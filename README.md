@@ -1,42 +1,53 @@
 # gugou-front-end
 
-This template should help get you started developing with Vue 3 in Vite.
+谷子交易系统前端项目
 
-## Recommended IDE Setup
+## 技术栈
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Vue 3
+- TypeScript
+- Vite
+- Vue Router
+- Pinia
+- Axios
 
-## Recommended Browser Setup
+## 项目结构
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+```
+src/
+├── api/          # API 接口定义
+├── assets/       # 静态资源
+├── components/   # 组件
+├── layouts/      # 布局组件
+├── router/       # 路由配置
+├── stores/       # Pinia 状态管理
+├── types/        # TypeScript 类型定义
+├── utils/        # 工具函数
+└── views/        # 页面视图
+    ├── user/     # 用户端页面
+    └── admin/    # 管理后台页面
+```
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## 安装依赖
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+## 开发环境运行
 
 ```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+## 生产环境构建
 
 ```sh
 npm run build
+```
+
+## 类型检查
+
+```sh
+npm run type-check
 ```
