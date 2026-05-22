@@ -1,31 +1,15 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
+import { getGoodsList, addGoods } from '@/api/goods'
+import type { GoodsItem } from '@/types/goods'
 
-interface Product {
-  image: string
-  name: string
-  price: string
-  ip: string
-  role: string
-  category: string
-  description: string
-}
-
+const route = useRoute()
 const selectedImage = ref('')
-const imagePreviewRef = ref<HTMLImageElement | null>(null)
-const uploadTextRef = ref<HTMLSpanElement | null>(null)
-const products = ref<Product[]>([
-  {
-    image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80',
-    name: '玛奇朵',
-    price: '85.00',
-    ip: '精灵宝可梦联动',
-    role: '玛奇朵',
-    category: '色纸',
-    description: '精灵宝可梦联动原版限定',
-  },
-])
+const loading = ref(false)
+const products = ref<GoodsItem[]>([])
+const searchQuery = ref('')
 
 const form = reactive({
   name: '',
@@ -33,6 +17,38 @@ const form = reactive({
   ip: '',
   role: '',
   category: '',
+})
+
+const filterForm = reactive({
+  ip: '',
+  role: '',
+  category: '',
+  timeRange: '',
+  minPrice: '',
+  maxPrice: '',
+})
+
+// 加载产品列表
+async function loadProducts(keyword?: string) {
+  loading.value = true
+  try {
+    const res = await getGoodsList({ keyword })
+    products.value = res.data.list
+  } catch (e) {
+    console.error('加载产品失败', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  const keyword = route.query.keyword as string
+  if (keyword) {
+    searchQuery.value = keyword
+    loadProducts(keyword)
+  } else {
+    loadProducts()
+  }
 })
 
 function onImageChange(e: Event) {
@@ -45,33 +61,51 @@ function onImageChange(e: Event) {
   reader.readAsDataURL(file)
 }
 
-function addProduct() {
+async function handleAddProduct() {
   const name = form.name.trim()
   const price = form.price.trim()
-  if (!selectedImage.value || !name || !price) return
+  if (!name || !price) return
 
-  const desc = [
-    form.ip || 'IP 待定',
-    form.role || '角色待定',
-    form.category || '品类待定',
-  ].join(' · ')
+  loading.value = true
+  try {
+    await addGoods({
+      name,
+      price: Number(price),
+      image: selectedImage.value,
+      ip: form.ip || 'IP 待定',
+      role: form.role || '角色待定',
+      category: form.category || '品类待定',
+    })
+    form.name = ''
+    form.price = ''
+    form.ip = ''
+    form.role = ''
+    form.category = ''
+    selectedImage.value = ''
+    loadProducts()
+  } catch (e) {
+    console.error('添加产品失败', e)
+  } finally {
+    loading.value = false
+  }
+}
 
-  products.value.unshift({
-    image: selectedImage.value,
-    name,
-    price: Number(price).toFixed(2),
-    ip: form.ip || 'IP 待定',
-    role: form.role || '角色待定',
-    category: form.category || '品类待定',
-    description: desc,
-  })
+async function handleSearch() {
+  await loadProducts(searchQuery.value)
+}
 
-  form.name = ''
-  form.price = ''
-  form.ip = ''
-  form.role = ''
-  form.category = ''
-  selectedImage.value = ''
+async function handleFilter() {
+  loading.value = true
+  try {
+    const params: any = {}
+    if (filterForm.category) params.category = filterForm.category
+    const res = await getGoodsList(params)
+    products.value = res.data.list
+  } catch (e) {
+    console.error('筛选失败', e)
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -84,9 +118,9 @@ function addProduct() {
         <h1>我的产品库</h1>
         <p>按产品名称、IP或角色查询并集中管理产品信息，包括自录入价格的参考值和查询历史数据</p>
       </div>
-      <form class="search-box" @submit.prevent>
-        <input type="search" placeholder="搜索产品名称、IP或角色">
-        <button type="button">搜索</button>
+      <form class="search-box" @submit.prevent="handleSearch">
+        <input v-model="searchQuery" type="search" placeholder="搜索产品名称、IP或角色">
+        <button type="submit" :disabled="loading">搜索</button>
       </form>
     </section>
 
@@ -98,34 +132,34 @@ function addProduct() {
         </div>
         <label>
           <span>IP</span>
-          <input type="text" placeholder="请输入 IP 名称">
+          <input v-model="filterForm.ip" type="text" placeholder="请输入 IP 名称">
         </label>
         <label>
           <span>角色</span>
-          <input type="text" placeholder="请输入角色名称">
+          <input v-model="filterForm.role" type="text" placeholder="请输入角色名称">
         </label>
         <label>
           <span>品类</span>
-          <select>
-            <option>全部品类</option><option>徽章</option><option>色纸</option><option>卡片</option>
-            <option>亚克力</option><option>明信片</option>
+          <select v-model="filterForm.category">
+            <option value="">全部品类</option><option value="徽章">徽章</option><option value="色纸">色纸</option><option value="卡片">卡片</option>
+            <option value="亚克力">亚克力</option><option value="明信片">明信片</option>
           </select>
         </label>
         <label>
           <span>发行时间</span>
-          <select>
-            <option>不限时间</option><option>近一个月</option><option>近三个月</option>
-            <option>近一年</option><option>早期发行</option>
+          <select v-model="filterForm.timeRange">
+            <option value="">不限时间</option><option value="1m">近一个月</option><option value="3m">近三个月</option>
+            <option value="1y">近一年</option><option value="old">早期发行</option>
           </select>
         </label>
         <label>
           <span>价格区间</span>
           <div class="price-row">
-            <input type="number" placeholder="最低价">
-            <input type="number" placeholder="最高价">
+            <input v-model="filterForm.minPrice" type="number" placeholder="最低价">
+            <input v-model="filterForm.maxPrice" type="number" placeholder="最高价">
           </div>
         </label>
-        <button class="secondary" type="button">应用筛选</button>
+        <button class="secondary" type="button" :disabled="loading" @click="handleFilter">应用筛选</button>
       </aside>
 
       <section class="content">
@@ -134,7 +168,7 @@ function addProduct() {
             <p class="eyebrow">自定义产品</p>
             <h2>添加产品信息</h2>
           </div>
-          <form class="product-form" @submit.prevent="addProduct">
+          <form class="product-form" @submit.prevent="handleAddProduct">
             <label class="upload-box">
               <input name="image" type="file" accept="image/*" @change="onImageChange">
               <span v-if="!selectedImage">上传产品图片</span>
@@ -161,7 +195,7 @@ function addProduct() {
                 <span>品类</span>
                 <input v-model="form.category" type="text" placeholder="选填">
               </label>
-              <button class="primary" type="submit">添加到产品列表</button>
+              <button class="primary" type="submit" :disabled="loading">{{ loading ? '添加中...' : '添加到产品列表' }}</button>
             </div>
           </form>
         </section>

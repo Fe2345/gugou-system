@@ -1,32 +1,21 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { login as loginApi, register as registerApi, resetPassword } from '@/api/user'
+import { useUserStore } from '@/stores/user'
 
 defineOptions({ name: 'AuthView' })
 
-const STORAGE_KEY = 'courseUserAccounts'
-
-interface User {
-  phone: string
-  account: string
-  password: string
-  createdAt: string
-}
+const router = useRouter()
+const userStore = useUserStore()
 
 const activeTab = ref('login')
+const loading = ref(false)
 const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
 const loginForm = reactive({ account: '', password: '' })
 const registerForm = reactive({ phone: '', password: '', confirmPassword: '', agreement: false })
 const forgotForm = reactive({ phone: '', password: '' })
-
-function getUsers(): User[] {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-}
-
-function saveUsers(users: User[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users))
-}
 
 function showMessage(msg: string, type: 'success' | 'error' = 'success') {
   message.value = msg
@@ -41,31 +30,34 @@ function isPhone(value: string) {
   return /^1[3-9]\d{9}$/.test(value)
 }
 
-function findUserByAccount(account: string) {
-  return getUsers().find((user) => user.phone === account || user.account === account)
-}
-
 function handleTab(tab: string) {
   activeTab.value = tab
   clearMessage()
 }
 
-function handleLogin() {
+async function handleLogin() {
   clearMessage()
   const account = loginForm.account.trim()
   if (!account) { showMessage('请填写手机号或账号', 'error'); return }
   if (!loginForm.password) { showMessage('请填写密码', 'error'); return }
 
-  const user = findUserByAccount(account)
-  if (!user) { activeTab.value = 'register'; showMessage('该账号未注册，请先注册', 'error'); return }
-  if (user.password !== loginForm.password) { showMessage('密码错误，请重新输入', 'error'); return }
-
-  loginForm.account = ''
-  loginForm.password = ''
-  showMessage('登录成功')
+  loading.value = true
+  try {
+    const res = await loginApi({ account, password: loginForm.password })
+    userStore.setToken(res.data.token)
+    userStore.setUserInfo(res.data.user)
+    loginForm.account = ''
+    loginForm.password = ''
+    showMessage('登录成功')
+    setTimeout(() => router.push('/'), 1000)
+  } catch (e: any) {
+    showMessage(e?.response?.data?.message || '登录失败，请检查账号密码', 'error')
+  } finally {
+    loading.value = false
+  }
 }
 
-function handleRegister() {
+async function handleRegister() {
   clearMessage()
   const phone = registerForm.phone.trim()
   if (!isPhone(phone)) { showMessage('请输入有效的 11 位手机号', 'error'); return }
@@ -73,38 +65,40 @@ function handleRegister() {
   if (registerForm.password !== registerForm.confirmPassword) { showMessage('两次输入的密码不一致', 'error'); return }
   if (!registerForm.agreement) { showMessage('请先同意用户协议', 'error'); return }
 
-  const users = getUsers()
-  if (users.some((user) => user.phone === phone)) {
+  loading.value = true
+  try {
+    await registerApi({ phone, password: registerForm.password, confirmPassword: registerForm.confirmPassword })
+    registerForm.phone = ''
+    registerForm.password = ''
+    registerForm.confirmPassword = ''
+    registerForm.agreement = false
     activeTab.value = 'login'
-    showMessage('该手机号已注册，请直接登录', 'error')
-    return
+    showMessage('注册成功，请登录')
+  } catch (e: any) {
+    showMessage(e?.response?.data?.message || '注册失败，请稍后重试', 'error')
+  } finally {
+    loading.value = false
   }
-
-  saveUsers([...users, { phone, account: phone, password: registerForm.password, createdAt: new Date().toISOString() }])
-  registerForm.phone = ''
-  registerForm.password = ''
-  registerForm.confirmPassword = ''
-  registerForm.agreement = false
-  activeTab.value = 'login'
-  showMessage('注册成功，请登录')
 }
 
-function handleForgot() {
+async function handleForgot() {
   clearMessage()
   const phone = forgotForm.phone.trim()
   if (!isPhone(phone)) { showMessage('请输入有效的 11 位手机号', 'error'); return }
   if (forgotForm.password.length < 6) { showMessage('密码至少需要 6 位', 'error'); return }
 
-  const users = getUsers()
-  const idx = users.findIndex((user) => user.phone === phone)
-  if (idx === -1) { activeTab.value = 'register'; showMessage('未找到该手机号，请先注册', 'error'); return }
-
-  users[idx]!.password = forgotForm.password
-  saveUsers(users)
-  forgotForm.phone = ''
-  forgotForm.password = ''
-  activeTab.value = 'login'
-  showMessage('密码修改成功，请使用新密码登录')
+  loading.value = true
+  try {
+    await resetPassword({ phone, password: forgotForm.password })
+    forgotForm.phone = ''
+    forgotForm.password = ''
+    activeTab.value = 'login'
+    showMessage('密码修改成功，请使用新密码登录')
+  } catch (e: any) {
+    showMessage(e?.response?.data?.message || '密码重置失败，请稍后重试', 'error')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -141,7 +135,7 @@ function handleForgot() {
             <span>密码</span>
             <input v-model="loginForm.password" type="password" autocomplete="current-password" placeholder="请输入密码">
           </label>
-          <button class="primary" type="submit">登录</button>
+          <button class="primary" type="submit" :disabled="loading">{{ loading ? '登录中...' : '登录' }}</button>
           <div class="form-links">
             <button type="button" @click="handleTab('register')">立即注册</button>
             <button type="button" @click="handleTab('forgot')">忘记密码</button>
@@ -171,7 +165,7 @@ function handleForgot() {
             <input v-model="registerForm.agreement" type="checkbox">
             <span>我已阅读并同意《用户协议》</span>
           </label>
-          <button class="primary" type="submit">注册</button>
+          <button class="primary" type="submit" :disabled="loading">{{ loading ? '注册中...' : '注册' }}</button>
           <div class="form-links single">
             <button type="button" @click="handleTab('login')">已有账号，去登录</button>
           </div>
@@ -192,7 +186,7 @@ function handleForgot() {
             <span>新密码</span>
             <input v-model="forgotForm.password" type="password" autocomplete="new-password" placeholder="设置新密码">
           </label>
-          <button class="primary" type="submit">确认修改</button>
+          <button class="primary" type="submit" :disabled="loading">{{ loading ? '提交中...' : '确认修改' }}</button>
           <div class="form-links single">
             <button type="button" @click="handleTab('login')">返回登录</button>
           </div>
@@ -315,6 +309,7 @@ input:focus {
   box-shadow: 0 12px 28px rgba(15, 93, 114, 0.22);
 }
 .primary:hover { background: var(--accent-dark); }
+.primary:disabled { opacity: 0.7; cursor: not-allowed; }
 
 .form-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .form-links.single { grid-template-columns: 1fr; }

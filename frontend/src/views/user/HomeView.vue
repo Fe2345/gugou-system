@@ -1,5 +1,62 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
+import { getGoodsList } from '@/api/goods'
+
+const router = useRouter()
+const searchQuery = ref('')
+const loading = ref(false)
+
+// 首页统计数据（后续接入 API）
+const stats = ref({
+  totalAssets: 36,
+  totalValue: 4280,
+  pendingOrders: 2,
+  pendingDelivery: 5,
+})
+
+// 热门数据（后续接入 API）
+const hotGoods = ref([
+  { name: '玛奇朵限定徽章', tag: '热度 2.4k' },
+  { name: '幽兰色限定角色卡', tag: '收藏 918' },
+  { name: '维多利亚明信片', tag: '关注 786' },
+])
+
+const recentDeals = ref([
+  { name: '春日限定徽章', tag: '¥ 128 成交' },
+  { name: '深海明信片套装', tag: '¥ 96 成交' },
+  { name: '秋色色纸', tag: '¥ 58 成交' },
+])
+
+const activeGroups = ref([
+  { name: '限定徽章拼团套装', tag: '差 3 人' },
+  { name: '金色限定徽章', tag: '差 5 人' },
+  { name: '迷你卡片拼团', tag: '差 2 人' },
+])
+
+const swapRequests = ref([
+  { name: '维多利亚金色色纸', tag: '匹配 12 人' },
+  { name: '精灵宝可梦卡牌', tag: '匹配 8 人' },
+  { name: '明信片套装', tag: '匹配 6 人' },
+])
+
+async function handleSearch() {
+  if (!searchQuery.value.trim()) return
+  loading.value = true
+  try {
+    await getGoodsList({ keyword: searchQuery.value })
+    router.push({ path: '/goods', query: { keyword: searchQuery.value } })
+  } catch (e) {
+    console.error('搜索失败', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+function goTo(path: string) {
+  router.push(path)
+}
 </script>
 
 <template>
@@ -11,31 +68,31 @@ import TopBar from '@/layouts/TopBar.vue'
         <h1>欢迎来到谷子交易系统</h1>
         <p>集中展示您的关注窗口、市场推荐和个人数据，帮助您从系统功能快速找到所需业务</p>
       </div>
-      <form class="search-box" @submit.prevent>
-        <input type="search" placeholder="搜索谷子名称、IP或角色产品">
-        <button type="button">搜索</button>
+      <form class="search-box" @submit.prevent="handleSearch">
+        <input v-model="searchQuery" type="search" placeholder="搜索谷子名称、IP或角色产品">
+        <button type="submit" :disabled="loading">{{ loading ? '搜索中...' : '搜索' }}</button>
       </form>
     </section>
 
     <section class="data-grid" aria-label="关键数据概览">
       <article class="data-card">
         <span>我的资产总数</span>
-        <strong>36</strong>
+        <strong>{{ stats.totalAssets }}</strong>
         <p>已录入收藏谷子</p>
       </article>
       <article class="data-card">
         <span>资产总值</span>
-        <strong>¥ 4,280</strong>
+        <strong>¥ {{ stats.totalValue.toLocaleString() }}</strong>
         <p>基于近期成交价格估算</p>
       </article>
       <article class="data-card">
         <span>待处理订单</span>
-        <strong>2</strong>
+        <strong>{{ stats.pendingOrders }}</strong>
         <p>等待用户完成付款</p>
       </article>
       <article class="data-card">
         <span>待收货物</span>
-        <strong>5</strong>
+        <strong>{{ stats.pendingDelivery }}</strong>
         <p>谷子已发货等待确认收货</p>
       </article>
     </section>
@@ -48,23 +105,23 @@ import TopBar from '@/layouts/TopBar.vue'
         </div>
       </div>
       <div class="quick-grid">
-        <button type="button">
+        <button type="button" @click="goTo('/assets')">
           <strong>录入资产</strong>
           <span>登记您拥有的谷子和相关信息</span>
         </button>
-        <button type="button">
+        <button type="button" @click="goTo('/price')">
           <strong>查看行情</strong>
           <span>查看价格趋势和市场热度</span>
         </button>
-        <button type="button">
+        <button type="button" @click="goTo('/market')">
           <strong>发起交易</strong>
           <span>发布您想交易的谷子需求</span>
         </button>
-        <button type="button">
+        <button type="button" @click="goTo('/group')">
           <strong>参与拼团</strong>
           <span>加入拼团并等待用户集合</span>
         </button>
-        <button type="button">
+        <button type="button" @click="goTo('/my-orders')">
           <strong>查看订单</strong>
           <span>查看购买、交易和收货状态</span>
         </button>
@@ -86,9 +143,7 @@ import TopBar from '@/layouts/TopBar.vue'
             <span>热度榜</span>
           </div>
           <ul>
-            <li><strong>玛奇朵限定徽章</strong><span>热度 2.4k</span></li>
-            <li><strong>幽兰色限定角色卡</strong><span>收藏 918</span></li>
-            <li><strong>维多利亚明信片</strong><span>关注 786</span></li>
+            <li v-for="item in hotGoods" :key="item.name"><strong>{{ item.name }}</strong><span>{{ item.tag }}</span></li>
           </ul>
         </article>
 
@@ -98,9 +153,7 @@ import TopBar from '@/layouts/TopBar.vue'
             <span>市场动态</span>
           </div>
           <ul>
-            <li><strong>春日限定徽章</strong><span>¥ 128 成交</span></li>
-            <li><strong>深海明信片套装</strong><span>¥ 96 成交</span></li>
-            <li><strong>秋色色纸</strong><span>¥ 58 成交</span></li>
+            <li v-for="item in recentDeals" :key="item.name"><strong>{{ item.name }}</strong><span>{{ item.tag }}</span></li>
           </ul>
         </article>
 
@@ -110,9 +163,7 @@ import TopBar from '@/layouts/TopBar.vue'
             <span>即将成团</span>
           </div>
           <ul>
-            <li><strong>限定徽章拼团套装</strong><span>差 3 人</span></li>
-            <li><strong>金色限定徽章</strong><span>差 5 人</span></li>
-            <li><strong>迷你卡片拼团</strong><span>差 2 人</span></li>
+            <li v-for="item in activeGroups" :key="item.name"><strong>{{ item.name }}</strong><span>{{ item.tag }}</span></li>
           </ul>
         </article>
 
@@ -122,9 +173,7 @@ import TopBar from '@/layouts/TopBar.vue'
             <span>匹配推荐</span>
           </div>
           <ul>
-            <li><strong>维多利亚金色色纸</strong><span>匹配 12 人</span></li>
-            <li><strong>精灵宝可梦卡牌</strong><span>匹配 8 人</span></li>
-            <li><strong>明信片套装</strong><span>匹配 6 人</span></li>
+            <li v-for="item in swapRequests" :key="item.name"><strong>{{ item.name }}</strong><span>{{ item.tag }}</span></li>
           </ul>
         </article>
       </div>
