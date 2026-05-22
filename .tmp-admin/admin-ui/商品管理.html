@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品审核 - 管理控制台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f9fbff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #e6ebf2;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --danger: #e11d48;
+      --purple: #7c3aed;
+      --shadow: 0 18px 45px rgba(22, 32, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Inter", "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px 18px;
+      background: #111827;
+      color: #dbe4f0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 8px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 22px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #38bdf8, #2563eb 58%, #7c3aed);
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+    }
+
+    .brand strong {
+      display: block;
+      color: #fff;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 3px;
+      color: #9ca8ba;
+      font-size: 12px;
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 42px;
+      padding: 0 12px;
+      border-radius: 8px;
+      color: #aeb8c8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .nav-item.active,
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .sidebar-footer {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 22px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-footer span {
+      display: block;
+      color: #9ca8ba;
+      font-size: 12px;
+    }
+
+    .sidebar-footer strong {
+      display: block;
+      margin-top: 5px;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 26px 32px 38px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .title-block h1 {
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .title-block p {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 300px;
+      height: 42px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--muted);
+      box-shadow: 0 8px 20px rgba(22, 32, 51, 0.04);
+    }
+
+    .search svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .search input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+      font-size: 14px;
+    }
+
+    .icon-btn,
+    .primary-btn,
+    .soft-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 42px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .icon-btn {
+      width: 42px;
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 20px rgba(22, 32, 51, 0.04);
+    }
+
+    .primary-btn {
+      gap: 8px;
+      padding: 0 16px;
+      background: var(--primary);
+      color: #fff;
+      border: 0;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 12px 22px rgba(37, 99, 235, 0.24);
+    }
+
+    .soft-btn {
+      gap: 8px;
+      padding: 0 14px;
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .primary-btn:hover,
+    .soft-btn:hover,
+    .icon-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .primary-btn svg,
+    .soft-btn svg,
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .overview {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .metric-card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric-card {
+      padding: 18px;
+      min-height: 122px;
+    }
+
+    .metric-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .metric-head span {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .metric-icon {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+    }
+
+    .metric-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .metric-card:nth-child(1) .metric-icon {
+      background: #fef3c7;
+      color: var(--warning);
+    }
+
+    .metric-card:nth-child(2) .metric-icon {
+      background: #dbeafe;
+      color: var(--primary);
+    }
+
+    .metric-card:nth-child(3) .metric-icon {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .metric-card:nth-child(4) .metric-icon {
+      background: #ffe4e6;
+      color: var(--danger);
+    }
+
+    .metric-value {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      margin-bottom: 8px;
+    }
+
+    .metric-value strong {
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .trend {
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .trend.up {
+      color: var(--success);
+    }
+
+    .trend.warn {
+      color: var(--warning);
+    }
+
+    .trend.danger {
+      color: var(--danger);
+    }
+
+    .metric-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-header h2 {
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .panel-header p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tabs {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 8px;
+      background: #eef2f7;
+      flex: 0 0 auto;
+    }
+
+    .tabs button {
+      height: 30px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tabs button.active {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 3px 10px rgba(22, 32, 51, 0.08);
+    }
+
+    .filter-panel {
+      padding: 16px 20px;
+      margin-bottom: 18px;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1.5fr repeat(3, minmax(130px, 0.6fr)) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .field {
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      padding: 0 12px;
+      color: var(--muted);
+      outline: 0;
+      font-size: 14px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .field select {
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      padding: 18px 20px 20px;
+    }
+
+    .product-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      overflow: hidden;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 34px rgba(22, 32, 51, 0.08);
+    }
+
+    .product-cover {
+      position: relative;
+      height: 138px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 22% 20%, rgba(255, 255, 255, .88), transparent 20%),
+        radial-gradient(circle at 78% 20%, rgba(255, 255, 255, .62), transparent 18%),
+        linear-gradient(135deg, #93c5fd, #c4b5fd 55%, #f9a8d4);
+    }
+
+    .product-cover::after {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.72);
+      background: rgba(255,255,255,.18);
+      backdrop-filter: blur(2px);
+    }
+
+    .cover-mark {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.9);
+      color: #2563eb;
+      font-size: 22px;
+      font-weight: 900;
+      box-shadow: 0 12px 24px rgba(22,32,51,.15);
+    }
+
+    .product-card:nth-child(2) .product-cover {
+      background:
+        radial-gradient(circle at 16% 22%, rgba(255, 255, 255, .82), transparent 20%),
+        radial-gradient(circle at 78% 26%, rgba(255, 255, 255, .58), transparent 18%),
+        linear-gradient(135deg, #fda4af, #fcd34d 50%, #86efac);
+    }
+
+    .product-card:nth-child(3) .product-cover {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, .8), transparent 18%),
+        radial-gradient(circle at 78% 24%, rgba(255, 255, 255, .54), transparent 18%),
+        linear-gradient(135deg, #67e8f9, #60a5fa 46%, #818cf8);
+    }
+
+    .product-info {
+      padding: 14px;
+    }
+
+    .product-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .product-title {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .product-meta {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .price {
+      color: #be123c;
+      font-size: 16px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .product-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .product-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .mini-btn {
+      height: 34px;
+      border: 0;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .mini-btn.pass {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .mini-btn.reject {
+      background: #ffe4e6;
+      color: #be123c;
+    }
+
+    .mini-btn.edit {
+      background: #eef2ff;
+      color: var(--primary);
+    }
+
+    .mini-btn.down {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .flow {
+      padding: 18px 20px 20px;
+    }
+
+    .flow-step {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr);
+      gap: 12px;
+      position: relative;
+      padding-bottom: 20px;
+    }
+
+    .flow-step:last-child {
+      padding-bottom: 0;
+    }
+
+    .flow-step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 17px;
+      top: 40px;
+      width: 2px;
+      height: calc(100% - 40px);
+      background: #e8edf5;
+    }
+
+    .flow-icon {
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #eef2ff;
+      color: var(--primary);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .flow-step.active .flow-icon {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, .24);
+    }
+
+    .flow-step.success .flow-icon {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .flow-step.reject .flow-icon {
+      background: #ffe4e6;
+      color: #be123c;
+    }
+
+    .flow-title {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .flow-desc {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .record-list {
+      display: grid;
+    }
+
+    .record-item {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .record-item:last-child {
+      border-bottom: 0;
+    }
+
+    .record-avatar {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #eef2ff;
+      color: var(--primary);
+      font-weight: 900;
+    }
+
+    .record-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .record-desc {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .record-time {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .table-panel {
+      margin-top: 18px;
+    }
+
+    .bulk-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-soft);
+    }
+
+    .bulk-left,
+    .bulk-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .bulk-left span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .data-table th {
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .product-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 260px;
+    }
+
+    .thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      flex: 0 0 auto;
+      background: linear-gradient(135deg, #93c5fd, #c4b5fd 55%, #f9a8d4);
+      border: 1px solid rgba(255,255,255,.7);
+      box-shadow: 0 8px 16px rgba(22,32,51,.08);
+    }
+
+    .data-table tr:nth-child(2) .thumb {
+      background: linear-gradient(135deg, #fda4af, #fcd34d 55%, #86efac);
+    }
+
+    .data-table tr:nth-child(3) .thumb {
+      background: linear-gradient(135deg, #67e8f9, #60a5fa 50%, #818cf8);
+    }
+
+    .data-table tr:nth-child(4) .thumb {
+      background: linear-gradient(135deg, #c4b5fd, #f0abfc 55%, #fda4af);
+    }
+
+    .product-name {
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .product-code {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      height: 26px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .status.pending {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .status.online {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .status.reject {
+      background: #ffe4e6;
+      color: #be123c;
+    }
+
+    .status.down {
+      background: #e5e7eb;
+      color: #4b5563;
+    }
+
+    .status.editing {
+      background: #eef2ff;
+      color: var(--primary);
+    }
+
+    .table-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-btn {
+      height: 30px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .table-btn.pass {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .table-btn.reject {
+      background: #ffe4e6;
+      color: #be123c;
+    }
+
+    .table-btn.edit {
+      background: #eef2ff;
+      color: var(--primary);
+    }
+
+    .table-btn.down {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .pagination span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .page-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .page-btn {
+      min-width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    @media (max-width: 1220px) {
+      .overview {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+
+      .sidebar-footer {
+        display: none;
+      }
+
+      .nav-group {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .nav-item {
+        justify-content: center;
+      }
+
+      .nav-item span {
+        display: none;
+      }
+
+      .main {
+        padding: 22px 18px 30px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+
+      .search {
+        width: min(100%, 360px);
+      }
+
+      .filter-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .overview,
+      .product-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .bulk-bar,
+      .pagination {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <strong>管理控制台</strong>
+          <span>Admin Center</span>
+        </div>
+      </div>
+
+      <nav class="nav-group" aria-label="后台导航">
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+          <span>首页概览</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>用户管理</span>
+        </a>
+        <a class="nav-item active" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2l1 7h10l1-7"/><path d="M4 9h16l-1 13H5L4 9z"/><path d="M9 14h6"/></svg>
+          <span>商品审核</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+          <span>订单处理</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-4 3 3 5-7"/></svg>
+          <span>数据报表</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1v.17a2 2 0 1 1-4 0V21a1.65 1.65 0 0 0-.4-1 1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1-.4H2.83a2 2 0 1 1 0-4H3a1.65 1.65 0 0 0 1-.4 1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .4-1V2.83a2 2 0 1 1 4 0V3a1.65 1.65 0 0 0 .4 1 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.14.7.34 1 .6.3.3.5.64.6 1h.17a2 2 0 1 1 0 4H21a1.65 1.65 0 0 0-1 .4 1.65 1.65 0 0 0-.6 1z"/></svg>
+          <span>系统设置</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span>当前登录</span>
+        <strong>系统管理员</strong>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title-block">
+          <h1>商品审核</h1>
+          <p>审核商品、上架/下架、修改商品信息与追踪处理记录</p>
+        </div>
+
+        <div class="actions">
+          <label class="search" aria-label="搜索">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="search" placeholder="搜索商品名称、IP、卖家">
+          </label>
+          <button class="icon-btn" title="通知" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </button>
+          <button class="primary-btn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            新增商品
+          </button>
+        </div>
+      </header>
+
+      <section class="overview" aria-label="商品管理指标">
+        <article class="metric-card">
+          <div class="metric-head">
+            <span>待审核商品</span>
+            <div class="metric-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4"/><path d="M12 16h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            </div>
+          </div>
+          <div class="metric-value"><strong>24</strong><span class="trend warn">+6</span></div>
+          <p class="metric-note">今日新增审核 9 件</p>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-head">
+            <span>上架中商品</span>
+            <div class="metric-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2l1 7h10l1-7"/><path d="M4 9h16l-1 13H5L4 9z"/></svg>
+            </div>
+          </div>
+          <div class="metric-value"><strong>3,286</strong><span class="trend up">+4.2%</span></div>
+          <p class="metric-note">平台可交易商品</p>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-head">
+            <span>今日通过</span>
+            <div class="metric-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+          </div>
+          <div class="metric-value"><strong>18</strong><span class="trend up">+12.8%</span></div>
+          <p class="metric-note">审核通过率 86%</p>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-head">
+            <span>未通过/下架</span>
+            <div class="metric-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            </div>
+          </div>
+          <div class="metric-value"><strong>7</strong><span class="trend danger">需复核</span></div>
+          <p class="metric-note">图片或价格异常较多</p>
+        </article>
+      </section>
+
+      <section class="panel filter-panel">
+        <div class="filter-row">
+          <label class="field">
+            <input type="text" placeholder="输入商品名称 / 商品编号 / 卖家ID">
+          </label>
+
+          <label class="field">
+            <select>
+              <option>全部状态</option>
+              <option>待审核</option>
+              <option>已上架</option>
+              <option>未通过</option>
+              <option>已下架</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <select>
+              <option>全部分类</option>
+              <option>徽章/吧唧</option>
+              <option>亚克力立牌</option>
+              <option>色纸/拍立得</option>
+              <option>手办/挂件</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <select>
+              <option>提交时间</option>
+              <option>今天</option>
+              <option>近7天</option>
+              <option>近30天</option>
+            </select>
+          </label>
+
+          <button class="primary-btn" type="button">筛选商品</button>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div>
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>重点审核商品</h2>
+                <p>优先处理价格波动较高、图片信息不完整或热门IP商品</p>
+              </div>
+              <div class="tabs" aria-label="审核状态">
+                <button class="active" type="button">待审核</button>
+                <button type="button">已上架</button>
+                <button type="button">未通过</button>
+              </div>
+            </div>
+
+            <div class="product-grid">
+              <article class="product-card">
+                <div class="product-cover">
+                  <div class="cover-mark">谷</div>
+                </div>
+                <div class="product-info">
+                  <div class="product-top">
+                    <div>
+                      <div class="product-title">蓝色幻想系列 限定徽章套组</div>
+                      <div class="product-meta">卖家：BJUT000126 · 提交 12 分钟前</div>
+                    </div>
+                    <div class="price">￥128</div>
+                  </div>
+                  <div class="product-tags">
+                    <span class="tag">待审核</span>
+                    <span class="tag">徽章</span>
+                    <span class="tag">热门IP</span>
+                  </div>
+                  <div class="product-actions">
+                    <button class="mini-btn pass">通过上架</button>
+                    <button class="mini-btn reject">不通过</button>
+                    <button class="mini-btn edit">修改信息</button>
+                    <button class="mini-btn down">暂缓审核</button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="product-card">
+                <div class="product-cover">
+                  <div class="cover-mark">IP</div>
+                </div>
+                <div class="product-info">
+                  <div class="product-top">
+                    <div>
+                      <div class="product-title">樱花季角色亚克力立牌</div>
+                      <div class="product-meta">卖家：BJUT000219 · 提交 28 分钟前</div>
+                    </div>
+                    <div class="price">￥68</div>
+                  </div>
+                  <div class="product-tags">
+                    <span class="tag">待审核</span>
+                    <span class="tag">立牌</span>
+                    <span class="tag">图片待核验</span>
+                  </div>
+                  <div class="product-actions">
+                    <button class="mini-btn pass">通过上架</button>
+                    <button class="mini-btn reject">不通过</button>
+                    <button class="mini-btn edit">修改信息</button>
+                    <button class="mini-btn down">暂缓审核</button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="product-card">
+                <div class="product-cover">
+                  <div class="cover-mark">限</div>
+                </div>
+                <div class="product-info">
+                  <div class="product-top">
+                    <div>
+                      <div class="product-title">限定拍立得收藏卡 随机款</div>
+                      <div class="product-meta">卖家：BJUT000308 · 提交 1 小时前</div>
+                    </div>
+                    <div class="price">￥45</div>
+                  </div>
+                  <div class="product-tags">
+                    <span class="tag">待审核</span>
+                    <span class="tag">拍立得</span>
+                    <span class="tag">价格异常</span>
+                  </div>
+                  <div class="product-actions">
+                    <button class="mini-btn pass">通过上架</button>
+                    <button class="mini-btn reject">不通过</button>
+                    <button class="mini-btn edit">修改信息</button>
+                    <button class="mini-btn down">暂缓审核</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </article>
+
+          <article class="panel table-panel">
+            <div class="panel-header">
+              <div>
+                <h2>商品审核记录</h2>
+                <p>支持单条审核、批量上架、批量下架和信息修改</p>
+              </div>
+            </div>
+
+            <div class="bulk-bar">
+              <div class="bulk-left">
+                <input type="checkbox">
+                <span>已选择 0 项</span>
+              </div>
+              <div class="bulk-right">
+                <button class="soft-btn" type="button">批量通过</button>
+                <button class="soft-btn" type="button">批量下架</button>
+                <button class="soft-btn" type="button">导出记录</button>
+              </div>
+            </div>
+
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox"></th>
+                    <th>商品信息</th>
+                    <th>分类</th>
+                    <th>卖家</th>
+                    <th>价格</th>
+                    <th>库存</th>
+                    <th>提交时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox"></td>
+                    <td>
+                      <div class="product-cell">
+                        <div class="thumb"></div>
+                        <div>
+                          <div class="product-name">蓝色幻想系列 限定徽章套组</div>
+                          <div class="product-code">PRBJUT0001260001</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>徽章/吧唧</td>
+                    <td>BJUT000126</td>
+                    <td>￥128</td>
+                    <td>12</td>
+                    <td>10:28</td>
+                    <td><span class="status pending">待审核</span></td>
+                    <td>
+                      <div class="table-actions">
+                        <button class="table-btn pass">上架</button>
+                        <button class="table-btn reject">驳回</button>
+                        <button class="table-btn edit">编辑</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td><input type="checkbox"></td>
+                    <td>
+                      <div class="product-cell">
+                        <div class="thumb"></div>
+                        <div>
+                          <div class="product-name">樱花季角色亚克力立牌</div>
+                          <div class="product-code">PRBJUT0002190004</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>亚克力立牌</td>
+                    <td>BJUT000219</td>
+                    <td>￥68</td>
+                    <td>8</td>
+                    <td>09:52</td>
+                    <td><span class="status pending">待审核</span></td>
+                    <td>
+                      <div class="table-actions">
+                        <button class="table-btn pass">上架</button>
+                        <button class="table-btn reject">驳回</button>
+                        <button class="table-btn edit">编辑</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td><input type="checkbox"></td>
+                    <td>
+                      <div class="product-cell">
+                        <div class="thumb"></div>
+                        <div>
+                          <div class="product-name">限定拍立得收藏卡 随机款</div>
+                          <div class="product-code">PRBJUT0003080011</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>拍立得/色纸</td>
+                    <td>BJUT000308</td>
+                    <td>￥45</td>
+                    <td>20</td>
+                    <td>昨天</td>
+                    <td><span class="status reject">未通过</span></td>
+                    <td>
+                      <div class="table-actions">
+                        <button class="table-btn edit">修改</button>
+                        <button class="table-btn pass">复审</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td><input type="checkbox"></td>
+                    <td>
+                      <div class="product-cell">
+                        <div class="thumb"></div>
+                        <div>
+                          <div class="product-name">角色挂件 生日纪念款</div>
+                          <div class="product-code">PRBJUT0001760022</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>挂件</td>
+                    <td>BJUT000176</td>
+                    <td>￥36</td>
+                    <td>15</td>
+                    <td>昨天</td>
+                    <td><span class="status online">已上架</span></td>
+                    <td>
+                      <div class="table-actions">
+                        <button class="table-btn down">下架</button>
+                        <button class="table-btn edit">编辑</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pagination">
+              <span>共 128 条商品记录，当前显示 1-4 条</span>
+              <div class="page-buttons">
+                <button class="page-btn">‹</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">›</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <aside class="side-stack">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>审核流程</h2>
+                <p>商品状态流转路径</p>
+              </div>
+            </div>
+
+            <div class="flow">
+              <div class="flow-step active">
+                <div class="flow-icon">1</div>
+                <div>
+                  <div class="flow-title">待审核</div>
+                  <div class="flow-desc">用户提交商品后，系统进入待审核状态，管理员检查图片、描述、价格和分类。</div>
+                </div>
+              </div>
+
+              <div class="flow-step success">
+                <div class="flow-icon">2</div>
+                <div>
+                  <div class="flow-title">审核通过</div>
+                  <div class="flow-desc">信息完整且符合规则后，商品状态更新为已上架，并进入前台交易市场。</div>
+                </div>
+              </div>
+
+              <div class="flow-step reject">
+                <div class="flow-icon">3</div>
+                <div>
+                  <div class="flow-title">未通过</div>
+                  <div class="flow-desc">若存在图片不清晰、价格异常、描述违规等问题，商品将被驳回并提示修改。</div>
+                </div>
+              </div>
+
+              <div class="flow-step">
+                <div class="flow-icon">4</div>
+                <div>
+                  <div class="flow-title">下架/归档</div>
+                  <div class="flow-desc">商品售出、违规或用户主动撤回后，可进入已下架状态并保留历史记录。</div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>最近处理记录</h2>
+                <p>管理员审核操作留痕</p>
+              </div>
+            </div>
+
+            <div class="record-list">
+              <div class="record-item">
+                <div class="record-avatar">通</div>
+                <div>
+                  <div class="record-title">通过“生日纪念挂件”上架</div>
+                  <div class="record-desc">审核员：系统管理员 · 状态更新为已上架</div>
+                </div>
+                <div class="record-time">10:36</div>
+              </div>
+
+              <div class="record-item">
+                <div class="record-avatar">驳</div>
+                <div>
+                  <div class="record-title">驳回“限定拍立得收藏卡”</div>
+                  <div class="record-desc">原因：价格异常，需补充来源说明</div>
+                </div>
+                <div class="record-time">09:58</div>
+              </div>
+
+              <div class="record-item">
+                <div class="record-avatar">改</div>
+                <div>
+                  <div class="record-title">修改“亚克力立牌”分类</div>
+                  <div class="record-desc">从“挂件”调整为“亚克力立牌”</div>
+                </div>
+                <div class="record-time">昨天</div>
+              </div>
+
+              <div class="record-item">
+                <div class="record-avatar">下</div>
+                <div>
+                  <div class="record-title">下架异常商品</div>
+                  <div class="record-desc">原因：用户举报图片与实物不符</div>
+                </div>
+                <div class="record-time">昨天</div>
+              </div>
+            </div>
+          </article>
+        </aside>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

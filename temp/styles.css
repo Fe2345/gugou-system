@@ -1,0 +1,271 @@
+:root {
+  color-scheme: light;
+  --bg: #e9f2f3;
+  --panel: rgba(255, 255, 255, 0.95);
+  --ink: #12232b;
+  --muted: #627179;
+  --line: #d8e3e7;
+  --accent: #0f5d72;
+  --accent-dark: #0a4657;
+  --gold: #dca12e;
+  --error: #b9352b;
+  --success: #1f6b45;
+  --shadow: 0 28px 80px rgba(13, 54, 66, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  color: var(--ink);
+  background:
+    linear-gradient(rgba(10, 70, 87, 0.86), rgba(10, 70, 87, 0.9)),
+    url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1600&q=80") center/cover fixed;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 30px 16px;
+}
+
+.auth-card {
+  width: min(520px, 100%);
+  padding: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.brand-mark {
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--gold);
+  color: #172126;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 30px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.brand p {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f4f8fa;
+}
+
+.tab {
+  min-height: 42px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 700;
+}
+
+.tab.active {
+  color: #fff;
+  background: var(--accent);
+  box-shadow: 0 10px 24px rgba(15, 93, 114, 0.2);
+}
+
+.view {
+  display: none;
+  padding-top: 28px;
+}
+
+.view.active {
+  display: block;
+}
+
+.view-head {
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+h2 {
+  font-size: 28px;
+  letter-spacing: 0;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+input {
+  width: 100%;
+  height: 50px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(15, 93, 114, 0.12);
+}
+
+.check-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.check-line input {
+  width: 18px;
+  height: 18px;
+}
+
+.primary {
+  min-height: 50px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--accent);
+  font-weight: 800;
+  box-shadow: 0 12px 28px rgba(15, 93, 114, 0.22);
+}
+
+.primary:hover,
+.tab.active:hover {
+  background: var(--accent-dark);
+}
+
+.form-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.form-links.single {
+  grid-template-columns: 1fr;
+}
+
+.form-links button {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  text-align: left;
+  padding: 2px 0;
+}
+
+.form-links button:last-child {
+  text-align: right;
+}
+
+.form-links.single button {
+  text-align: center;
+}
+
+.message {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid #bce5ce;
+  border-radius: 8px;
+  color: var(--success);
+  background: #e8f7ef;
+}
+
+.message.error {
+  color: var(--error);
+  border-color: #f0b8b3;
+  background: #fdecea;
+}
+
+@media (max-width: 560px) {
+  .page {
+    align-items: start;
+    padding-top: 22px;
+  }
+
+  .auth-card {
+    padding: 24px;
+  }
+
+  .brand {
+    align-items: flex-start;
+  }
+
+  h1 {
+    font-size: 25px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  .tabs,
+  .form-links {
+    grid-template-columns: 1fr;
+  }
+
+  .form-links button,
+  .form-links button:last-child {
+    text-align: center;
+  }
+}

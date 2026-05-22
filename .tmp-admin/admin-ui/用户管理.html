@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户管理 - 管理控制台</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --panel-soft: #f9fbff;
+  --ink: #172033;
+  --muted: #667085;
+  --line: #e6ebf2;
+  --primary: #2563eb;
+  --success: #16a34a;
+  --danger: #e11d48;
+  --shadow: 0 18px 45px rgba(22, 32, 51, 0.08);
+}
+
+body { margin:0; padding:0; font-family:"Inter", "Noto Sans SC"; background: var(--bg); color: var(--ink); }
+.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+
+/* Sidebar */
+.sidebar { background: #111827; color:#dbe4f0; padding:24px 18px; position:sticky; top:0; height:100vh; }
+.brand { display:flex; align-items:center; gap:12px; margin-bottom:22px; padding-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.08);}
+.brand-mark { display:grid; place-items:center; width:40px; height:40px; border-radius:8px; background: linear-gradient(135deg,#38bdf8,#2563eb 58%,#7c3aed); color:#fff; font-weight:800; }
+.nav-group { display:grid; gap:6px; }
+.nav-item { display:flex; align-items:center; gap:12px; padding:0 12px; min-height:42px; border-radius:8px; color:#aeb8c8; text-decoration:none; font-size:14px; font-weight:500; }
+.nav-item.active, .nav-item:hover { background: rgba(255,255,255,0.08); color:#fff; }
+
+/* Main */
+.main { min-width:0; padding:26px 32px 38px; }
+.topbar { display:flex; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; }
+.title-block h1 { font-size:28px; font-weight:800; }
+.title-block p { color: var(--muted); font-size:14px; margin-top:4px; }
+.actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+
+.search { display:flex; align-items:center; gap:8px; width:280px; height:42px; padding:0 12px; border:1px solid var(--line); border-radius:8px; background: var(--panel-soft); color: var(--muted);}
+.search input { border:0; outline:0; background:transparent; width:100%; font-size:14px; color:var(--ink); }
+
+.primary-btn { gap:8px; padding:0 16px; height:42px; background: var(--primary); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:700; box-shadow:0 12px 22px rgba(37,99,235,0.24); transition:all 0.18s; }
+.primary-btn:hover { background:#1d4ed8; transform:translateY(-1px); }
+
+/* Table Panel */
+.table-panel { background: var(--panel); border-radius:12px; box-shadow: var(--shadow); padding:20px; overflow-x:auto; margin-top:16px;}
+.data-table { width:100%; border-collapse: collapse; min-width:900px; }
+.data-table th, .data-table td { text-align:left; padding:14px 20px; font-size:14px; border-bottom:1px solid var(--line); }
+.data-table th { background: var(--panel-soft); font-weight:600; color: var(--muted); font-size:13px; }
+.data-table tr:last-child td { border-bottom:0; }
+
+/* Status labels */
+.status { display:inline-flex; align-items:center; height:26px; padding:0 9px; border-radius:999px; font-size:12px; font-weight:700; }
+.status.active { background: var(--success); color:#fff; }
+.status.frozen { background: var(--danger); color:#fff; }
+
+/* Action buttons in table */
+.btn { padding:6px 12px; border-radius:6px; border:none; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.2s; }
+.btn.freeze { background: var(--danger); color:#fff; }
+.btn.unfreeze { background: var(--success); color:#fff; }
+.btn.detail { background: var(--primary); color:#fff; margin-left:4px; }
+.btn:hover { opacity:0.85; }
+
+/* Filter bar */
+.filter-bar { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.filter-bar select { padding:6px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel-soft); font-size:13px; color:var(--ink);}
+.filter-bar button { background: var(--primary); color:#fff; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-weight:600; transition:all 0.2s; }
+.filter-bar button:hover { background: #1d4ed8; }
+
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <strong>管理控制台</strong>
+        <span>Admin Center</span>
+      </div>
+    </div>
+    <nav class="nav-group" aria-label="后台导航">
+      <a class="nav-item" href="#">首页概览</a>
+      <a class="nav-item active" href="#">用户管理</a>
+      <a class="nav-item" href="#">商品审核</a>
+      <a class="nav-item" href="#">订单处理</a>
+      <a class="nav-item" href="#">数据报表</a>
+      <a class="nav-item" href="#">系统设置</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="title-block">
+        <h1>用户管理</h1>
+        <p>搜索、冻结/解冻、查看用户详情及资产信息</p>
+      </div>
+      <div class="actions">
+        <label class="search">
+          🔍
+          <input type="search" placeholder="搜索用户ID/姓名/手机号">
+        </label>
+        <button class="primary-btn">高级搜索</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <select>
+        <option value="">全部状态</option>
+        <option value="active">正常</option>
+        <option value="frozen">冻结</option>
+      </select>
+      <select>
+        <option value="">信用等级</option>
+        <option value="high">高</option>
+        <option value="medium">中</option>
+        <option value="low">低</option>
+      </select>
+      <button class="primary-btn">应用筛选</button>
+    </div>
+
+    <div class="table-panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>用户ID</th>
+            <th>姓名</th>
+            <th>手机号</th>
+            <th>资产总额</th>
+            <th>信用分</th>
+            <th>注册时间</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>BJUT000001</td>
+            <td>张三</td>
+            <td>13812345678</td>
+            <td>12,500</td>
+            <td>95</td>
+            <td>2026-01-12</td>
+            <td><span class="status active">正常</span></td>
+            <td>
+              <button class="btn freeze">冻结</button>
+              <button class="btn detail">查看详情</button>
+            </td>
+          </tr>
+          <tr>
+            <td>BJUT000002</td>
+            <td>李四</td>
+            <td>13987654321</td>
+            <td>8,600</td>
+            <td>88</td>
+            <td>2026-02-03</td>
+            <td><span class="status frozen">冻结</span></td>
+            <td>
+              <button class="btn unfreeze">解冻</button>
+              <button class="btn detail">查看详情</button>
+            </td>
+          </tr>
+          <tr>
+            <td>BJUT000003</td>
+            <td>王五</td>
+            <td>13711223344</td>
+            <td>15,200</td>
+            <td>99</td>
+            <td>2026-03-15</td>
+            <td><span class="status active">正常</span></td>
+            <td>
+              <button class="btn freeze">冻结</button>
+              <button class="btn detail">查看详情</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+</body>
+</html>

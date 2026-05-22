@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p D:/vscode/企业web/gugou-front-end/.tmp-admin)",
+      "Bash(unzip -o \"../Web\\(1\\).zip\" -d web1/)",
+      "Bash(unzip -o \"../管理员前端ui.zip\" -d admin-ui/)"
+    ]
+  }
+}

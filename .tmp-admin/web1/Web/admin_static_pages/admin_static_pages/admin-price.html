@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--
+  编写日期：2026-05-06
+  用途：谷购系统管理员端价格记录页面静态原型
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>价格记录页面</title>
+  <link rel="stylesheet" href="admin-common.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">谷购后台</div>
+      <div class="brand-sub">管理员静态页面原型</div>
+      <div class="nav-title">管理导航</div>
+      <ul class="nav">
+        <li><a href="#">登录页面</a></li>
+        <li><a href="#">后台首页页面</a></li>
+        <li><a href="#">用户管理页面</a></li>
+        <li><a href="#">商品管理页面</a></li>
+        <li><a href="admin-orders.html">订单管理页面</a></li>
+        <li><a href="admin-exchange.html">换物管理页面</a></li>
+        <li><a href="admin-team.html">拼团管理页面</a></li>
+        <li><a href="admin-price.html" class="active">价格记录页面</a></li>
+      </ul>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">价格记录页面</h1>
+          <p class="page-desc">用于查看商品历史成交价格、涨跌幅、统计区间与记录维护情况。</p>
+        </div>
+        <div class="admin-chip">当前管理员：数据管理员 A0004</div>
+      </div>
+
+      <section class="metrics">
+        <div class="metric"><div class="metric-label">新增价格记录</div><div class="metric-value">76</div><div class="metric-note">今日已同步</div></div>
+        <div class="metric"><div class="metric-label">波动较大商品</div><div class="metric-value">12</div><div class="metric-note">涨跌幅超过 15%</div></div>
+        <div class="metric"><div class="metric-label">近7天均价</div><div class="metric-value">¥84.6</div><div class="metric-note">平台总体均值</div></div>
+        <div class="metric"><div class="metric-label">待复核记录</div><div class="metric-value">4</div><div class="metric-note">来源异常待确认</div></div>
+      </section>
+
+      <section class="toolbar">
+        <input class="input" type="text" placeholder="输入商品名称或记录编号">
+        <select class="select"><option>统计区间</option><option>近7天</option><option>近30天</option><option>近90天</option></select>
+        <select class="select"><option>波动范围</option><option>全部</option><option>上涨</option><option>下跌</option></select>
+        <button class="btn btn-primary">查询记录</button>
+        <button class="btn btn-light">导出数据</button>
+      </section>
+
+      <section class="content-grid">
+        <div class="table-wrap">
+          <div class="table-head">
+            <div>
+              <h2 class="table-title">价格记录列表</h2>
+              <p class="table-sub">静态展示价格记录与涨跌幅字段</p>
+            </div>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>记录编号</th>
+                <th>商品名称</th>
+                <th>成交价格</th>
+                <th>统计区间</th>
+                <th>涨跌幅</th>
+                <th>统计时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>PR202605060001</td>
+                <td>吧唧限定 A</td>
+                <td>¥56.00</td>
+                <td>近7天</td>
+                <td><span class="badge badge-green">+8.5%</span></td>
+                <td>2026-05-06 08:00</td>
+              </tr>
+              <tr>
+                <td>PR202605060008</td>
+                <td>色纸套组 B</td>
+                <td>¥105.00</td>
+                <td>近30天</td>
+                <td><span class="badge badge-red">-6.2%</span></td>
+                <td>2026-05-06 09:30</td>
+              </tr>
+              <tr>
+                <td>PR202605050022</td>
+                <td>拍立得单张</td>
+                <td>¥39.00</td>
+                <td>近7天</td>
+                <td><span class="badge badge-orange">+15.0%</span></td>
+                <td>2026-05-05 18:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="form-card">
+          <h2 class="form-title">新增价格记录</h2>
+          <p class="form-sub">当前阶段为静态录入界面</p>
+          <div class="form-grid">
+            <input class="input" type="text" placeholder="商品名称">
+            <input class="input" type="text" placeholder="成交价格">
+            <select class="select"><option>统计区间</option><option>近7天</option><option>近30天</option><option>近90天</option></select>
+            <input class="input" type="text" placeholder="涨跌幅">
+            <div class="form-row-full"><textarea class="textarea" placeholder="填写数据来源、记录说明或复核备注"></textarea></div>
+            <button class="btn btn-primary">保存记录</button>
+            <button class="btn btn-light">取消</button>
+          </div>
+          <div class="footer-note">后续可接入价格趋势图、异常波动预警与数据复核流程。</div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

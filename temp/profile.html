@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="GBK">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心</title>
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <span>G</span>
+        <strong>谷子交易系统</strong>
+      </div>
+      <nav class="nav" aria-label="顶部导航">
+        <button type="button">商品库</button>
+        <button type="button">交易市场</button>
+        <button type="button">我的资产</button>
+        <button type="button">价格行情</button>
+        <button type="button">换物中心</button>
+        <button type="button">拼团中心</button>
+        <button type="button">我的订单</button>
+        <button type="button" class="active">个人中心</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="user-hero">
+      <div class="avatar">谷</div>
+      <div class="user-info">
+        <p class="eyebrow">个人中心</p>
+        <h1>谷子收藏家001</h1>
+        <div class="user-meta">
+          <span>账号ID：U202605001</span>
+          <span>手机号：138****5260</span>
+          <span>信用等级：信用良好</span>
+          <span>账户状态：正常</span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="primary" type="button">编辑资料</button>
+        <button class="secondary" type="button">修改密码</button>
+        <button class="secondary" type="button">查看信用详情</button>
+      </div>
+    </section>
+
+    <section class="profile-layout">
+      <aside class="side-menu" aria-label="个人中心菜单">
+        <button class="active" type="button">个人资料</button>
+        <button type="button">地址管理</button>
+        <button type="button">安全设置</button>
+        <button type="button">信用评价</button>
+        <button type="button">消息通知</button>
+      </aside>
+
+      <section class="content">
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">个人资料</p>
+              <h2>账户基础信息</h2>
+            </div>
+            <div class="panel-actions">
+              <button class="secondary" type="button">编辑资料</button>
+              <button class="primary" type="button">保存修改</button>
+              <button class="secondary" type="button">取消</button>
+            </div>
+          </div>
+          <div class="profile-grid">
+            <div><span>头像</span><strong>当前头像</strong></div>
+            <div><span>昵称</span><strong>谷子收藏家001</strong></div>
+            <div><span>手机号</span><strong>138****5260</strong></div>
+            <div><span>联系方式</span><strong>微信号或站内联系</strong></div>
+            <div><span>注册时间</span><strong>2026-03-15</strong></div>
+            <div><span>常用地区</span><strong>北京市朝阳区</strong></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">地址管理</p>
+              <h2>收货地址</h2>
+            </div>
+            <button class="primary" type="button">新增地址</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>收货人</th>
+                  <th>手机号</th>
+                  <th>所在地区</th>
+                  <th>详细地址</th>
+                  <th>默认地址</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>林同学</td>
+                  <td>138****5260</td>
+                  <td>北京市朝阳区</td>
+                  <td>XX大学东门快递点</td>
+                  <td><span class="tag ok">是</span></td>
+                  <td class="link-text">编辑 / 删除</td>
+                </tr>
+                <tr>
+                  <td>林同学</td>
+                  <td>138****5260</td>
+                  <td>北京市通州区</td>
+                  <td>XX小区3号楼</td>
+                  <td><span class="tag">否</span></td>
+                  <td class="link-text">设为默认 / 编辑</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">安全设置</p>
+              <h2>账户安全</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>安全项目</th>
+                  <th>当前状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>登录密码</td><td>已设置</td><td class="link-text">修改密码</td></tr>
+                <tr><td>手机绑定</td><td>已绑定</td><td class="link-text">更换手机号</td></tr>
+                <tr><td>支付验证</td><td>已开启</td><td class="link-text">修改验证方式</td></tr>
+                <tr><td>登录保护</td><td>已开启</td><td class="link-text">查看记录</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">信用评价</p>
+              <h2>信用状态</h2>
+            </div>
+          </div>
+          <div class="credit-grid">
+            <div><span>信用分</span><strong>92</strong></div>
+            <div><span>信用等级</span><strong>信用良好</strong></div>
+            <div><span>完成交易</span><strong>18 次</strong></div>
+            <div><span>完成换物</span><strong>6 次</strong></div>
+            <div><span>拼团履约</span><strong>5 次</strong></div>
+            <div><span>投诉记录</span><strong>0 次</strong></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>类型</th>
+                  <th>对象</th>
+                  <th>评价内容</th>
+                  <th>时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>交易评价</td>
+                  <td>卖家 星海收藏家</td>
+                  <td>发货及时，商品状态准确</td>
+                  <td>2026-05-01</td>
+                </tr>
+                <tr>
+                  <td>换物评价</td>
+                  <td>用户 月见谷仓</td>
+                  <td>沟通顺畅，包装完整</td>
+                  <td>2026-04-26</td>
+                </tr>
+                <tr>
+                  <td>拼团评价</td>
+                  <td>团长 罗德岛仓管</td>
+                  <td>拼团规则清楚，处理及时</td>
+                  <td>2026-04-20</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">消息通知</p>
+              <h2>消息列表</h2>
+            </div>
+            <div class="panel-actions">
+              <button class="secondary" type="button">全部标为已读</button>
+              <button class="secondary" type="button">查看详情</button>
+              <button class="secondary" type="button">删除消息</button>
+            </div>
+          </div>
+          <div class="message-list">
+            <article>
+              <span class="tag warn">未读</span>
+              <div><strong>订单通知</strong><p>您的订单 O20260503001 已发货</p></div>
+            </article>
+            <article>
+              <span class="tag warn">未读</span>
+              <div><strong>换物通知</strong><p>用户星海收藏家接受了您的换物请求</p></div>
+            </article>
+            <article>
+              <span class="tag">已读</span>
+              <div><strong>拼团通知</strong><p>明日方舟第51期通行证拼团已成团</p></div>
+            </article>
+            <article>
+              <span class="tag">已读</span>
+              <div><strong>系统通知</strong><p>平台更新了信用评价规则</p></div>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <aside class="right-panel" aria-label="消息与信用提醒">
+        <section class="remind-card">
+          <div class="section-head">
+            <p class="eyebrow">待处理事项</p>
+            <h2>事项提醒</h2>
+          </div>
+          <div class="remind-grid">
+            <div><span>待确认收货</span><strong>1</strong></div>
+            <div><span>待处理换物</span><strong>2</strong></div>
+            <div><span>待确认拼团</span><strong>1</strong></div>
+            <div><span>未读消息</span><strong>4</strong></div>
+          </div>
+        </section>
+
+        <section class="remind-card">
+          <div class="section-head">
+            <p class="eyebrow">信用提醒</p>
+            <h2>当前状态</h2>
+          </div>
+          <ul>
+            <li>当前信用良好</li>
+            <li>近30天无投诉记录</li>
+            <li>请及时处理待确认交易</li>
+          </ul>
+        </section>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

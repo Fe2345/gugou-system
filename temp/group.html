@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="GBK">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>拼团中心</title>
+  <link rel="stylesheet" href="group.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <span>G</span>
+        <strong>谷子交易系统</strong>
+      </div>
+      <nav class="nav" aria-label="顶部导航">
+        <button type="button">商品库</button>
+        <button type="button">交易市场</button>
+        <button type="button">我的资产</button>
+        <button type="button">价格行情</button>
+        <button type="button">换物中心</button>
+        <button type="button" class="active">拼团中心</button>
+        <button type="button">我的订单</button>
+        <button type="button">个人中心</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">拼团中心</p>
+        <h1>查找拼团项目，快速判断是否能成团</h1>
+        <p>围绕商品、人数进度和截止时间展示拼团状态，帮助用户判断是否值得参与。</p>
+      </div>
+      <div class="hero-tools">
+        <form class="search-box">
+          <input type="search" placeholder="输入商品名称 / IP / 角色">
+          <button type="button">搜索</button>
+        </form>
+        <div class="mode-tabs">
+          <button type="button" class="active">即将成团</button>
+          <button type="button">最新发布</button>
+          <button type="button">即将截止</button>
+        </div>
+        <div class="hero-actions">
+          <button class="primary" type="button">发起拼团</button>
+          <button class="secondary" type="button">我的拼团</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="group-layout">
+      <aside class="filter-panel" aria-label="拼团筛选条件">
+        <div class="section-head">
+          <p class="eyebrow">筛选条件</p>
+          <h2>拼团筛选</h2>
+        </div>
+
+        <label>
+          <span>IP 分类</span>
+          <select>
+            <option>全部 IP</option>
+            <option>女神异闻录</option>
+            <option>蓝色监狱</option>
+            <option>咒术回战</option>
+            <option>原神</option>
+          </select>
+        </label>
+        <label>
+          <span>商品品类</span>
+          <select>
+            <option>全部品类</option>
+            <option>吧唧</option>
+            <option>立牌</option>
+            <option>色纸</option>
+            <option>卡片</option>
+            <option>挂件</option>
+            <option>亚克力砖</option>
+          </select>
+        </label>
+        <label>
+          <span>拼团状态</span>
+          <select>
+            <option>全部状态</option>
+            <option>进行中</option>
+            <option>即将成团</option>
+            <option>已成团</option>
+            <option>即将截止</option>
+          </select>
+        </label>
+        <label>
+          <span>目标人数</span>
+          <select>
+            <option>不限人数</option>
+            <option>2人团</option>
+            <option>3到5人团</option>
+            <option>6人以上团</option>
+          </select>
+        </label>
+        <label>
+          <span>截止时间</span>
+          <select>
+            <option>不限时间</option>
+            <option>24小时内</option>
+            <option>3天内</option>
+            <option>7天内</option>
+          </select>
+        </label>
+        <label>
+          <span>价格区间</span>
+          <select>
+            <option>不限价格</option>
+            <option>50元以下</option>
+            <option>50到100元</option>
+            <option>100元以上</option>
+          </select>
+        </label>
+        <button class="primary full" type="button">应用筛选</button>
+      </aside>
+
+      <section class="list-panel">
+        <div class="section-head list-head">
+          <div>
+            <p class="eyebrow">拼团项目列表</p>
+            <h2>当前拼团</h2>
+          </div>
+          <span>5 个项目</span>
+        </div>
+
+        <article class="group-card">
+          <div class="group-main">
+            <div>
+              <p class="code">拼团项目 P001</p>
+              <h3>明日方舟第51期通行证周边代购团</h3>
+              <div class="tags">
+                <span>游戏通行证周边</span>
+                <span>罗德岛仓管</span>
+                <span>信用良好</span>
+              </div>
+            </div>
+            <strong class="price">￥25/人</strong>
+          </div>
+          <div class="progress-block">
+            <div class="progress-head">
+              <span>当前人数 7 / 10</span>
+              <strong>70%</strong>
+            </div>
+            <div class="progress-bar"><span style="width: 70%"></span></div>
+            <div class="progress-meta">
+              <span>剩余名额：3人</span>
+              <span>截止时间：2026-05-08 22:00</span>
+            </div>
+          </div>
+          <div class="card-bottom">
+            <span class="status near">即将成团</span>
+            <div class="card-actions">
+              <button class="secondary" type="button">查看</button>
+              <button class="primary" type="button">加入</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="group-card">
+          <div class="group-main">
+            <div>
+              <p class="code">拼团项目 P002</p>
+              <h3>泡泡玛特 MOLLY 系列盲盒整盒拼团</h3>
+              <div class="tags">
+                <span>盲盒整盒</span>
+                <span>盲盒研究所</span>
+                <span>普通用户</span>
+              </div>
+            </div>
+            <strong class="price">￥79/抽</strong>
+          </div>
+          <div class="progress-block">
+            <div class="progress-head">
+              <span>当前人数 9 / 12</span>
+              <strong>75%</strong>
+            </div>
+            <div class="progress-bar"><span style="width: 75%"></span></div>
+            <div class="progress-meta">
+              <span>剩余名额：3人</span>
+              <span>截止时间：2026-05-09 18:00</span>
+            </div>
+          </div>
+          <div class="card-bottom">
+            <span class="status doing">进行中</span>
+            <div class="card-actions">
+              <button class="secondary" type="button">查看</button>
+              <button class="primary" type="button">加入</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="group-card">
+          <div class="group-main">
+            <div>
+              <p class="code">拼团项目 P003</p>
+              <h3>咒术回战 一番赏拼团</h3>
+              <div class="tags">
+                <span>一番赏</span>
+                <span>纸片人仓库</span>
+                <span>高信用用户</span>
+              </div>
+            </div>
+            <strong class="price">￥65/抽</strong>
+          </div>
+          <div class="progress-block">
+            <div class="progress-head">
+              <span>当前人数 16 / 20</span>
+              <strong>80%</strong>
+            </div>
+            <div class="progress-bar warning"><span style="width: 80%"></span></div>
+            <div class="progress-meta">
+              <span>剩余名额：4人</span>
+              <span>截止时间：2026-05-07 20:00</span>
+            </div>
+          </div>
+          <div class="card-bottom">
+            <span class="status deadline">即将截止</span>
+            <div class="card-actions">
+              <button class="secondary" type="button">查看</button>
+              <button class="primary" type="button">加入</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="group-card">
+          <div class="group-main">
+            <div>
+              <p class="code">拼团项目 P004</p>
+              <h3>原神 角色主题徽章盒蛋拼团</h3>
+              <div class="tags">
+                <span>盒蛋谷子</span>
+                <span>提瓦特补货站</span>
+                <span>信用良好</span>
+              </div>
+            </div>
+            <strong class="price">￥45/个</strong>
+          </div>
+          <div class="progress-block">
+            <div class="progress-head">
+              <span>当前人数 5 / 8</span>
+              <strong>62.5%</strong>
+            </div>
+            <div class="progress-bar"><span style="width: 62.5%"></span></div>
+            <div class="progress-meta">
+              <span>剩余名额：3人</span>
+              <span>截止时间：2026-05-10 21:00</span>
+            </div>
+          </div>
+          <div class="card-bottom">
+            <span class="status doing">进行中</span>
+            <div class="card-actions">
+              <button class="secondary" type="button">查看</button>
+              <button class="primary" type="button">加入</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="group-card">
+          <div class="group-main">
+            <div>
+              <p class="code">拼团项目 P005</p>
+              <h3>蓝色监狱 官方亚克力挂件整盒拼团</h3>
+              <div class="tags">
+                <span>整盒周边</span>
+                <span>蓝锁吃谷组</span>
+                <span>信用良好</span>
+              </div>
+            </div>
+            <strong class="price">￥52/个</strong>
+          </div>
+          <div class="progress-block">
+            <div class="progress-head">
+              <span>当前人数 8 / 8</span>
+              <strong>100%</strong>
+            </div>
+            <div class="progress-bar success"><span style="width: 100%"></span></div>
+            <div class="progress-meta">
+              <span>剩余名额：0人</span>
+              <span>截止时间：2026-05-06 23:30</span>
+            </div>
+          </div>
+          <div class="card-bottom">
+            <span class="status done">已成团</span>
+            <div class="card-actions single">
+              <button class="secondary" type="button">查看</button>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <aside class="right-panel" aria-label="我的拼团状态">
+        <section class="state-card">
+          <div class="section-head">
+            <p class="eyebrow">我的拼团</p>
+            <h2>状态看板</h2>
+          </div>
+          <div class="state-grid">
+            <div><span>我发起的</span><strong>2</strong></div>
+            <div><span>我参与的</span><strong>4</strong></div>
+            <div><span>进行中</span><strong>3</strong></div>
+            <div><span>待确认</span><strong>1</strong></div>
+            <div><span>已成团</span><strong>5</strong></div>
+            <div><span>已失败</span><strong>1</strong></div>
+          </div>
+          <button class="primary full" type="button">查看全部拼团记录</button>
+        </section>
+
+        <section class="state-card">
+          <div class="section-head">
+            <p class="eyebrow">待处理提醒</p>
+            <h2>进度提醒</h2>
+          </div>
+          <div class="notice">
+            <strong>P001</strong>
+            <span>还差 3 人即可成团，请关注进度。</span>
+          </div>
+          <div class="notice">
+            <strong>P004</strong>
+            <span>将于 2026-05-10 21:00 截止。</span>
+          </div>
+          <div class="notice">
+            <strong>P006</strong>
+            <span>已成团，请确认订单。</span>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>
