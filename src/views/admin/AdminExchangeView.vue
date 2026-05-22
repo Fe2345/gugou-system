@@ -57,7 +57,7 @@ const statusMap: Record<string, { text: string; cls: string }> = {
               <td>{{ r.user }}</td>
               <td>{{ r.offer }}</td>
               <td>{{ r.want }}</td>
-              <td><span class="status" :class="statusMap[r.status].cls">{{ statusMap[r.status].text }}</span></td>
+              <td><span class="status" :class="statusMap[r.status]?.cls">{{ statusMap[r.status]?.text }}</span></td>
               <td>{{ r.time }}</td>
               <td class="actions">
                 <button class="secondary sm" type="button">查看</button>

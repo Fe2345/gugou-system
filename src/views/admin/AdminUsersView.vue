@@ -12,7 +12,10 @@ const users = ref([
 ])
 
 function toggleStatus(i: number) {
-  users.value[i].status = users.value[i].status === 'active' ? 'frozen' : 'active'
+  const user = users.value[i]
+  if (user) {
+    user.status = user.status === 'active' ? 'frozen' : 'active'
+  }
 }
 </script>
 

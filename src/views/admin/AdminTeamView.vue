@@ -58,7 +58,7 @@ const statusMap: Record<string, { text: string; cls: string }> = {
               <td>{{ t.leader }}</td>
               <td>{{ t.progress }}</td>
               <td class="price">{{ t.price }}</td>
-              <td><span class="status" :class="statusMap[t.status].cls">{{ statusMap[t.status].text }}</span></td>
+              <td><span class="status" :class="statusMap[t.status]?.cls">{{ statusMap[t.status]?.text }}</span></td>
               <td>{{ t.deadline }}</td>
             </tr>
           </tbody>
