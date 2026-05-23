@@ -4,7 +4,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- Load .env ---
-_dotenv_path = BASE_DIR / ".env"
+_dotenv_path = BASE_DIR.parent / ".env"
 if _dotenv_path.exists():
     with open(_dotenv_path, encoding="utf-8") as _f:
         for _line in _f:
@@ -36,6 +36,14 @@ INSTALLED_APPS = [
     "apps.common",
     "apps.accounts",
     "apps.products",
+    "apps.assets",
+    "apps.market",
+    "apps.orders",
+    "apps.exchanges",
+    "apps.teams",
+    "apps.pricing",
+    "apps.credits",
+    "apps.operations",
 ]
 
 MIDDLEWARE = [
@@ -106,6 +114,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
+    "EXCEPTION_HANDLER": "apps.common.exceptions.custom_exception_handler",
 }
 
 # --- Custom User Model ---
@@ -128,3 +137,6 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --- Logging ---
+from apps.common.logging import LOGGING

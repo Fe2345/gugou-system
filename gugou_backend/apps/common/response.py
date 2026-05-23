@@ -18,8 +18,25 @@ def success(data=None, message: str = "success", code: int = 200) -> DRFResponse
     return DRFResponse({"code": code, "message": message, "data": data})
 
 
-def error(message: str = "error", code: int = 400, data=None) -> DRFResponse:
-    return DRFResponse({"code": code, "message": message, "data": data})
+def error(message: str = "error", code: int = 400, data=None, http_status: int | None = None) -> DRFResponse:
+    if http_status is None:
+        http_status = code
+    return DRFResponse({"code": code, "message": message, "data": data}, status=http_status)
+
+
+def flatten_errors(errors) -> str:
+    """将 DRF serializer.errors（dict/list）展平为一条可读字符串。"""
+    if isinstance(errors, list):
+        return str(errors[0]) if errors else "参数错误"
+    if isinstance(errors, dict):
+        first_key = next(iter(errors))
+        first_val = errors[first_key]
+        if isinstance(first_val, list):
+            return str(first_val[0]) if first_val else f"{first_key}: 参数错误"
+        if isinstance(first_val, str):
+            return str(first_val)
+        return f"{first_key}: 参数错误"
+    return str(errors)
 
 
 def paginated(paginator, serializer) -> dict:

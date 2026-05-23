@@ -66,6 +66,25 @@ class User(AbstractBaseUser, BaseModel):
         return self.role == self.Role.ADMIN
 
 
+class LoginRecord(BaseModel):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="login_records",
+        verbose_name="用户",
+    )
+    ip_address = models.GenericIPAddressField("登录 IP", blank=True, null=True)
+    user_agent = models.TextField("User-Agent", blank=True, default="")
+
+    class Meta:
+        db_table = "login_record"
+        verbose_name = "登录记录"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f"{self.user.user_id} login at {self.created_at}"
+
+
 class UserProfile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile", verbose_name="用户")
     avatar = models.URLField("头像", blank=True, default="")
