@@ -2,7 +2,7 @@ import type { LoginForm, RegisterForm, LoginResult, UserInfo } from '@/types/use
 import type { ApiResponse } from '@/types/api'
 
 // Mock 开关：设为 true 使用本地模拟数据
-const USE_MOCK = true
+const USE_MOCK = false
 
 // Mock 用户数据
 const mockUsers: Record<string, { password: string; user: UserInfo }> = {
