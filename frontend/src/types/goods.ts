@@ -17,4 +17,5 @@ export interface GoodsForm {
   ip: string
   role: string
   category: string
+  description?: string
 }
