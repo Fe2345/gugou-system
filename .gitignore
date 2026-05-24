@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Django
+staticfiles/
+media/
+*.log
+
+# Node
+node_modules/
+dist/
+.cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Docker
+docker-compose.yml
+
+# OS
+.DS_Store
+Thumbs.db
