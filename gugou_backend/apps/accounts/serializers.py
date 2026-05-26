@@ -82,13 +82,15 @@ class UserSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source="user_id", read_only=True)
     role = serializers.CharField(read_only=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+    creditScore = serializers.IntegerField(source="credit_score", read_only=True)
+    status = serializers.CharField(read_only=True)
     avatar = serializers.SerializerMethodField()
     bio = serializers.SerializerMethodField()
     contact = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "phone", "nickname", "avatar", "role", "createdAt", "bio", "contact"]
+        fields = ["id", "phone", "nickname", "avatar", "role", "createdAt", "creditScore", "status", "bio", "contact"]
 
     def get_avatar(self, obj):
         profile = getattr(obj, "profile", None)
