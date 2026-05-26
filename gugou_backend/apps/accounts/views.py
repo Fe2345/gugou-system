@@ -10,6 +10,7 @@ from apps.common.response import error, flatten_errors, success
 from .models import LoginRecord
 from .serializers import (
     ChangePasswordSerializer,
+    ChangePhoneSerializer,
     LoginRecordSerializer,
     LoginSerializer,
     RegisterSerializer,
@@ -102,6 +103,21 @@ class ChangePasswordView(APIView):
         serializer.save()
         logger.info("密码修改: %s", request.user.user_id)
         return success(message="密码修改成功，请使用新密码重新登录")
+
+
+class ChangePhoneView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        serializer = ChangePhoneSerializer(
+            data=request.data, context={"user": request.user}
+        )
+        if not serializer.is_valid():
+            return error(message=flatten_errors(serializer.errors), code=400)
+        serializer.save()
+        logger.info("手机号变更: %s", request.user.user_id)
+        data = UserSerializer(request.user).data
+        return success(data=data, message="手机号修改成功")
 
 
 class LoginRecordsView(APIView):

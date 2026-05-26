@@ -102,3 +102,8 @@ export async function getLoginRecords(): Promise<ApiResponse<LoginRecordItem[]>>
   const { default: request } = await import('@/utils/request')
   return request.get('/user/login-records')
 }
+
+export async function changePhone(phone: string): Promise<ApiResponse<UserInfo>> {
+  const { default: request } = await import('@/utils/request')
+  return request.put('/user/change-phone', { phone })
+}

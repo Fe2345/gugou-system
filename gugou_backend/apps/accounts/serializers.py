@@ -121,6 +121,23 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.save()
 
 
+class ChangePhoneSerializer(serializers.Serializer):
+    phone = serializers.CharField(max_length=11)
+
+    def validate_phone(self, value):
+        import re
+        if not re.match(r"^1[3-9]\d{9}$", value):
+            raise serializers.ValidationError("请输入有效的 11 位手机号")
+        if User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("该手机号已被其他账号使用")
+        return value
+
+    def save(self):
+        user = self.context["user"]
+        user.phone = self.validated_data["phone"]
+        user.save(update_fields=["phone"])
+
+
 class LoginRecordSerializer(serializers.Serializer):
     ip = serializers.CharField(source="ip_address", read_only=True)
     ua = serializers.CharField(source="user_agent", read_only=True)

@@ -3,7 +3,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
-import { getUserInfo, updateUserInfo, changePassword, getLoginRecords } from '@/api/user'
+import { getUserInfo, updateUserInfo, changePassword, changePhone, getLoginRecords } from '@/api/user'
 import type { UserInfo } from '@/types/user'
 import type { LoginRecordItem } from '@/api/user'
 
@@ -34,6 +34,10 @@ const editForm = reactive({ nickname: '', bio: '', contact: '' })
 // 修改密码弹窗
 const showPasswordModal = ref(false)
 const passwordForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
+
+// 更换手机号弹窗
+const showPhoneModal = ref(false)
+const phoneForm = reactive({ phone: '' })
 
 // 登录记录
 const loginRecords = ref<LoginRecordItem[]>([])
@@ -136,6 +140,27 @@ async function handleChangePassword() {
   } finally { saving.value = false }
 }
 
+// --- 更换手机号 ---
+function openPhoneModal() {
+  phoneForm.phone = ''
+  showPhoneModal.value = true
+}
+
+function closePhoneModal() { showPhoneModal.value = false }
+
+async function handleChangePhone() {
+  if (!/^1[3-9]\d{9}$/.test(phoneForm.phone)) { showMessage('请输入有效的 11 位手机号', 'error'); return }
+  saving.value = true
+  try {
+    const res = await changePhone(phoneForm.phone)
+    if (user.value) user.value.phone = res.data.phone
+    showPhoneModal.value = false
+    showMessage('手机号修改成功')
+  } catch (e: any) {
+    showMessage(e?.response?.data?.message || '修改失败', 'error')
+  } finally { saving.value = false }
+}
+
 onMounted(() => {
   loadUser()
   loadRecords()
@@ -218,7 +243,7 @@ onMounted(() => {
               <thead><tr><th>安全项目</th><th>操作</th></tr></thead>
               <tbody>
                 <tr><td>登录密码</td><td class="link-text"><button type="button" class="link-btn" @click="openPasswordModal">修改密码</button></td></tr>
-                <tr><td>手机号</td><td class="link-text">{{ maskPhone(user.phone) }}（已绑定）</td></tr>
+                <tr><td>手机号</td><td class="link-text"><button type="button" class="link-btn" @click="openPhoneModal">更换手机号</button></td></tr>
               </tbody>
             </table>
           </div>
@@ -294,6 +319,27 @@ onMounted(() => {
         <div class="modal-actions">
           <button type="button" class="secondary" @click="closePasswordModal">取消</button>
           <button type="submit" class="primary" :disabled="saving">{{ saving ? '提交中...' : '确认修改' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 更换手机号弹窗 -->
+  <div v-if="showPhoneModal" class="modal-overlay" @click.self="closePhoneModal">
+    <div class="modal">
+      <div class="modal-header"><h2>更换手机号</h2><button class="modal-close" @click="closePhoneModal">&times;</button></div>
+      <form class="modal-form" @submit.prevent="handleChangePhone">
+        <label>
+          <span>当前手机号</span>
+          <input :value="maskPhone(user!.phone)" disabled style="color: var(--muted); background: var(--soft);">
+        </label>
+        <label>
+          <span>新手机号</span>
+          <input v-model="phoneForm.phone" type="tel" maxlength="11" required placeholder="请输入新手机号">
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="secondary" @click="closePhoneModal">取消</button>
+          <button type="submit" class="primary" :disabled="saving">{{ saving ? '提交中...' : '确认更换' }}</button>
         </div>
       </form>
     </div>
