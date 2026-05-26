@@ -111,7 +111,7 @@ onMounted(async () => {
         <p class="eyebrow">当前谷子</p>
         <h2>{{ item.name }}</h2>
         <div class="meta-tags">
-          <span>{{ item.ip }}</span><span>{{ item.role }}</span><span>{{ item.category }}</span>
+          <span>{{ item.ipName }}</span><span>{{ item.characterName }}</span><span>{{ item.category }}</span>
         </div>
       </div>
       <div class="metric-grid" aria-label="价格指标">
@@ -173,7 +173,7 @@ onMounted(async () => {
       <div class="hot-grid">
         <article v-for="h in hotPrices" :key="h.id" class="hot-card" @click="keyword = h.name; handleSearch()">
           <h3>{{ h.name }}</h3>
-          <p class="hot-meta">{{ h.ip }} · {{ h.role }} · {{ h.category }}</p>
+          <p class="hot-meta">{{ h.ipName }} · {{ h.characterName }} · {{ h.category }}</p>
           <div class="hot-bottom">
             <strong>¥{{ h.currentPrice }}</strong>
             <span :class="{ up: h.changePercent > 0, down: h.changePercent < 0 }">{{ h.changePercent > 0 ? '+' : '' }}{{ h.changePercent }}%</span>

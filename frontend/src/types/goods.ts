@@ -1,21 +1,21 @@
 export interface GoodsItem {
   id: string
   name: string
-  price: number
-  image: string
-  ip: string
-  role: string
+  ipName: string
+  characterName: string
   category: string
+  referencePrice: number
+  mainImage: string
   description: string
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'active' | 'inactive' | 'frozen' | 'archived'
   createdAt: string
 }
 
 export interface GoodsForm {
   name: string
-  price: string
-  ip: string
-  role: string
+  ipName: string
+  characterName: string
   category: string
+  referencePrice: string
   description?: string
 }

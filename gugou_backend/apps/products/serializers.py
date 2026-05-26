@@ -1,0 +1,76 @@
+from rest_framework import serializers
+
+from apps.common.id_generator import generate_product_id
+from .models import Product
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    """商品输出序列化器，snake_case -> camelCase"""
+    id = serializers.CharField(source="product_id", read_only=True)
+    ipName = serializers.CharField(source="ip_name", read_only=True)
+    characterName = serializers.CharField(source="character_name", read_only=True)
+    referencePrice = serializers.DecimalField(source="reference_price", max_digits=10, decimal_places=2, read_only=True)
+    mainImage = serializers.CharField(source="main_image", read_only=True)
+    createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+
+    class Meta:
+        model = Product
+        fields = ["id", "name", "ipName", "characterName", "category",
+                  "referencePrice", "mainImage", "description", "status", "createdAt"]
+
+
+class ProductCreateSerializer(serializers.Serializer):
+    """商品创建序列化器"""
+    name = serializers.CharField(max_length=100)
+    ipName = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    characterName = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    category = serializers.CharField(max_length=20)
+    referencePrice = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
+    mainImage = serializers.URLField(required=False, default="", allow_blank=True)
+    description = serializers.CharField(required=False, default="", allow_blank=True)
+
+    def create(self, validated_data):
+        product = Product(
+            product_id=generate_product_id(),
+            name=validated_data["name"],
+            ip_name=validated_data.get("ipName", ""),
+            character_name=validated_data.get("characterName", ""),
+            category=validated_data["category"],
+            reference_price=validated_data.get("referencePrice", 0),
+            main_image=validated_data.get("mainImage", ""),
+            description=validated_data.get("description", ""),
+        )
+        request = self.context.get("request")
+        if request and hasattr(request, "user") and request.user.is_authenticated:
+            product.created_by = request.user
+        product.save()
+        return product
+
+
+class ProductUpdateSerializer(serializers.Serializer):
+    """商品更新序列化器"""
+    name = serializers.CharField(max_length=100, required=False)
+    ipName = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    characterName = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    category = serializers.CharField(max_length=20, required=False)
+    referencePrice = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    mainImage = serializers.URLField(required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+    status = serializers.ChoiceField(choices=Product.Status.choices, required=False)
+
+    def update(self, instance, validated_data):
+        field_map = {
+            "name": "name",
+            "ipName": "ip_name",
+            "characterName": "character_name",
+            "category": "category",
+            "referencePrice": "reference_price",
+            "mainImage": "main_image",
+            "description": "description",
+            "status": "status",
+        }
+        for camel, snake in field_map.items():
+            if camel in validated_data:
+                setattr(instance, snake, validated_data[camel])
+        instance.save()
+        return instance

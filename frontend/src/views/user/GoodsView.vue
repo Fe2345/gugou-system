@@ -20,24 +20,24 @@ const productToDelete = ref<GoodsItem | null>(null)
 
 const form = reactive({
   name: '',
-  price: '',
-  ip: '',
-  role: '',
+  referencePrice: '',
+  ipName: '',
+  characterName: '',
   category: '',
 })
 
 const editForm = reactive({
   name: '',
-  price: '',
-  ip: '',
-  role: '',
+  referencePrice: '',
+  ipName: '',
+  characterName: '',
   category: '',
   description: '',
 })
 
 const filterForm = reactive({
-  ip: '',
-  role: '',
+  ipName: '',
+  characterName: '',
   category: '',
   timeRange: '',
   minPrice: '',
@@ -81,23 +81,23 @@ function onImageChange(e: Event) {
 
 async function handleAddProduct() {
   const name = form.name.trim()
-  const price = form.price.trim()
+  const price = form.referencePrice.trim()
   if (!name || !price) return
 
   loading.value = true
   try {
     await addGoods({
       name,
-      price: Number(price),
-      image: selectedImage.value,
-      ip: form.ip || 'IP 待定',
-      role: form.role || '角色待定',
+      referencePrice: Number(price),
+      mainImage: selectedImage.value,
+      ipName: form.ipName || 'IP 待定',
+      characterName: form.characterName || '角色待定',
       category: form.category || '品类待定',
     })
     form.name = ''
-    form.price = ''
-    form.ip = ''
-    form.role = ''
+    form.referencePrice = ''
+    form.ipName = ''
+    form.characterName = ''
     form.category = ''
     selectedImage.value = ''
     loadProducts()
@@ -139,9 +139,9 @@ function closeDetail() {
 function startEdit(product: GoodsItem) {
   editingProduct.value = product
   editForm.name = product.name
-  editForm.price = String(product.price)
-  editForm.ip = product.ip
-  editForm.role = product.role
+  editForm.referencePrice = String(product.referencePrice)
+  editForm.ipName = product.ipName
+  editForm.characterName = product.characterName
   editForm.category = product.category
   editForm.description = product.description
 }
@@ -156,9 +156,9 @@ async function handleSaveEdit() {
   try {
     await updateGoods(editingProduct.value.id, {
       name: editForm.name,
-      price: Number(editForm.price),
-      ip: editForm.ip,
-      role: editForm.role,
+      referencePrice: Number(editForm.referencePrice),
+      ipName: editForm.ipName,
+      characterName: editForm.characterName,
       category: editForm.category,
       description: editForm.description,
     })
@@ -199,7 +199,7 @@ async function handleDelete() {
 
 // 上下架
 async function toggleStatus(product: GoodsItem) {
-  const newStatus = product.status === 'approved' ? 'pending' : 'approved'
+  const newStatus = product.status === 'active' ? 'inactive' : 'active'
   loading.value = true
   try {
     await updateGoods(product.id, { status: newStatus })
@@ -214,9 +214,10 @@ async function toggleStatus(product: GoodsItem) {
 // 状态文本
 function getStatusText(status: string) {
   const map: Record<string, string> = {
-    pending: '待审核',
-    approved: '已上架',
-    rejected: '已下架',
+    active: '正常启用',
+    inactive: '未启用',
+    frozen: '冻结',
+    archived: '已归档',
   }
   return map[status] || status
 }
@@ -249,11 +250,11 @@ function getStatusClass(status: string) {
         </div>
         <label>
           <span>IP</span>
-          <input v-model="filterForm.ip" type="text" placeholder="请输入 IP 名称">
+          <input v-model="filterForm.ipName" type="text" placeholder="请输入 IP 名称">
         </label>
         <label>
           <span>角色</span>
-          <input v-model="filterForm.role" type="text" placeholder="请输入角色名称">
+          <input v-model="filterForm.characterName" type="text" placeholder="请输入角色名称">
         </label>
         <label>
           <span>品类</span>
@@ -298,15 +299,15 @@ function getStatusClass(status: string) {
               </label>
               <label>
                 <span>参考价</span>
-                <input v-model="form.price" type="number" min="0" step="0.01" placeholder="请输入自定义价格">
+                <input v-model="form.referencePrice" type="number" min="0" step="0.01" placeholder="请输入自定义价格">
               </label>
               <label>
                 <span>IP</span>
-                <input v-model="form.ip" type="text" placeholder="选填">
+                <input v-model="form.ipName" type="text" placeholder="选填">
               </label>
               <label>
                 <span>角色</span>
-                <input v-model="form.role" type="text" placeholder="选填">
+                <input v-model="form.characterName" type="text" placeholder="选填">
               </label>
               <label>
                 <span>品类</span>
@@ -331,21 +332,21 @@ function getStatusClass(status: string) {
           </div>
           <div v-else class="product-grid">
             <article v-for="(p, i) in products" :key="i" class="product-card">
-              <img :src="p.image" :alt="p.name">
+              <img :src="p.mainImage" :alt="p.name">
               <div class="product-info">
                 <div class="product-header">
-                  <strong class="product-price">¥ {{ p.price }}</strong>
+                  <strong class="product-price">¥ {{ p.referencePrice }}</strong>
                   <span class="status-badge" :class="getStatusClass(p.status)">{{ getStatusText(p.status) }}</span>
                 </div>
                 <h3>{{ p.name }}</h3>
-                <p class="product-meta">{{ p.ip }} · {{ p.role }} · {{ p.category }}</p>
+                <p class="product-meta">{{ p.ipName }} · {{ p.characterName }} · {{ p.category }}</p>
                 <p>{{ p.description }}</p>
               </div>
               <div class="product-actions">
                 <button class="action-btn view" @click="viewDetail(p)">详情</button>
                 <button class="action-btn edit" @click="startEdit(p)">编辑</button>
                 <button class="action-btn toggle" @click="toggleStatus(p)">
-                  {{ p.status === 'approved' ? '下架' : '上架' }}
+                  {{ p.status === 'active' ? '下架' : '上架' }}
                 </button>
                 <button class="action-btn delete" @click="confirmDelete(p)">删除</button>
               </div>
@@ -375,19 +376,19 @@ function getStatusClass(status: string) {
       </div>
       <div class="detail-content">
         <div class="detail-image">
-          <img :src="selectedProduct.image" :alt="selectedProduct.name">
+          <img :src="selectedProduct.mainImage" :alt="selectedProduct.name">
         </div>
         <div class="detail-info">
           <h3>{{ selectedProduct.name }}</h3>
           <div class="detail-meta">
-            <span class="detail-price">¥ {{ selectedProduct.price }}</span>
+            <span class="detail-price">¥ {{ selectedProduct.referencePrice }}</span>
             <span class="status-badge" :class="getStatusClass(selectedProduct.status)">
               {{ getStatusText(selectedProduct.status) }}
             </span>
           </div>
           <div class="detail-fields">
-            <div class="field"><label>IP</label><span>{{ selectedProduct.ip }}</span></div>
-            <div class="field"><label>角色</label><span>{{ selectedProduct.role }}</span></div>
+            <div class="field"><label>IP</label><span>{{ selectedProduct.ipName }}</span></div>
+            <div class="field"><label>角色</label><span>{{ selectedProduct.characterName }}</span></div>
             <div class="field"><label>品类</label><span>{{ selectedProduct.category }}</span></div>
             <div class="field"><label>创建时间</label><span>{{ selectedProduct.createdAt }}</span></div>
           </div>
@@ -415,15 +416,15 @@ function getStatusClass(status: string) {
         </label>
         <label>
           <span>参考价</span>
-          <input v-model="editForm.price" type="number" min="0" step="0.01" required>
+          <input v-model="editForm.referencePrice" type="number" min="0" step="0.01" required>
         </label>
         <label>
           <span>IP</span>
-          <input v-model="editForm.ip" type="text">
+          <input v-model="editForm.ipName" type="text">
         </label>
         <label>
           <span>角色</span>
-          <input v-model="editForm.role" type="text">
+          <input v-model="editForm.characterName" type="text">
         </label>
         <label>
           <span>品类</span>
@@ -511,9 +512,10 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .product-header { display: flex; justify-content: space-between; align-items: center; }
 .product-meta { color: var(--accent); font-size: 14px; margin-bottom: 6px; }
 .status-badge { display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px; font-size: 14px; font-weight: 700; }
-.status-badge.approved { background: #dcfce7; color: #15803d; }
-.status-badge.pending { background: #fef3c7; color: #b45309; }
-.status-badge.rejected { background: #fee2e2; color: #be123c; }
+.status-badge.active { background: #dcfce7; color: #15803d; }
+.status-badge.inactive { background: #fef3c7; color: #b45309; }
+.status-badge.frozen { background: #fee2e2; color: #be123c; }
+.status-badge.archived { background: #e5e7eb; color: #6b7280; }
 .product-actions { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
 .action-btn { flex: 1; height: 36px; border: 0; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font: inherit; transition: background 0.2s; }
 .action-btn.view { background: var(--soft); color: var(--accent); }

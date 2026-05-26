@@ -9,9 +9,7 @@ class UserAsset(BaseModel):
         HOLDING = "holding", "持有中"
         SELLING = "selling", "出售中"
         EXCHANGING = "exchanging", "换物中"
-        LOCKED = "locked", "交易锁定"
         SOLD = "sold", "已售出"
-        EXCHANGED = "exchanged", "已换出"
         INVALID = "invalid", "已失效"
 
     asset_id = models.CharField("资产编号", max_length=25, primary_key=True)
@@ -32,6 +30,7 @@ class UserAsset(BaseModel):
     acquired_at = models.DateTimeField("入手时间", null=True, blank=True)
     current_value = models.DecimalField("当前估值", max_digits=10, decimal_places=2, default=0)
     status = models.CharField("持有状态", max_length=20, choices=Status.choices, default=Status.HOLDING)
+    description = models.TextField("资产描述", blank=True, default="")
     source = models.CharField("来源", max_length=50, blank=True, default="")
 
     class Meta:

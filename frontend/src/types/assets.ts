@@ -1,29 +1,29 @@
 export interface AssetItem {
   id: string
-  goodsId: string
-  name: string
-  ip: string
-  role: string
+  productId: string
+  productName: string
+  ipName: string
+  characterName: string
   category: string
-  image: string
+  mainImage: string
   quantity: number
-  costPrice: number
+  acquirePrice: number
   currentValue: number
-  status: 'holding' | 'selling' | 'trading' | 'sold'
+  status: 'holding' | 'selling' | 'exchanging' | 'sold' | 'invalid'
   description: string
   createdAt: string
   updatedAt: string
 }
 
 export interface AssetForm {
-  goodsId?: string
-  name: string
-  ip: string
-  role: string
+  productId?: string
+  productName: string
+  ipName: string
+  characterName: string
   category: string
-  image?: string
+  mainImage?: string
   quantity: number
-  costPrice: number
+  acquirePrice: number
   description?: string
 }
 

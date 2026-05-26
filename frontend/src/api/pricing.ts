@@ -7,8 +7,8 @@ const mockPriceData: PriceItem[] = [
   {
     id: 'P001',
     name: '玛奇朵 亚克力砖',
-    ip: '女神异闻录3',
-    role: '玛奇朵',
+    ipName: '女神异闻录3',
+    characterName: '玛奇朵',
     category: '亚克力砖',
     currentPrice: 286,
     avgPrice: 274,
@@ -37,8 +37,8 @@ const mockPriceData: PriceItem[] = [
   {
     id: 'P002',
     name: '鸣神 千本樱姬 限定徽章',
-    ip: '哈利波特',
-    role: '千本樱姬',
+    ipName: '哈利波特',
+    characterName: '千本樱姬',
     category: '徽章',
     currentPrice: 96,
     avgPrice: 88,
@@ -66,8 +66,8 @@ const mockPriceData: PriceItem[] = [
   {
     id: 'P003',
     name: '精灵宝可梦 皮卡丘 限定明信片',
-    ip: '精灵宝可梦',
-    role: '皮卡丘',
+    ipName: '精灵宝可梦',
+    characterName: '皮卡丘',
     category: '明信片',
     currentPrice: 72,
     avgPrice: 65,
@@ -94,8 +94,8 @@ const mockPriceData: PriceItem[] = [
   {
     id: 'P004',
     name: '原神 风 岩神角色挂件',
-    ip: '原神',
-    role: '风',
+    ipName: '原神',
+    characterName: '风',
     category: '挂件',
     currentPrice: 64,
     avgPrice: 58,
@@ -122,8 +122,8 @@ const mockPriceData: PriceItem[] = [
   {
     id: 'P005',
     name: '崩坏星穹铁道 刃 色纸',
-    ip: '崩坏星穹铁道',
-    role: '刃',
+    ipName: '崩坏星穹铁道',
+    characterName: '刃',
     category: '色纸',
     currentPrice: 35,
     avgPrice: 33,
@@ -158,8 +158,8 @@ export async function queryPrice(params: PriceQuery): Promise<ApiResponse<PriceI
     const kw = params.keyword.toLowerCase()
     const item = mockPriceData.find(p =>
       p.name.toLowerCase().includes(kw) ||
-      p.ip.toLowerCase().includes(kw) ||
-      p.role.toLowerCase().includes(kw)
+      p.ipName.toLowerCase().includes(kw) ||
+      p.characterName.toLowerCase().includes(kw)
     )
     return { code: 200, message: 'ok', data: item || null }
   }
