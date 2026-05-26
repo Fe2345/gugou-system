@@ -82,13 +82,15 @@ class UserSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source="user_id", read_only=True)
     role = serializers.CharField(read_only=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+    creditScore = serializers.IntegerField(source="credit_score", read_only=True)
+    status = serializers.CharField(read_only=True)
     avatar = serializers.SerializerMethodField()
     bio = serializers.SerializerMethodField()
     contact = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "phone", "nickname", "avatar", "role", "createdAt", "bio", "contact"]
+        fields = ["id", "phone", "nickname", "avatar", "role", "createdAt", "creditScore", "status", "bio", "contact"]
 
     def get_avatar(self, obj):
         profile = getattr(obj, "profile", None)
@@ -101,6 +103,45 @@ class UserSerializer(serializers.ModelSerializer):
     def get_contact(self, obj):
         profile = getattr(obj, "profile", None)
         return profile.contact if profile else ""
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(min_length=6, write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context["user"]
+        if not user.check_password(value):
+            raise serializers.ValidationError("当前密码不正确")
+        return value
+
+    def save(self):
+        user = self.context["user"]
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+
+
+class ChangePhoneSerializer(serializers.Serializer):
+    phone = serializers.CharField(max_length=11)
+
+    def validate_phone(self, value):
+        import re
+        if not re.match(r"^1[3-9]\d{9}$", value):
+            raise serializers.ValidationError("请输入有效的 11 位手机号")
+        if User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("该手机号已被其他账号使用")
+        return value
+
+    def save(self):
+        user = self.context["user"]
+        user.phone = self.validated_data["phone"]
+        user.save(update_fields=["phone"])
+
+
+class LoginRecordSerializer(serializers.Serializer):
+    ip = serializers.CharField(source="ip_address", read_only=True)
+    ua = serializers.CharField(source="user_agent", read_only=True)
+    time = serializers.DateTimeField(source="created_at", read_only=True)
 
 
 class UserUpdateSerializer(serializers.Serializer):

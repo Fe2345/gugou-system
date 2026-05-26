@@ -5,6 +5,10 @@ export interface UserInfo {
   avatar: string
   role: 'user' | 'admin'
   createdAt: string
+  creditScore: number
+  status: 'normal' | 'frozen' | 'disabled' | 'deleted'
+  bio: string
+  contact: string
 }
 
 export interface LoginForm {

@@ -2,17 +2,17 @@ import type { LoginForm, RegisterForm, LoginResult, UserInfo } from '@/types/use
 import type { ApiResponse } from '@/types/api'
 
 // Mock 开关：设为 true 使用本地模拟数据
-const USE_MOCK = true
+const USE_MOCK = false
 
 // Mock 用户数据
 const mockUsers: Record<string, { password: string; user: UserInfo }> = {
   '13800000000': {
     password: '123456',
-    user: { id: '1', phone: '13800000000', nickname: '测试用户', avatar: '', role: 'user', createdAt: '2026-01-01' },
+    user: { id: '1', phone: '13800000000', nickname: '测试用户', avatar: '', role: 'user', createdAt: '2026-01-01', creditScore: 92, status: 'normal', bio: '一个谷子爱好者', contact: '' },
   },
   'admin': {
     password: '123456',
-    user: { id: '100', phone: '13999999999', nickname: '管理员', avatar: '', role: 'admin', createdAt: '2026-01-01' },
+    user: { id: '100', phone: '13999999999', nickname: '管理员', avatar: '', role: 'admin', createdAt: '2026-01-01', creditScore: 100, status: 'normal', bio: '', contact: '' },
   },
 }
 
@@ -87,4 +87,23 @@ export async function resetPassword(params: { phone: string; password: string })
   }
   const { default: request } = await import('@/utils/request')
   return request.post('/auth/reset-password', params)
+}
+
+export async function changePassword(oldPassword: string, newPassword: string): Promise<ApiResponse<void>> {
+  const { default: request } = await import('@/utils/request')
+  return request.post('/user/change-password', { old_password: oldPassword, new_password: newPassword })
+}
+
+export interface LoginRecordItem {
+  ip: string; ua: string; time: string
+}
+
+export async function getLoginRecords(): Promise<ApiResponse<LoginRecordItem[]>> {
+  const { default: request } = await import('@/utils/request')
+  return request.get('/user/login-records')
+}
+
+export async function changePhone(phone: string): Promise<ApiResponse<UserInfo>> {
+  const { default: request } = await import('@/utils/request')
+  return request.put('/user/change-phone', { phone })
 }

@@ -20,10 +20,11 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 3000,
+      host: env.VITE_HOST || '0.0.0.0',
+      port: Number(env.VITE_PORT) || 3000,
       proxy: {
         '/api': {
-          target: env.VITE_BACKEND_URL || 'http://127.0.0.1:8000',
+          target: env.VITE_BACKEND_URL || 'http://127.0.0.1:8001',
           changeOrigin: true,
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq) => {

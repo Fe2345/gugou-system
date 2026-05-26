@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import { logout as logoutApi } from '@/api/user'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
 const navItems = [
   { label: '产品库', to: '/goods' },
@@ -17,6 +20,12 @@ const navItems = [
 
 function isActive(path: string) {
   return route.path === path
+}
+
+async function handleLogout() {
+  try { await logoutApi() } catch { /* ignore */ }
+  userStore.logout()
+  router.push('/')
 }
 </script>
 
@@ -38,6 +47,13 @@ function isActive(path: string) {
           {{ item.label }}
         </button>
       </nav>
+      <div class="user-area">
+        <template v-if="userStore.isLoggedIn && userStore.userInfo">
+          <span class="user-name">{{ userStore.userInfo.nickname || userStore.userInfo.phone }}</span>
+          <button class="logout-btn" type="button" @click="handleLogout">退出</button>
+        </template>
+        <button v-else class="login-btn" type="button" @click="router.push('/login')">登录</button>
+      </div>
     </div>
   </header>
 </template>
@@ -106,6 +122,54 @@ function isActive(path: string) {
 .nav button.active {
   color: var(--accent);
   background: #edf6f8;
+}
+
+.user-area {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+}
+
+.user-name {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.login-btn {
+  min-height: 36px;
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  padding: 0 16px;
+  color: var(--accent);
+  background: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  font: inherit;
+}
+
+.login-btn:hover {
+  color: #fff;
+  background: var(--accent);
+}
+
+.logout-btn {
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 12px;
+  color: var(--muted);
+  background: var(--soft);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font: inherit;
+}
+
+.logout-btn:hover {
+  color: #be123c;
 }
 
 @media (max-width: 980px) {
