@@ -17,21 +17,21 @@ const filterCategory = ref('')
 const filterTime = ref('')
 
 const editingGoods = ref<AdminGoodsItem | null>(null)
-const editForm = reactive({ name: '', price: '', category: '', description: '' })
+const editForm = reactive({ name: '', referencePrice: '', category: '', description: '' })
 
 const metrics = computed(() => {
-  const pending = goods.value.filter(g => g.status === 'pending').length
-  const online = goods.value.filter(g => g.status === 'approved').length
-  const rejected = goods.value.filter(g => g.status === 'rejected').length
+  const active = goods.value.filter(g => g.status === 'active').length
+  const inactive = goods.value.filter(g => g.status === 'inactive').length
+  const frozen = goods.value.filter(g => g.status === 'frozen').length
   return [
-    { label: '待审核商品', value: String(pending), note: '需要审核处理' },
-    { label: '上架中商品', value: String(online), note: '平台可交易商品' },
-    { label: '已通过', value: String(online), note: '审核通过上架' },
-    { label: '未通过/下架', value: String(rejected), note: '图片或价格异常' },
+    { label: '正常商品', value: String(active), note: '正常启用中' },
+    { label: '未启用商品', value: String(inactive), note: '暂时不可用' },
+    { label: '冻结商品', value: String(frozen), note: '因异常限制使用' },
+    { label: '全部商品', value: String(goods.value.length), note: '商品总数' },
   ]
 })
 
-const statusMap: Record<string, string> = { pending: '待审核', approved: '已上架', rejected: '未通过' }
+const statusMap: Record<string, string> = { active: '正常启用', inactive: '未启用', frozen: '冻结', archived: '已归档' }
 
 async function loadGoods() {
   loading.value = true
@@ -93,7 +93,7 @@ async function handleOffline(id: string) {
 function startEdit(item: AdminGoodsItem) {
   editingGoods.value = item
   editForm.name = item.name
-  editForm.price = String(item.price)
+  editForm.referencePrice = String(item.referencePrice)
   editForm.category = item.category
   editForm.description = item.description
 }
@@ -108,7 +108,7 @@ async function handleSaveEdit() {
   try {
     await updateGoods(editingGoods.value.id, {
       name: editForm.name,
-      price: Number(editForm.price),
+      referencePrice: Number(editForm.referencePrice),
       category: editForm.category,
       description: editForm.description,
     })
@@ -142,7 +142,7 @@ async function handleSaveEdit() {
   <section class="toolbar">
     <div class="search-box"><input v-model="searchQuery" type="search" placeholder="输入商品名称 / 商品编号 / 卖家ID" @keyup.enter="handleSearch"></div>
     <select v-model="filterStatus" @change="handleFilter">
-      <option value="all">全部状态</option><option value="pending">待审核</option><option value="approved">已上架</option><option value="rejected">未通过</option>
+      <option value="all">全部状态</option><option value="active">正常启用</option><option value="inactive">未启用</option><option value="frozen">冻结</option><option value="archived">已归档</option>
     </select>
     <select v-model="filterCategory" @change="handleFilter">
       <option value="">全部分类</option><option value="徽章/吧唧">徽章/吧唧</option><option value="亚克力立牌">亚克力立牌</option><option value="色纸/拍立得">色纸/拍立得</option><option value="挂件">挂件</option>
@@ -169,15 +169,15 @@ async function handleSaveEdit() {
             <td class="muted">{{ row.id }}</td>
             <td>{{ row.category }}</td>
             <td>{{ row.seller }}</td>
-            <td class="price">¥{{ row.price }}</td>
+            <td class="price">¥{{ row.referencePrice }}</td>
             <td>{{ row.stock }}</td>
             <td>{{ row.submittedAt }}</td>
             <td><span class="status" :class="row.status">{{ statusMap[row.status] }}</span></td>
             <td class="actions">
-              <button v-if="row.status === 'pending'" class="primary sm" type="button" @click="handleApprove(row.id)">通过</button>
-              <button v-if="row.status === 'pending'" class="danger sm" type="button" @click="handleReject(row.id)">驳回</button>
-              <button v-if="row.status === 'approved'" class="warn sm" type="button" @click="handleOffline(row.id)">下架</button>
-              <button v-if="row.status === 'rejected'" class="primary sm" type="button" @click="handleApprove(row.id)">复审</button>
+              <button v-if="row.status === 'inactive'" class="primary sm" type="button" @click="handleApprove(row.id)">启用</button>
+              <button v-if="row.status === 'inactive'" class="danger sm" type="button" @click="handleReject(row.id)">驳回</button>
+              <button v-if="row.status === 'active'" class="warn sm" type="button" @click="handleOffline(row.id)">下架</button>
+              <button v-if="row.status === 'frozen'" class="primary sm" type="button" @click="handleApprove(row.id)">解冻</button>
               <button class="secondary sm" type="button" @click="startEdit(row)">编辑</button>
             </td>
           </tr>
@@ -195,7 +195,7 @@ async function handleSaveEdit() {
       </div>
       <form class="modal-form" @submit.prevent="handleSaveEdit">
         <label><span>商品名称</span><input v-model="editForm.name" type="text" required></label>
-        <label><span>价格</span><input v-model="editForm.price" type="number" min="0" step="0.01" required></label>
+        <label><span>参考价</span><input v-model="editForm.referencePrice" type="number" min="0" step="0.01" required></label>
         <label><span>分类</span><input v-model="editForm.category" type="text"></label>
         <label><span>描述</span><textarea v-model="editForm.description" rows="3"></textarea></label>
         <div class="modal-actions">
@@ -245,9 +245,10 @@ tr:last-child td { border-bottom: 0; }
 .muted { color: var(--muted); font-size: 12px; }
 .price { color: #be123c; font-weight: 900; }
 .status { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-.status.pending { background: #fef3c7; color: #b45309; }
-.status.approved { background: #dcfce7; color: #15803d; }
-.status.rejected { background: #fee2e2; color: #be123c; }
+.status.active { background: #dcfce7; color: #15803d; }
+.status.inactive { background: #fef3c7; color: #b45309; }
+.status.frozen { background: #fee2e2; color: #be123c; }
+.status.archived { background: #e5e7eb; color: #6b7280; }
 .actions { display: flex; gap: 6px; }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: grid; place-items: center; z-index: 1000; padding: 20px; }

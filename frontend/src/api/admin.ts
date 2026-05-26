@@ -38,11 +38,11 @@ const mockUsers: AdminUser[] = [
 ]
 
 const mockAdminGoods: (GoodsItem & { seller: string; submittedAt: string; stock: number })[] = [
-  { id: 'G1001', name: '蓝色幻想系列 限定徽章套组', price: 128, image: '', ip: '蓝色幻想', role: '群像', category: '徽章/吧唧', description: '限定徽章套组', status: 'pending', createdAt: '2026-05-06', seller: 'BJUT000126', submittedAt: '10:28', stock: 12 },
-  { id: 'G1002', name: '樱花季角色亚克力立牌', price: 68, image: '', ip: '樱花季', role: '主角', category: '亚克力立牌', description: '亚克力立牌', status: 'pending', createdAt: '2026-05-06', seller: 'BJUT000219', submittedAt: '09:52', stock: 8 },
-  { id: 'G1003', name: '限定拍立得收藏卡 随机款', price: 45, image: '', ip: '限定系列', role: '随机', category: '拍立得/色纸', description: '拍立得收藏卡', status: 'rejected', createdAt: '2026-05-05', seller: 'BJUT000308', submittedAt: '昨天', stock: 20 },
-  { id: 'G1004', name: '角色挂件 生日纪念款', price: 36, image: '', ip: '生日系列', role: '角色', category: '挂件', description: '生日纪念挂件', status: 'approved', createdAt: '2026-05-05', seller: 'BJUT000176', submittedAt: '昨天', stock: 15 },
-  { id: 'G1005', name: '原神 甘雨 限定亚克力砖', price: 198, image: '', ip: '原神', role: '甘雨', category: '亚克力砖', description: '甘雨限定亚克力砖', status: 'pending', createdAt: '2026-05-06', seller: 'BJUT000333', submittedAt: '30 分钟前', stock: 5 },
+  { id: 'G1001', name: '蓝色幻想系列 限定徽章套组', referencePrice: 128, mainImage: '', ipName: '蓝色幻想', characterName: '群像', category: '徽章/吧唧', description: '限定徽章套组', status: 'active', createdAt: '2026-05-06', seller: 'BJUT000126', submittedAt: '10:28', stock: 12 },
+  { id: 'G1002', name: '樱花季角色亚克力立牌', referencePrice: 68, mainImage: '', ipName: '樱花季', characterName: '主角', category: '亚克力立牌', description: '亚克力立牌', status: 'active', createdAt: '2026-05-06', seller: 'BJUT000219', submittedAt: '09:52', stock: 8 },
+  { id: 'G1003', name: '限定拍立得收藏卡 随机款', referencePrice: 45, mainImage: '', ipName: '限定系列', characterName: '随机', category: '拍立得/色纸', description: '拍立得收藏卡', status: 'inactive', createdAt: '2026-05-05', seller: 'BJUT000308', submittedAt: '昨天', stock: 20 },
+  { id: 'G1004', name: '角色挂件 生日纪念款', referencePrice: 36, mainImage: '', ipName: '生日系列', characterName: '角色', category: '挂件', description: '生日纪念挂件', status: 'active', createdAt: '2026-05-05', seller: 'BJUT000176', submittedAt: '昨天', stock: 15 },
+  { id: 'G1005', name: '原神 甘雨 限定亚克力砖', referencePrice: 198, mainImage: '', ipName: '原神', characterName: '甘雨', category: '亚克力砖', description: '甘雨限定亚克力砖', status: 'active', createdAt: '2026-05-06', seller: 'BJUT000333', submittedAt: '30 分钟前', stock: 5 },
 ]
 
 const mockPriceRecords: AdminPriceRecord[] = [
@@ -83,7 +83,7 @@ export async function approveGoods(id: string): Promise<ApiResponse<void>> {
   if (USE_MOCK) {
     await delay()
     const item = mockAdminGoods.find(g => g.id === id)
-    if (item) item.status = 'approved'
+    if (item) item.status = 'active'
     return { code: 200, message: 'ok', data: undefined }
   }
   const { default: request } = await import('@/utils/request')
@@ -94,7 +94,7 @@ export async function rejectGoods(id: string): Promise<ApiResponse<void>> {
   if (USE_MOCK) {
     await delay()
     const item = mockAdminGoods.find(g => g.id === id)
-    if (item) item.status = 'rejected'
+    if (item) item.status = 'inactive'
     return { code: 200, message: 'ok', data: undefined }
   }
   const { default: request } = await import('@/utils/request')
@@ -105,7 +105,7 @@ export async function offlineGoods(id: string): Promise<ApiResponse<void>> {
   if (USE_MOCK) {
     await delay()
     const item = mockAdminGoods.find(g => g.id === id)
-    if (item) item.status = 'rejected'
+    if (item) item.status = 'inactive'
     return { code: 200, message: 'ok', data: undefined }
   }
   const { default: request } = await import('@/utils/request')

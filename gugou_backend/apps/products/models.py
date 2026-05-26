@@ -14,28 +14,21 @@ class Product(BaseModel):
         CARD = "card", "卡片"
         OTHER = "other", "其他"
 
-    class Rarity(models.TextChoices):
-        COMMON = "common", "普通"
-        RARE = "rare", "稀有"
-        SR = "sr", "SR"
-        SSR = "ssr", "SSR"
-        LIMITED = "limited", "限定"
-
     class Status(models.TextChoices):
-        ACTIVE = "active", "正常展示"
-        INACTIVE = "inactive", "下架"
+        ACTIVE = "active", "正常启用"
+        INACTIVE = "inactive", "未启用"
         FROZEN = "frozen", "冻结"
-        ARCHIVED = "archived", "归档"
+        ARCHIVED = "archived", "已归档"
 
     product_id = models.CharField("商品编号", max_length=13, primary_key=True)
     name = models.CharField("商品名称", max_length=100)
     ip_name = models.CharField("IP 名称", max_length=50)
-    character_name = models.CharField("角色名称", max_length=50)
+    character_name = models.CharField("角色名称", max_length=50, blank=True, default="")
     category = models.CharField("品类", max_length=20, choices=Category.choices)
-    rarity = models.CharField("稀有度", max_length=20, choices=Rarity.choices)
     reference_price = models.DecimalField("参考价格", max_digits=10, decimal_places=2, default=0)
-    status = models.CharField("商品状态", max_length=10, choices=Status.choices, default=Status.ACTIVE)
     main_image = models.URLField("主图", blank=True, default="")
+    description = models.TextField("商品描述", blank=True, default="")
+    status = models.CharField("商品状态", max_length=10, choices=Status.choices, default=Status.ACTIVE)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

@@ -1,8 +1,8 @@
 export interface PriceItem {
   id: string
   name: string
-  ip: string
-  role: string
+  ipName: string
+  characterName: string
   category: string
   currentPrice: number
   avgPrice: number

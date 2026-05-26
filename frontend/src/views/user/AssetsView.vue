@@ -23,22 +23,22 @@ const assetToDelete = ref<AssetItem | null>(null)
 const operationType = ref<'list' | 'delist' | 'sold'>('list')
 
 const addForm = reactive<AssetForm>({
-  name: '',
-  ip: '',
-  role: '',
+  productName: '',
+  ipName: '',
+  characterName: '',
   category: '',
   quantity: 1,
-  costPrice: 0,
+  acquirePrice: 0,
   description: '',
 })
 
 const editForm = reactive({
-  name: '',
-  ip: '',
-  role: '',
+  productName: '',
+  ipName: '',
+  characterName: '',
   category: '',
   quantity: 1,
-  costPrice: 0,
+  acquirePrice: 0,
   currentValue: 0,
   description: '',
 })
@@ -76,12 +76,12 @@ function handleFilter() {
 
 // 添加资产
 function openAddModal() {
-  addForm.name = ''
-  addForm.ip = ''
-  addForm.role = ''
+  addForm.productName = ''
+  addForm.ipName = ''
+  addForm.characterName = ''
   addForm.category = ''
   addForm.quantity = 1
-  addForm.costPrice = 0
+  addForm.acquirePrice = 0
   addForm.description = ''
   showAddModal.value = true
 }
@@ -91,7 +91,7 @@ function closeAddModal() {
 }
 
 async function handleAdd() {
-  if (!addForm.name || !addForm.costPrice) return
+  if (!addForm.productName || !addForm.acquirePrice) return
   loading.value = true
   try {
     await addAsset(addForm)
@@ -118,12 +118,12 @@ function closeDetailModal() {
 // 编辑资产
 function startEdit(asset: AssetItem) {
   selectedAsset.value = asset
-  editForm.name = asset.name
-  editForm.ip = asset.ip
-  editForm.role = asset.role
+  editForm.productName = asset.productName
+  editForm.ipName = asset.ipName
+  editForm.characterName = asset.characterName
   editForm.category = asset.category
   editForm.quantity = asset.quantity
-  editForm.costPrice = asset.costPrice
+  editForm.acquirePrice = asset.acquirePrice
   editForm.currentValue = asset.currentValue
   editForm.description = asset.description
   showEditModal.value = true
@@ -139,12 +139,12 @@ async function handleSaveEdit() {
   loading.value = true
   try {
     await updateAsset(selectedAsset.value.id, {
-      name: editForm.name,
-      ip: editForm.ip,
-      role: editForm.role,
+      productName: editForm.productName,
+      ipName: editForm.ipName,
+      characterName: editForm.characterName,
       category: editForm.category,
       quantity: editForm.quantity,
-      costPrice: editForm.costPrice,
+      acquirePrice: editForm.acquirePrice,
       currentValue: editForm.currentValue,
       description: editForm.description,
     })
@@ -217,8 +217,9 @@ function getStatusText(status: string) {
   const map: Record<string, string> = {
     holding: '持有中',
     selling: '出售中',
-    trading: '交换中',
-    sold: '已卖出',
+    exchanging: '换物中',
+    sold: '已售出',
+    invalid: '已失效',
   }
   return map[status] || status
 }
@@ -234,7 +235,7 @@ function formatMoney(amount: number) {
 
 // 计算变化值
 function getValueChange(asset: AssetItem) {
-  return asset.currentValue - asset.costPrice
+  return asset.currentValue - asset.acquirePrice
 }
 </script>
 
@@ -270,8 +271,9 @@ function getValueChange(asset: AssetItem) {
         <option value="all">全部状态</option>
         <option value="holding">持有中</option>
         <option value="selling">出售中</option>
-        <option value="trading">交换中</option>
-        <option value="sold">已卖出</option>
+        <option value="exchanging">换物中</option>
+        <option value="sold">已售出</option>
+        <option value="invalid">已失效</option>
       </select>
       <select v-model="sortBy" aria-label="排列方式" @change="handleFilter">
         <option value="time">按录入时间</option>
@@ -304,11 +306,11 @@ function getValueChange(asset: AssetItem) {
           <tbody>
             <tr v-for="asset in assets" :key="asset.id">
               <td>{{ asset.id }}</td>
-              <td><strong>{{ asset.name }}</strong></td>
-              <td>{{ asset.ip }} / {{ asset.role }}</td>
+              <td><strong>{{ asset.productName }}</strong></td>
+              <td>{{ asset.ipName }} / {{ asset.characterName }}</td>
               <td>{{ asset.category }}</td>
               <td>{{ asset.quantity }}</td>
-              <td>{{ formatMoney(asset.costPrice) }}</td>
+              <td>{{ formatMoney(asset.acquirePrice) }}</td>
               <td>{{ formatMoney(asset.currentValue) }}</td>
               <td :class="{ up: getValueChange(asset) >= 0, down: getValueChange(asset) < 0 }">
                 {{ getValueChange(asset) >= 0 ? '+' : '' }}{{ formatMoney(getValueChange(asset)) }}
@@ -318,7 +320,7 @@ function getValueChange(asset: AssetItem) {
                 <button class="action-btn small" @click="viewDetail(asset)">详情</button>
                 <button class="action-btn small" @click="startEdit(asset)">编辑</button>
                 <button v-if="asset.status === 'holding'" class="action-btn small list" @click="openOperation(asset, 'list')">上架</button>
-                <button v-if="asset.status === 'selling' || asset.status === 'trading'" class="action-btn small delist" @click="openOperation(asset, 'delist')">下架</button>
+                <button v-if="asset.status === 'selling' || asset.status === 'exchanging'" class="action-btn small delist" @click="openOperation(asset, 'delist')">下架</button>
                 <button class="action-btn small delete" @click="confirmDelete(asset)">删除</button>
               </td>
             </tr>
@@ -338,16 +340,16 @@ function getValueChange(asset: AssetItem) {
       <form class="modal-form" @submit.prevent="handleAdd">
         <label>
           <span>谷子名称 *</span>
-          <input v-model="addForm.name" type="text" required placeholder="请输入谷子名称">
+          <input v-model="addForm.productName" type="text" required placeholder="请输入谷子名称">
         </label>
         <div class="form-row">
           <label>
             <span>IP</span>
-            <input v-model="addForm.ip" type="text" placeholder="如：原神">
+            <input v-model="addForm.ipName" type="text" placeholder="如：原神">
           </label>
           <label>
             <span>角色</span>
-            <input v-model="addForm.role" type="text" placeholder="如：胡桃">
+            <input v-model="addForm.characterName" type="text" placeholder="如：胡桃">
           </label>
         </div>
         <div class="form-row">
@@ -361,8 +363,8 @@ function getValueChange(asset: AssetItem) {
           </label>
         </div>
         <label>
-          <span>成本价 *</span>
-          <input v-model.number="addForm.costPrice" type="number" min="0" step="0.01" required placeholder="请输入购买价格">
+          <span>入手价 *</span>
+          <input v-model.number="addForm.acquirePrice" type="number" min="0" step="0.01" required placeholder="请输入购买价格">
         </label>
         <label>
           <span>描述</span>
@@ -385,18 +387,18 @@ function getValueChange(asset: AssetItem) {
       </div>
       <div class="detail-content">
         <div class="detail-info">
-          <h3>{{ selectedAsset.name }}</h3>
+          <h3>{{ selectedAsset.productName }}</h3>
           <div class="detail-meta">
             <span class="detail-price">{{ formatMoney(selectedAsset.currentValue) }}</span>
             <span class="status" :class="getStatusClass(selectedAsset.status)">{{ getStatusText(selectedAsset.status) }}</span>
           </div>
           <div class="detail-fields">
             <div class="field"><label>资产编号</label><span>{{ selectedAsset.id }}</span></div>
-            <div class="field"><label>IP</label><span>{{ selectedAsset.ip }}</span></div>
-            <div class="field"><label>角色</label><span>{{ selectedAsset.role }}</span></div>
+            <div class="field"><label>IP</label><span>{{ selectedAsset.ipName }}</span></div>
+            <div class="field"><label>角色</label><span>{{ selectedAsset.characterName }}</span></div>
             <div class="field"><label>品类</label><span>{{ selectedAsset.category }}</span></div>
             <div class="field"><label>数量</label><span>{{ selectedAsset.quantity }}</span></div>
-            <div class="field"><label>成本价</label><span>{{ formatMoney(selectedAsset.costPrice) }}</span></div>
+            <div class="field"><label>入手价</label><span>{{ formatMoney(selectedAsset.acquirePrice) }}</span></div>
             <div class="field"><label>当前估值</label><span>{{ formatMoney(selectedAsset.currentValue) }}</span></div>
             <div class="field"><label>估值变化</label><span :class="{ up: getValueChange(selectedAsset) >= 0, down: getValueChange(selectedAsset) < 0 }">{{ getValueChange(selectedAsset) >= 0 ? '+' : '' }}{{ formatMoney(getValueChange(selectedAsset)) }}</span></div>
             <div class="field"><label>创建时间</label><span>{{ selectedAsset.createdAt }}</span></div>
@@ -422,16 +424,16 @@ function getValueChange(asset: AssetItem) {
       <form class="modal-form" @submit.prevent="handleSaveEdit">
         <label>
           <span>谷子名称</span>
-          <input v-model="editForm.name" type="text" required>
+          <input v-model="editForm.productName" type="text" required>
         </label>
         <div class="form-row">
           <label>
             <span>IP</span>
-            <input v-model="editForm.ip" type="text">
+            <input v-model="editForm.ipName" type="text">
           </label>
           <label>
             <span>角色</span>
-            <input v-model="editForm.role" type="text">
+            <input v-model="editForm.characterName" type="text">
           </label>
         </div>
         <div class="form-row">
@@ -446,8 +448,8 @@ function getValueChange(asset: AssetItem) {
         </div>
         <div class="form-row">
           <label>
-            <span>成本价</span>
-            <input v-model.number="editForm.costPrice" type="number" min="0" step="0.01">
+            <span>入手价</span>
+            <input v-model.number="editForm.acquirePrice" type="number" min="0" step="0.01">
           </label>
           <label>
             <span>当前估值</span>
@@ -556,8 +558,9 @@ tbody tr:hover { background: #fbfdfe; }
 .status { display: inline-flex; align-items: center; min-height: 28px; border-radius: 999px; padding: 0 10px; font-size: 13px; font-weight: 800; }
 .status.holding { color: var(--accent); background: #eaf6f8; }
 .status.selling { color: #9a5d00; background: #fff3d7; }
-.status.trading { color: #6d4bc2; background: #f1ebff; }
+.status.exchanging { color: #6d4bc2; background: #f1ebff; }
 .status.sold { color: var(--muted); background: #edf1f3; }
+.status.invalid { color: #b9352b; background: #fde8e8; }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .action-btn { border: 0; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 700; cursor: pointer; font: inherit; transition: background 0.2s; }
 .action-btn.small { min-height: 30px; }

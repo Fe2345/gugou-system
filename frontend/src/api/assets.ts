@@ -1,17 +1,17 @@
 import type { AssetItem, AssetForm, AssetSummary, AssetOperation } from '@/types/assets'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
 
-const USE_MOCK = true
+const USE_MOCK = false
 
 const mockAssets: AssetItem[] = [
-  { id: 'A001', goodsId: '1', name: '鸣神 千本樱姬 限定徽章', ip: '哈利波特', role: '千本樱姬', category: '徽章', image: '', quantity: 2, costPrice: 76, currentValue: 96, status: 'holding', description: '限定版徽章', createdAt: '2026-04-01', updatedAt: '2026-05-01' },
-  { id: 'A002', goodsId: '2', name: '哈利波特 影山飞雄 亚克力立牌', ip: '哈利波特', role: '影山飞雄', category: '亚克力', image: '', quantity: 1, costPrice: 88, currentValue: 82, status: 'holding', description: '亚克力立牌', createdAt: '2026-04-02', updatedAt: '2026-05-02' },
-  { id: 'A003', goodsId: '3', name: '精灵宝可梦 皮卡丘 限定明信片', ip: '精灵宝可梦', role: '皮卡丘', category: '明信片', image: '', quantity: 3, costPrice: 45, currentValue: 72, status: 'selling', description: '限定明信片套装', createdAt: '2026-04-03', updatedAt: '2026-05-03' },
-  { id: 'A004', goodsId: '4', name: '原神 风 岩神角色挂件', ip: '原神', role: '风', category: '挂件', image: '', quantity: 1, costPrice: 58, currentValue: 64, status: 'trading', description: '角色挂件', createdAt: '2026-04-04', updatedAt: '2026-05-04' },
-  { id: 'A005', goodsId: '5', name: '崩坏星穹铁道 刃 色纸', ip: '崩坏星穹铁道', role: '刃', category: '色纸', image: '', quantity: 1, costPrice: 35, currentValue: 35, status: 'holding', description: '限定色纸', createdAt: '2026-04-05', updatedAt: '2026-05-05' },
-  { id: 'A006', goodsId: '6', name: '圣斗士星矢 瞬 门票', ip: '圣斗士星矢', role: '瞬', category: '票据', image: '', quantity: 4, costPrice: 40, currentValue: 52, status: 'holding', description: '活动门票', createdAt: '2026-04-06', updatedAt: '2026-05-06' },
-  { id: 'A007', goodsId: '7', name: '新世纪福音战士 明日香 限定套装', ip: '新世纪福音战士', role: '明日香', category: '限定套装', image: '', quantity: 1, costPrice: 120, currentValue: 108, status: 'selling', description: '限定套装', createdAt: '2026-04-07', updatedAt: '2026-05-07' },
-  { id: 'A008', goodsId: '8', name: '时光代理人 陆光 透卡', ip: '时光代理人', role: '陆光', category: '透卡', image: '', quantity: 2, costPrice: 30, currentValue: 38, status: 'sold', description: '限定透卡', createdAt: '2026-04-08', updatedAt: '2026-05-08' },
+  { id: 'A001', productId: '1', productName: '鸣神 千本樱姬 限定徽章', ipName: '哈利波特', characterName: '千本樱姬', category: '徽章', mainImage: '', quantity: 2, acquirePrice: 76, currentValue: 96, status: 'holding', description: '限定版徽章', createdAt: '2026-04-01', updatedAt: '2026-05-01' },
+  { id: 'A002', productId: '2', productName: '哈利波特 影山飞雄 亚克力立牌', ipName: '哈利波特', characterName: '影山飞雄', category: '亚克力', mainImage: '', quantity: 1, acquirePrice: 88, currentValue: 82, status: 'holding', description: '亚克力立牌', createdAt: '2026-04-02', updatedAt: '2026-05-02' },
+  { id: 'A003', productId: '3', productName: '精灵宝可梦 皮卡丘 限定明信片', ipName: '精灵宝可梦', characterName: '皮卡丘', category: '明信片', mainImage: '', quantity: 3, acquirePrice: 45, currentValue: 72, status: 'selling', description: '限定明信片套装', createdAt: '2026-04-03', updatedAt: '2026-05-03' },
+  { id: 'A004', productId: '4', productName: '原神 风 岩神角色挂件', ipName: '原神', characterName: '风', category: '挂件', mainImage: '', quantity: 1, acquirePrice: 58, currentValue: 64, status: 'exchanging', description: '角色挂件', createdAt: '2026-04-04', updatedAt: '2026-05-04' },
+  { id: 'A005', productId: '5', productName: '崩坏星穹铁道 刃 色纸', ipName: '崩坏星穹铁道', characterName: '刃', category: '色纸', mainImage: '', quantity: 1, acquirePrice: 35, currentValue: 35, status: 'holding', description: '限定色纸', createdAt: '2026-04-05', updatedAt: '2026-05-05' },
+  { id: 'A006', productId: '6', productName: '圣斗士星矢 瞬 门票', ipName: '圣斗士星矢', characterName: '瞬', category: '票据', mainImage: '', quantity: 4, acquirePrice: 40, currentValue: 52, status: 'holding', description: '活动门票', createdAt: '2026-04-06', updatedAt: '2026-05-06' },
+  { id: 'A007', productId: '7', productName: '新世纪福音战士 明日香 限定套装', ipName: '新世纪福音战士', characterName: '明日香', category: '限定套装', mainImage: '', quantity: 1, acquirePrice: 120, currentValue: 108, status: 'selling', description: '限定套装', createdAt: '2026-04-07', updatedAt: '2026-05-07' },
+  { id: 'A008', productId: '8', productName: '时光代理人 陆光 透卡', ipName: '时光代理人', characterName: '陆光', category: '透卡', mainImage: '', quantity: 2, acquirePrice: 30, currentValue: 38, status: 'sold', description: '限定透卡', createdAt: '2026-04-08', updatedAt: '2026-05-08' },
 ]
 
 function delay(ms = 500) {
@@ -22,7 +22,7 @@ function delay(ms = 500) {
 function calculateSummary(assets: AssetItem[]): AssetSummary {
   const totalCount = assets.reduce((sum, a) => sum + a.quantity, 0)
   const categoryCount = new Set(assets.map(a => a.category)).size
-  const totalCost = assets.reduce((sum, a) => sum + a.costPrice * a.quantity, 0)
+  const totalCost = assets.reduce((sum, a) => sum + a.acquirePrice * a.quantity, 0)
   const totalValue = assets.reduce((sum, a) => sum + a.currentValue * a.quantity, 0)
   const valueChange = totalValue - totalCost
   return { totalCount, categoryCount, totalCost, totalValue, valueChange }
@@ -40,9 +40,9 @@ export async function getAssetsList(params?: {
     if (params?.keyword) {
       const kw = params.keyword.toLowerCase()
       list = list.filter(a =>
-        a.name.toLowerCase().includes(kw) ||
-        a.ip.toLowerCase().includes(kw) ||
-        a.role.toLowerCase().includes(kw)
+        a.productName.toLowerCase().includes(kw) ||
+        a.ipName.toLowerCase().includes(kw) ||
+        a.characterName.toLowerCase().includes(kw)
       )
     }
     if (params?.status && params.status !== 'all') {
@@ -54,7 +54,7 @@ export async function getAssetsList(params?: {
     if (params?.sortBy === 'value') {
       list.sort((a, b) => b.currentValue - a.currentValue)
     } else if (params?.sortBy === 'change') {
-      list.sort((a, b) => (b.currentValue - b.costPrice) - (a.currentValue - a.costPrice))
+      list.sort((a, b) => (b.currentValue - b.acquirePrice) - (a.currentValue - a.acquirePrice))
     }
     const summary = calculateSummary(list)
     return { code: 200, message: 'ok', data: { list, summary } }
@@ -79,15 +79,15 @@ export async function addAsset(data: AssetForm): Promise<ApiResponse<void>> {
     await delay()
     mockAssets.unshift({
       id: 'A' + String(mockAssets.length + 1).padStart(3, '0'),
-      goodsId: data.goodsId || '',
-      name: data.name,
-      ip: data.ip,
-      role: data.role,
+      productId: data.productId || '',
+      productName: data.productName,
+      ipName: data.ipName,
+      characterName: data.characterName,
       category: data.category,
-      image: data.image || '',
+      mainImage: data.mainImage || '',
       quantity: data.quantity,
-      costPrice: data.costPrice,
-      currentValue: data.costPrice,
+      acquirePrice: data.acquirePrice,
+      currentValue: data.acquirePrice,
       status: 'holding',
       description: data.description || '',
       createdAt: new Date().toISOString(),
