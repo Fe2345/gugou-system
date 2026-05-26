@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.exchanges",
     "apps.teams",
     "apps.pricing",
+    "apps.addresses",
     "apps.credits",
     "apps.operations",
 ]

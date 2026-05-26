@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
 import { getUserInfo, updateUserInfo, changePassword, changePhone, getLoginRecords } from '@/api/user'
+import { getAddresses, addAddress, updateAddress, deleteAddress, getDivisions } from '@/api/address'
+import type { AddressItem, AddressForm, DivisionItem } from '@/api/address'
 import type { UserInfo } from '@/types/user'
 import type { LoginRecordItem } from '@/api/user'
 
@@ -42,6 +44,24 @@ const phoneForm = reactive({ phone: '' })
 // 登录记录
 const loginRecords = ref<LoginRecordItem[]>([])
 const loadingRecords = ref(false)
+
+// --- 地址管理 ---
+const addresses = ref<AddressItem[]>([])
+const loadingAddresses = ref(false)
+const showAddrModal = ref(false)
+const editingAddrId = ref<number | null>(null)
+const addrForm = reactive<AddressForm>({
+  receiver_name: '', receiver_phone: '',
+  province_code: '', city_code: '', district_code: '',
+  street: '', detail: '', is_default: false,
+})
+// 区划数据
+const provinces = ref<DivisionItem[]>([])
+const cities = ref<DivisionItem[]>([])
+const districts = ref<DivisionItem[]>([])
+const addrProvName = ref('')
+const addrCityName = ref('')
+const addrDistName = ref('')
 
 function showMessage(msg: string, type: 'success' | 'error' = 'success') {
   message.value = msg
@@ -161,9 +181,124 @@ async function handleChangePhone() {
   } finally { saving.value = false }
 }
 
+// --- 地址管理函数 ---
+async function loadAddresses() {
+  loadingAddresses.value = true
+  try { addresses.value = (await getAddresses()).data }
+  catch { /* ignore */ }
+  finally { loadingAddresses.value = false }
+}
+
+async function openAddrModal(addr?: AddressItem) {
+  await loadProvinceList()
+  if (addr) {
+    editingAddrId.value = addr.id
+    addrForm.receiver_name = addr.receiver_name
+    addrForm.receiver_phone = addr.receiver_phone
+    addrForm.province_code = addr.province.code
+    addrForm.city_code = addr.city.code
+    addrForm.district_code = addr.district.code
+    addrForm.street = addr.street
+    addrForm.detail = addr.detail
+    addrForm.is_default = addr.is_default
+    addrProvName.value = addr.province.name
+    addrCityName.value = addr.city.name
+    addrDistName.value = addr.district.name
+    await loadCities(addr.province.code)
+    await loadDistricts(addr.city.code)
+  } else {
+    editingAddrId.value = null
+    resetAddrForm()
+  }
+  showAddrModal.value = true
+}
+
+function closeAddrModal() { showAddrModal.value = false }
+
+function resetAddrForm() {
+  addrForm.receiver_name = ''
+  addrForm.receiver_phone = ''
+  addrForm.province_code = ''
+  addrForm.city_code = ''
+  addrForm.district_code = ''
+  addrForm.street = ''
+  addrForm.detail = ''
+  addrForm.is_default = false
+  addrProvName.value = ''
+  addrCityName.value = ''
+  addrDistName.value = ''
+  cities.value = []
+  districts.value = []
+}
+
+async function loadProvinceList() {
+  if (provinces.value.length) return
+  try { provinces.value = (await getDivisions()).data }
+  catch { /* ignore */ }
+}
+
+async function loadCities(parentCode: string) {
+  cities.value = []
+  districts.value = []
+  addrForm.city_code = ''
+  addrForm.district_code = ''
+  addrCityName.value = ''
+  addrDistName.value = ''
+  const p = provinces.value.find(p => p.code === parentCode)
+  addrProvName.value = p?.name || ''
+  try { cities.value = (await getDivisions(parentCode)).data }
+  catch { /* ignore */ }
+}
+
+async function loadDistricts(parentCode: string) {
+  districts.value = []
+  addrForm.district_code = ''
+  addrDistName.value = ''
+  const c = cities.value.find(c => c.code === parentCode)
+  addrCityName.value = c?.name || ''
+  try { districts.value = (await getDivisions(parentCode)).data }
+  catch { /* ignore */ }
+}
+
+function onDistrictSelect(code: string) {
+  const d = districts.value.find(d => d.code === code)
+  addrDistName.value = d?.name || ''
+}
+
+async function handleSaveAddress() {
+  if (!addrForm.receiver_name || !addrForm.receiver_phone || !addrForm.province_code || !addrForm.city_code || !addrForm.district_code || !addrForm.detail) {
+    showMessage('请填写完整的地址信息', 'error'); return
+  }
+  saving.value = true
+  try {
+    if (editingAddrId.value) {
+      await updateAddress(editingAddrId.value, { ...addrForm })
+    } else {
+      await addAddress({ ...addrForm })
+    }
+    showAddrModal.value = false
+    showMessage(editingAddrId.value ? '地址已更新' : '地址已添加')
+    await loadAddresses()
+  } catch (e: any) {
+    showMessage(e?.response?.data?.message || '保存失败', 'error')
+  } finally { saving.value = false }
+}
+
+async function handleDeleteAddress(id: number) {
+  if (!confirm('确定要删除该地址吗？')) return
+  saving.value = true
+  try {
+    await deleteAddress(id)
+    showMessage('地址已删除')
+    await loadAddresses()
+  } catch { showMessage('删除失败', 'error') }
+  finally { saving.value = false }
+}
+
 onMounted(() => {
   loadUser()
   loadRecords()
+  loadAddresses()
 })
 </script>
 
@@ -231,8 +366,29 @@ onMounted(() => {
 
         <!-- 地址管理 -->
         <section v-show="activeMenu === 'address'" class="panel">
-          <div class="section-head"><div><p class="eyebrow">地址管理</p><h2>收货地址</h2></div></div>
-          <div class="empty-state"><strong>功能开发中</strong><p>后续版本将支持收货地址管理。</p></div>
+          <div class="section-head">
+            <div><p class="eyebrow">地址管理</p><h2>收货地址</h2></div>
+            <button class="primary small" type="button" @click="openAddrModal()">添加新地址</button>
+          </div>
+          <div v-if="!addresses.length" class="empty-state"><strong>暂无收货地址</strong><p>点击"添加新地址"录入收货信息。</p></div>
+          <div v-else class="addr-list">
+            <div v-for="a in addresses" :key="a.id" class="addr-card" :class="{ default: a.is_default }">
+              <div class="addr-body">
+                <div class="addr-line">
+                  <strong>{{ a.receiver_name }}</strong>
+                  <span>{{ a.receiver_phone }}</span>
+                  <span v-if="a.is_default" class="tag ok">默认</span>
+                </div>
+                <p class="addr-full">
+                  {{ a.province.name }} {{ a.city.name }} {{ a.district.name }} {{ a.street }} {{ a.detail }}
+                </p>
+              </div>
+              <div class="addr-actions">
+                <button class="link-btn" type="button" @click="openAddrModal(a)">编辑</button>
+                <button class="link-btn danger" type="button" @click="handleDeleteAddress(a.id)">删除</button>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- 安全设置 -->
@@ -344,6 +500,52 @@ onMounted(() => {
       </form>
     </div>
   </div>
+
+  <!-- 地址编辑弹窗 -->
+  <div v-if="showAddrModal" class="modal-overlay" @click.self="closeAddrModal">
+    <div class="modal modal-addr">
+      <div class="modal-header"><h2>{{ editingAddrId ? '编辑地址' : '添加地址' }}</h2><button class="modal-close" @click="closeAddrModal">&times;</button></div>
+      <form class="modal-form" @submit.prevent="handleSaveAddress">
+        <div class="form-row">
+          <label><span>收货人</span><input v-model="addrForm.receiver_name" required maxlength="30" placeholder="姓名"></label>
+          <label><span>手机号</span><input v-model="addrForm.receiver_phone" type="tel" required maxlength="11" placeholder="11 位手机号"></label>
+        </div>
+        <div class="form-row three">
+          <label>
+            <span>省</span>
+            <select v-model="addrForm.province_code" @change="loadCities(addrForm.province_code)">
+              <option value="">请选择</option>
+              <option v-for="p in provinces" :key="p.code" :value="p.code">{{ p.name }}</option>
+            </select>
+          </label>
+          <label>
+            <span>市</span>
+            <select v-model="addrForm.city_code" @change="loadDistricts(addrForm.city_code)" :disabled="!cities.length">
+              <option value="">请选择</option>
+              <option v-for="c in cities" :key="c.code" :value="c.code">{{ c.name }}</option>
+            </select>
+          </label>
+          <label>
+            <span>区</span>
+            <select v-model="addrForm.district_code" @change="onDistrictSelect(addrForm.district_code)" :disabled="!districts.length">
+              <option value="">请选择</option>
+              <option v-for="d in districts" :key="d.code" :value="d.code">{{ d.name }}</option>
+            </select>
+          </label>
+        </div>
+        <label><span>街道/镇</span><input v-model="addrForm.street" maxlength="100" placeholder="如：粤海街道"></label>
+        <label><span>详细地址</span><input v-model="addrForm.detail" required maxlength="200" placeholder="楼栋、门牌号等"></label>
+        <label class="check-line">
+          <input v-model="addrForm.is_default" type="checkbox">
+          <span>设为默认地址</span>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="secondary" @click="closeAddrModal">取消</button>
+          <button type="submit" class="primary" :disabled="saving">{{ saving ? '保存中...' : '保存' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -414,8 +616,31 @@ th { color: var(--muted); background: var(--soft); }
 .modal-form label span { color: var(--muted); font-size: 14px; font-weight: 600; }
 .modal-form input, .modal-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font: inherit; font-size: 14px; background: #fff; box-sizing: border-box; }
 .modal-form textarea { resize: vertical; min-height: 70px; }
-.modal-form input:focus, .modal-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,100,120,0.1); outline: none; }
+.modal-form input:focus, .modal-form textarea:focus, .modal-form select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,100,120,0.1); outline: none; }
+.modal-form select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font: inherit; font-size: 14px; background: #fff; box-sizing: border-box; }
+.modal-form select:disabled { background: var(--soft); color: var(--muted); }
+.modal-addr { width: min(640px, 100%); }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 18px 28px; border-top: 1px solid var(--line); }
+.check-line { display: flex !important; flex-direction: row !important; align-items: center; gap: 10px; }
+.check-line input { width: 18px !important; height: 18px; }
+.form-row { display: grid; gap: 14px; }
+.form-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.form-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.primary.small { min-height: 36px; padding: 0 14px; font-size: 14px; }
+
+/* 地址列表 */
+.addr-list { display: grid; gap: 12px; }
+.addr-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.addr-card.default { border-color: var(--accent); background: #f6fbfc; }
+.addr-line { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.addr-line strong { font-size: 16px; }
+.addr-line .tag { display: inline-flex; min-height: 24px; align-items: center; border-radius: 999px; padding: 0 10px; font-size: 12px; font-weight: 800; }
+.addr-line .tag.ok { color: #1f7a4d; background: #e8f7ef; }
+.addr-full { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.addr-actions { display: flex; align-items: flex-start; gap: 12px; }
+.link-btn { border: 0; background: transparent; color: var(--accent); font-weight: 800; cursor: pointer; font: inherit; font-size: 14px; }
+.link-btn:hover { text-decoration: underline; }
+.link-btn.danger { color: #be123c; }
 
 @media (max-width: 1120px) {
   .user-hero, .profile-layout { grid-template-columns: 1fr; }
