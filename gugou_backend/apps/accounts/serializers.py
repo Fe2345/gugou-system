@@ -105,6 +105,28 @@ class UserSerializer(serializers.ModelSerializer):
         return profile.contact if profile else ""
 
 
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(min_length=6, write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context["user"]
+        if not user.check_password(value):
+            raise serializers.ValidationError("当前密码不正确")
+        return value
+
+    def save(self):
+        user = self.context["user"]
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+
+
+class LoginRecordSerializer(serializers.Serializer):
+    ip = serializers.CharField(source="ip_address", read_only=True)
+    ua = serializers.CharField(source="user_agent", read_only=True)
+    time = serializers.DateTimeField(source="created_at", read_only=True)
+
+
 class UserUpdateSerializer(serializers.Serializer):
     nickname = serializers.CharField(max_length=50, required=False, allow_blank=True)
     avatar = serializers.URLField(required=False, allow_blank=True)

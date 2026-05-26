@@ -7,7 +7,10 @@ from rest_framework.views import APIView
 
 from apps.common.permissions import IsAuthenticated
 from apps.common.response import error, flatten_errors, success
+from .models import LoginRecord
 from .serializers import (
+    ChangePasswordSerializer,
+    LoginRecordSerializer,
     LoginSerializer,
     RegisterSerializer,
     ResetPasswordSerializer,
@@ -37,7 +40,13 @@ class LoginView(APIView):
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors), code=400)
         data = serializer.validated_data
-        user_data = UserSerializer(data["user"]).data
+        user = data["user"]
+        LoginRecord.objects.create(
+            user=user,
+            ip_address=request.META.get("REMOTE_ADDR"),
+            user_agent=request.META.get("HTTP_USER_AGENT", ""),
+        )
+        user_data = UserSerializer(user).data
         return success(data={"token": data["token"], "user": user_data})
 
 
@@ -78,4 +87,31 @@ class UserInfoView(APIView):
             return error(message=flatten_errors(serializer.errors), code=400)
         serializer.update(request.user, serializer.validated_data)
         data = UserSerializer(request.user).data
+        return success(data=data)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(
+            data=request.data, context={"user": request.user}
+        )
+        if not serializer.is_valid():
+            return error(message=flatten_errors(serializer.errors), code=400)
+        serializer.save()
+        logger.info("密码修改: %s", request.user.user_id)
+        return success(message="密码修改成功，请使用新密码重新登录")
+
+
+class LoginRecordsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        records = (
+            LoginRecord.objects
+            .filter(user=request.user)
+            .order_by("-created_at")[:20]
+        )
+        data = LoginRecordSerializer(records, many=True).data
         return success(data=data)

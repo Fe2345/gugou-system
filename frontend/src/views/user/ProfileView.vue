@@ -1,22 +1,21 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
-import { getUserInfo, updateUserInfo } from '@/api/user'
+import { getUserInfo, updateUserInfo, changePassword, getLoginRecords } from '@/api/user'
 import type { UserInfo } from '@/types/user'
+import type { LoginRecordItem } from '@/api/user'
 
 defineOptions({ name: 'ProfileView' })
 
+const router = useRouter()
 const userStore = useUserStore()
 const user = ref<UserInfo | null>(null)
 const loading = ref(false)
 const saving = ref(false)
 const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
-
-// 编辑弹窗
-const showEditModal = ref(false)
-const editForm = reactive({ nickname: '', bio: '', contact: '' })
 
 // 侧边菜单
 const activeMenu = ref('basic')
@@ -27,6 +26,18 @@ const menus = [
   { key: 'credit', label: '信用评价' },
   { key: 'messages', label: '消息通知' },
 ]
+
+// 编辑资料弹窗
+const showEditModal = ref(false)
+const editForm = reactive({ nickname: '', bio: '', contact: '' })
+
+// 修改密码弹窗
+const showPasswordModal = ref(false)
+const passwordForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
+
+// 登录记录
+const loginRecords = ref<LoginRecordItem[]>([])
+const loadingRecords = ref(false)
 
 function showMessage(msg: string, type: 'success' | 'error' = 'success') {
   message.value = msg
@@ -41,7 +52,6 @@ function maskPhone(phone: string) {
 
 const roleMap: Record<string, string> = { user: '普通用户', admin: '管理员' }
 const statusMap: Record<string, string> = { normal: '正常', frozen: '冻结', disabled: '停用', deleted: '已注销' }
-const statusClassMap: Record<string, string> = { normal: 'tag ok', frozen: 'tag warn', disabled: 'tag warn', deleted: 'tag' }
 
 function getCreditLevel(score: number) {
   if (score >= 90) return '优秀用户'
@@ -51,6 +61,10 @@ function getCreditLevel(score: number) {
 }
 
 async function loadUser() {
+  if (!userStore.isLoggedIn) {
+    router.replace('/login')
+    return
+  }
   loading.value = true
   try {
     const res = await getUserInfo()
@@ -63,6 +77,15 @@ async function loadUser() {
   }
 }
 
+function loadRecords() {
+  loadingRecords.value = true
+  getLoginRecords()
+    .then(res => { loginRecords.value = res.data })
+    .catch(() => {})
+    .finally(() => { loadingRecords.value = false })
+}
+
+// --- 编辑资料 ---
 function openEdit() {
   if (!user.value) return
   editForm.nickname = user.value.nickname
@@ -71,31 +94,51 @@ function openEdit() {
   showEditModal.value = true
 }
 
-function closeEdit() {
-  showEditModal.value = false
-}
+function closeEdit() { showEditModal.value = false }
 
 async function handleSave() {
   if (!user.value) return
   saving.value = true
   try {
-    await updateUserInfo({
-      nickname: editForm.nickname,
-      bio: editForm.bio,
-      contact: editForm.contact,
-    } as any)
+    await updateUserInfo({ nickname: editForm.nickname, bio: editForm.bio, contact: editForm.contact } as any)
     showEditModal.value = false
     showMessage('保存成功')
     await loadUser()
   } catch {
     showMessage('保存失败', 'error')
-  } finally {
-    saving.value = false
-  }
+  } finally { saving.value = false }
+}
+
+// --- 修改密码 ---
+function openPasswordModal() {
+  passwordForm.oldPassword = ''
+  passwordForm.newPassword = ''
+  passwordForm.confirmPassword = ''
+  showPasswordModal.value = true
+}
+
+function closePasswordModal() { showPasswordModal.value = false }
+
+async function handleChangePassword() {
+  if (passwordForm.newPassword.length < 6) { showMessage('新密码至少 6 位', 'error'); return }
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) { showMessage('两次输入不一致', 'error'); return }
+  saving.value = true
+  try {
+    await changePassword(passwordForm.oldPassword, passwordForm.newPassword)
+    showPasswordModal.value = false
+    showMessage('密码修改成功，请使用新密码重新登录')
+    setTimeout(() => {
+      userStore.logout()
+      router.push('/login')
+    }, 1500)
+  } catch (e: any) {
+    showMessage(e?.response?.data?.message || '修改失败', 'error')
+  } finally { saving.value = false }
 }
 
 onMounted(() => {
   loadUser()
+  loadRecords()
 })
 </script>
 
@@ -107,7 +150,7 @@ onMounted(() => {
   </main>
 
   <main v-else-if="!user" class="page">
-    <p class="loading-text">无法加载用户信息，请确认已登录。</p>
+    <p class="loading-text">请先登录后查看用户中心。</p>
   </main>
 
   <main v-else class="page">
@@ -126,28 +169,19 @@ onMounted(() => {
       </div>
       <div class="hero-actions">
         <button class="primary" type="button" @click="openEdit">编辑资料</button>
-        <button class="secondary" type="button" disabled>修改密码</button>
-        <button class="secondary" type="button" disabled>查看交易记录</button>
+        <button class="secondary" type="button" @click="openPasswordModal">修改密码</button>
       </div>
     </section>
 
     <div v-if="message" class="toast" :class="{ error: messageType === 'error' }">{{ message }}</div>
 
     <section class="profile-layout">
-      <!-- 侧边菜单 -->
       <aside class="side-menu" aria-label="用户中心菜单">
-        <button
-          v-for="m in menus"
-          :key="m.key"
-          type="button"
-          :class="{ active: activeMenu === m.key }"
-          @click="activeMenu = m.key"
-        >
+        <button v-for="m in menus" :key="m.key" type="button" :class="{ active: activeMenu === m.key }" @click="activeMenu = m.key">
           {{ m.label }}
         </button>
       </aside>
 
-      <!-- 主内容区 -->
       <section class="content">
         <!-- 基本信息 -->
         <section v-show="activeMenu === 'basic'" class="panel">
@@ -166,37 +200,44 @@ onMounted(() => {
             <div><span>信用分</span><strong>{{ user.creditScore }}（{{ getCreditLevel(user.creditScore) }}）</strong></div>
           </div>
           <div v-if="user.bio" class="bio-section">
-            <span>个人简介</span>
-            <p>{{ user.bio }}</p>
+            <span>个人简介</span><p>{{ user.bio }}</p>
           </div>
         </section>
 
-        <!-- 地址管理（占位） -->
+        <!-- 地址管理 -->
         <section v-show="activeMenu === 'address'" class="panel">
-          <div class="section-head">
-            <div><p class="eyebrow">地址管理</p><h2>收货地址</h2></div>
-          </div>
-          <div class="empty-state">
-            <strong>地址管理功能开发中</strong>
-            <p>后续版本将支持收货地址的增删改查。</p>
-          </div>
+          <div class="section-head"><div><p class="eyebrow">地址管理</p><h2>收货地址</h2></div></div>
+          <div class="empty-state"><strong>功能开发中</strong><p>后续版本将支持收货地址管理。</p></div>
         </section>
 
-        <!-- 安全设置（占位） -->
+        <!-- 安全设置 -->
         <section v-show="activeMenu === 'security'" class="panel">
           <div class="section-head"><div><p class="eyebrow">安全设置</p><h2>账户安全</h2></div></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>安全项目</th><th>当前状态</th><th>操作</th></tr></thead>
+              <thead><tr><th>安全项目</th><th>操作</th></tr></thead>
               <tbody>
-                <tr><td>登录密码</td><td>已设置</td><td class="link-text">修改密码（开发中）</td></tr>
-                <tr><td>手机号</td><td>已绑定</td><td class="link-text">更换手机号（开发中）</td></tr>
+                <tr><td>登录密码</td><td class="link-text"><button type="button" class="link-btn" @click="openPasswordModal">修改密码</button></td></tr>
+                <tr><td>手机号</td><td class="link-text">{{ maskPhone(user.phone) }}（已绑定）</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="section-head" style="margin-top: 24px;"><div><p class="eyebrow">登录记录</p><h2>最近登录</h2></div></div>
+          <div v-if="loginRecords.length === 0" style="color: var(--muted); font-size: 14px;">暂无记录</div>
+          <div v-else class="table-wrap">
+            <table>
+              <thead><tr><th>登录时间</th><th>IP 地址</th></tr></thead>
+              <tbody>
+                <tr v-for="(r, i) in loginRecords" :key="i">
+                  <td>{{ new Date(r.time).toLocaleString('zh-CN') }}</td>
+                  <td>{{ r.ip }}</td>
+                </tr>
               </tbody>
             </table>
           </div>
         </section>
 
-        <!-- 信用评价（占位） -->
+        <!-- 信用评价 -->
         <section v-show="activeMenu === 'credit'" class="panel">
           <div class="section-head"><div><p class="eyebrow">信用评价</p><h2>信用状态</h2></div></div>
           <div class="credit-grid">
@@ -206,18 +247,14 @@ onMounted(() => {
           <p class="muted-text">详细评价记录功能开发中。</p>
         </section>
 
-        <!-- 消息通知（占位） -->
+        <!-- 消息通知 -->
         <section v-show="activeMenu === 'messages'" class="panel">
           <div class="section-head"><div><p class="eyebrow">消息通知</p><h2>消息列表</h2></div></div>
-          <div class="empty-state">
-            <strong>消息功能开发中</strong>
-            <p>后续版本将支持系统通知和交易消息。</p>
-          </div>
+          <div class="empty-state"><strong>功能开发中</strong><p>后续版本将支持消息通知。</p></div>
         </section>
       </section>
 
-      <!-- 右侧面板 -->
-      <aside class="right-panel" aria-label="信息与提醒">
+      <aside class="right-panel">
         <section class="remind-card">
           <div class="section-head"><p class="eyebrow">账户信息</p><h2>当前状态</h2></div>
           <ul>
@@ -233,28 +270,30 @@ onMounted(() => {
   <!-- 编辑资料弹窗 -->
   <div v-if="showEditModal" class="modal-overlay" @click.self="closeEdit">
     <div class="modal">
-      <div class="modal-header">
-        <h2>编辑资料</h2>
-        <button class="modal-close" @click="closeEdit">&times;</button>
-      </div>
+      <div class="modal-header"><h2>编辑资料</h2><button class="modal-close" @click="closeEdit">&times;</button></div>
       <form class="modal-form" @submit.prevent="handleSave">
-        <label>
-          <span>昵称</span>
-          <input v-model="editForm.nickname" type="text" maxlength="50" placeholder="输入昵称">
-        </label>
-        <label>
-          <span>联系方式</span>
-          <input v-model="editForm.contact" type="text" maxlength="100" placeholder="微信/QQ等">
-        </label>
-        <label>
-          <span>个人简介</span>
-          <textarea v-model="editForm.bio" rows="3" maxlength="200" placeholder="简单介绍一下自己"></textarea>
-        </label>
+        <label><span>昵称</span><input v-model="editForm.nickname" type="text" maxlength="50" placeholder="输入昵称"></label>
+        <label><span>联系方式</span><input v-model="editForm.contact" type="text" maxlength="100" placeholder="微信/QQ等"></label>
+        <label><span>个人简介</span><textarea v-model="editForm.bio" rows="3" maxlength="200" placeholder="简单介绍一下自己"></textarea></label>
         <div class="modal-actions">
           <button type="button" class="secondary" @click="closeEdit">取消</button>
-          <button type="submit" class="primary" :disabled="saving">
-            {{ saving ? '保存中...' : '保存' }}
-          </button>
+          <button type="submit" class="primary" :disabled="saving">{{ saving ? '保存中...' : '保存' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 修改密码弹窗 -->
+  <div v-if="showPasswordModal" class="modal-overlay" @click.self="closePasswordModal">
+    <div class="modal">
+      <div class="modal-header"><h2>修改密码</h2><button class="modal-close" @click="closePasswordModal">&times;</button></div>
+      <form class="modal-form" @submit.prevent="handleChangePassword">
+        <label><span>当前密码</span><input v-model="passwordForm.oldPassword" type="password" required placeholder="请输入当前密码"></label>
+        <label><span>新密码</span><input v-model="passwordForm.newPassword" type="password" required minlength="6" placeholder="至少 6 位"></label>
+        <label><span>确认密码</span><input v-model="passwordForm.confirmPassword" type="password" required placeholder="再次输入新密码"></label>
+        <div class="modal-actions">
+          <button type="button" class="secondary" @click="closePasswordModal">取消</button>
+          <button type="submit" class="primary" :disabled="saving">{{ saving ? '提交中...' : '确认修改' }}</button>
         </div>
       </form>
     </div>
@@ -264,14 +303,11 @@ onMounted(() => {
 <style scoped>
 .page { width: min(1240px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 44px; }
 .loading-text { text-align: center; color: var(--muted); padding: 60px 0; font-size: 18px; }
-.toast {
-  margin-top: 16px; padding: 12px 18px; border-radius: 8px; color: #1f6b45; background: #e8f7ef;
-  border: 1px solid #bce5ce; font-weight: 600;
-}
+.toast { margin-top: 16px; padding: 12px 18px; border-radius: 8px; color: #1f6b45; background: #e8f7ef; border: 1px solid #bce5ce; font-weight: 600; }
 .toast.error { color: #b9352b; background: #fdecea; border-color: #f0b8b3; }
 .user-hero {
-  display: grid; grid-template-columns: 86px minmax(0, 1fr) 360px;
-  gap: 20px; align-items: center; padding: 30px; border-radius: 10px; color: #fff;
+  display: grid; grid-template-columns: 86px minmax(0, 1fr) 240px; gap: 20px; align-items: center;
+  padding: 30px; border-radius: 10px; color: #fff;
   background: linear-gradient(rgba(10,74,90,0.88), rgba(10,74,90,0.92)),
     url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80") center/cover;
   box-shadow: var(--shadow);
@@ -282,13 +318,12 @@ h1, h2, p { margin: 0; }
 h1 { font-size: 34px; }
 .user-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .user-meta span { padding: 7px 10px; border-radius: 7px; background: rgba(255,255,255,0.13); color: rgba(255,255,255,0.86); font-size: 13px; }
-.hero-actions, .panel-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.hero-actions, .panel-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .primary, .secondary { min-height: 42px; border-radius: 8px; padding: 0 14px; font-weight: 800; cursor: pointer; font: inherit; }
 .primary { border: 0; color: #fff; background: var(--accent); }
 .primary:hover { background: var(--accent-dark); }
 .primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .secondary { border: 1px solid var(--line); color: var(--accent); background: #fff; }
-.secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 .profile-layout { display: grid; grid-template-columns: 190px minmax(0, 1fr) 260px; gap: 20px; margin-top: 20px; }
 .side-menu, .panel, .remind-card { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); }
 .side-menu { align-self: start; display: grid; gap: 8px; padding: 14px; }
@@ -311,19 +346,17 @@ h2 { font-size: 23px; }
 .bio-section p { color: var(--ink); line-height: 1.6; }
 .muted-text { color: var(--muted); font-size: 14px; margin-top: 12px; }
 .table-wrap { overflow-x: auto; }
-table { width: 100%; min-width: 500px; border-collapse: collapse; font-size: 14px; }
+table { width: 100%; min-width: 400px; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 13px 12px; border-bottom: 1px solid var(--line); text-align: left; }
 th { color: var(--muted); background: var(--soft); }
 .link-text { color: var(--accent); font-weight: 800; }
-.tag { display: inline-flex; min-height: 26px; align-items: center; border-radius: 999px; padding: 0 10px; color: var(--muted); background: #edf1f3; font-size: 13px; font-weight: 800; }
-.tag.ok { color: #1f7a4d; background: #e8f7ef; }
-.tag.warn { color: #b86b00; background: #fff3d7; }
-.empty-state { min-height: 120px; display: grid; place-items: center; text-align: center; border: 1px dashed #bfd0d5; border-radius: 10px; color: var(--muted); background: var(--soft); }
+.link-btn { border: 0; background: transparent; color: var(--accent); font-weight: 800; cursor: pointer; font: inherit; padding: 0; }
+.link-btn:hover { text-decoration: underline; }
+.empty-state { min-height: 100px; display: grid; place-items: center; text-align: center; border: 1px dashed #bfd0d5; border-radius: 10px; color: var(--muted); background: var(--soft); padding: 20px; }
 .empty-state strong { display: block; margin-bottom: 8px; color: var(--ink); font-size: 18px; }
 .empty-state p { font-size: 14px; }
 .remind-card ul { margin: 0; padding-left: 20px; color: var(--muted); line-height: 2; }
 
-/* 弹窗 */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: grid; place-items: center; z-index: 1000; padding: 20px; }
 .modal { background: var(--panel); border-radius: 16px; width: min(520px, 100%); max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 28px; border-bottom: 1px solid var(--line); }
