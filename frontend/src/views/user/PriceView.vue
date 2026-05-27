@@ -5,10 +5,16 @@ import { queryPrice, getHotPrices } from '@/api/pricing'
 import type { PriceItem } from '@/types/pricing'
 
 const keyword = ref('')
-const range = ref<'7d' | '30d' | '90d'>('90d')
+const range = ref<'7d' | '30d' | '90d'>('30d')
 const loading = ref(false)
 const item = ref<PriceItem | null>(null)
 const hotPrices = ref<PriceItem[]>([])
+
+const categoryMap: Record<string, string> = {
+  figure: '手办', badge: '徽章', poster: '海报/色纸', acrylic: '亚克力',
+  doll: '玩偶', card: '卡片', other: '其他',
+}
+function categoryLabel(val: string) { return categoryMap[val] || val }
 
 const rangeLabel = computed(() => {
   const map = { '7d': '近7天', '30d': '近30天', '90d': '近90天' }
@@ -111,7 +117,7 @@ onMounted(async () => {
         <p class="eyebrow">当前谷子</p>
         <h2>{{ item.name }}</h2>
         <div class="meta-tags">
-          <span>{{ item.ipName }}</span><span>{{ item.characterName }}</span><span>{{ item.category }}</span>
+          <span>{{ item.ipName }}</span><span>{{ item.characterName }}</span><span>{{ categoryLabel(item.category) }}</span>
         </div>
       </div>
       <div class="metric-grid" aria-label="价格指标">
@@ -173,7 +179,7 @@ onMounted(async () => {
       <div class="hot-grid">
         <article v-for="h in hotPrices" :key="h.id" class="hot-card" @click="keyword = h.name; handleSearch()">
           <h3>{{ h.name }}</h3>
-          <p class="hot-meta">{{ h.ipName }} · {{ h.characterName }} · {{ h.category }}</p>
+          <p class="hot-meta">{{ h.ipName }} · {{ h.characterName }} · {{ categoryLabel(h.category) }}</p>
           <div class="hot-bottom">
             <strong>¥{{ h.currentPrice }}</strong>
             <span :class="{ up: h.changePercent > 0, down: h.changePercent < 0 }">{{ h.changePercent > 0 ? '+' : '' }}{{ h.changePercent }}%</span>

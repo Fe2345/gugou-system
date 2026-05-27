@@ -91,10 +91,18 @@ export async function deleteGoods(id: string): Promise<ApiResponse<void>> {
   return request.delete(`/products/${id}`)
 }
 
-export async function getGoodsCategories(): Promise<ApiResponse<string[]>> {
+export async function getGoodsCategories(): Promise<ApiResponse<{ value: string; label: string }[]>> {
   if (USE_MOCK) {
     await delay(200)
-    return { code: 200, message: 'ok', data: ['徽章', '色纸', '卡片', '亚克力', '明信片'] }
+    return { code: 200, message: 'ok', data: [
+      { value: 'figure', label: '手办' },
+      { value: 'badge', label: '徽章' },
+      { value: 'poster', label: '海报' },
+      { value: 'acrylic', label: '亚克力' },
+      { value: 'doll', label: '玩偶' },
+      { value: 'card', label: '卡片' },
+      { value: 'other', label: '其他' },
+    ] }
   }
   const { default: request } = await import('@/utils/request')
   return request.get('/products/categories')

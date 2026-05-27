@@ -1,7 +1,7 @@
 import type { PriceItem, PriceQuery } from '@/types/pricing'
 import type { ApiResponse } from '@/types/api'
 
-const USE_MOCK = true
+const USE_MOCK = false
 
 const mockPriceData: PriceItem[] = [
   {

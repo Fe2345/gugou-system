@@ -10,7 +10,7 @@ const selectedImage = ref('')
 const loading = ref(false)
 const products = ref<GoodsItem[]>([])
 const searchQuery = ref('')
-const categories = ref<string[]>([])
+const categories = ref<{ value: string; label: string }[]>([])
 
 // 弹窗状态
 const selectedProduct = ref<GoodsItem | null>(null)
@@ -24,6 +24,7 @@ const form = reactive({
   ipName: '',
   characterName: '',
   category: '',
+  description: '',
 })
 
 const editForm = reactive({
@@ -92,13 +93,15 @@ async function handleAddProduct() {
       mainImage: selectedImage.value,
       ipName: form.ipName || 'IP 待定',
       characterName: form.characterName || '角色待定',
-      category: form.category || '品类待定',
+      category: form.category || 'other',
+      description: form.description,
     })
     form.name = ''
     form.referencePrice = ''
     form.ipName = ''
     form.characterName = ''
     form.category = ''
+    form.description = ''
     selectedImage.value = ''
     loadProducts()
   } catch (e) {
@@ -116,6 +119,8 @@ async function handleFilter() {
   loading.value = true
   try {
     const params: any = {}
+    if (filterForm.ipName.trim()) params.ipName = filterForm.ipName.trim()
+    if (filterForm.characterName.trim()) params.characterName = filterForm.characterName.trim()
     if (filterForm.category) params.category = filterForm.category
     const res = await getGoodsList(params)
     products.value = res.data.list
@@ -260,7 +265,7 @@ function getStatusClass(status: string) {
           <span>品类</span>
           <select v-model="filterForm.category">
             <option value="">全部品类</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
           </select>
         </label>
         <label>
@@ -312,6 +317,10 @@ function getStatusClass(status: string) {
               <label>
                 <span>品类</span>
                 <input v-model="form.category" type="text" placeholder="选填">
+              </label>
+              <label class="full-width">
+                <span>描述</span>
+                <textarea v-model="form.description" rows="2" placeholder="选填"></textarea>
               </label>
               <button class="primary" type="submit" :disabled="loading">{{ loading ? '添加中...' : '添加到产品列表' }}</button>
             </div>
@@ -498,6 +507,9 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .upload-box img { width: 100%; height: 100%; object-fit: cover; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .form-grid .primary { align-self: end; }
+.form-grid .full-width { grid-column: 1 / -1; }
+.form-grid textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; color: var(--ink); background: #fff; outline: none; font: inherit; resize: vertical; min-height: 46px; }
+.form-grid textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(15,100,120,0.12); }
 .list-head { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
 
 .empty-state { min-height: 180px; display: grid; place-items: center; text-align: center; border: 1px dashed #bfd0d5; border-radius: 10px; color: var(--muted); background: var(--soft); }

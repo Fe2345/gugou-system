@@ -45,6 +45,7 @@ def next_seq(key: str) -> int:
                 db=1,
                 decode_responses=True,
                 socket_connect_timeout=1,
+                socket_timeout=1,
             )
         return _client.incr(key)
     except Exception:

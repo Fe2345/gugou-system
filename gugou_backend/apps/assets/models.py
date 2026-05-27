@@ -18,6 +18,8 @@ class UserAsset(BaseModel):
         on_delete=models.CASCADE,
         related_name="assets",
         verbose_name="所属用户",
+        null=True,
+        blank=True,
     )
     product = models.ForeignKey(
         "products.Product",

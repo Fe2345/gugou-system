@@ -1,0 +1,98 @@
+[
+  {
+    "name": "玛奇朵限定徽章",
+    "ip_name": "精灵宝可梦",
+    "character_name": "玛奇朵",
+    "category": "badge",
+    "reference_price": 128,
+    "description": "精灵宝可梦联动原版限定徽章，限量发售"
+  },
+  {
+    "name": "深海明信片套装",
+    "ip_name": "原神",
+    "character_name": "深海龙蜥",
+    "category": "card",
+    "reference_price": 96,
+    "description": "原神深海系列明信片，10张装"
+  },
+  {
+    "name": "春日限定徽章",
+    "ip_name": "初音未来",
+    "character_name": "初音",
+    "category": "badge",
+    "reference_price": 58,
+    "description": "春日祭限定徽章，樱花主题"
+  },
+  {
+    "name": "金色限定色纸",
+    "ip_name": "咒术回战",
+    "character_name": "五条悟",
+    "category": "poster",
+    "reference_price": 168,
+    "description": "金色限定版色纸，烫金工艺"
+  },
+  {
+    "name": "阿尼亚表情包立牌",
+    "ip_name": "间谍过家家",
+    "character_name": "阿尼亚",
+    "category": "acrylic",
+    "reference_price": 75,
+    "description": "阿尼亚经典表情亚克力立牌"
+  },
+  {
+    "name": "蕾姆泳装手办",
+    "ip_name": "Re:从零开始的异世界生活",
+    "character_name": "蕾姆",
+    "category": "figure",
+    "reference_price": 298,
+    "description": "蕾姆泳装Ver. 1/7比例手办"
+  },
+  {
+    "name": "炭治郎日轮刀模型",
+    "ip_name": "鬼灭之刃",
+    "character_name": "炭治郎",
+    "category": "figure",
+    "reference_price": 450,
+    "description": "炭治郎日轮刀 1:1复刻模型"
+  },
+  {
+    "name": "皮卡丘毛绒玩偶",
+    "ip_name": "精灵宝可梦",
+    "character_name": "皮卡丘",
+    "category": "doll",
+    "reference_price": 129,
+    "description": "皮卡丘大号毛绒玩偶 30cm"
+  },
+  {
+    "name": "明日香限定卡片",
+    "ip_name": "新世纪福音战士",
+    "character_name": "明日香",
+    "category": "card",
+    "reference_price": 45,
+    "description": "EVA明日香限定收藏卡片"
+  },
+  {
+    "name": "路飞五档海报",
+    "ip_name": "海贼王",
+    "character_name": "路飞",
+    "category": "poster",
+    "reference_price": 35,
+    "description": "路飞五档尼卡形态 A2海报"
+  },
+  {
+    "name": "亚丝娜亚克力挂件",
+    "ip_name": "刀剑神域",
+    "character_name": "亚丝娜",
+    "category": "acrylic",
+    "reference_price": 42,
+    "description": "亚丝娜战斗服Ver.亚克力挂件"
+  },
+  {
+    "name": "祢豆子竹筒玩偶",
+    "ip_name": "鬼灭之刃",
+    "character_name": "祢豆子",
+    "category": "doll",
+    "reference_price": 89,
+    "description": "祢豆子竹筒装迷你玩偶 20cm"
+  }
+]
