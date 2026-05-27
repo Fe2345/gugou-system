@@ -1,0 +1,40 @@
+:root {
+  color-scheme: light;
+  --bg: #eef4f6;
+  --panel: #ffffff;
+  --ink: #13242b;
+  --muted: #65737b;
+  --line: #dce7ea;
+  --accent: #0f6478;
+  --accent-dark: #0a4a5a;
+  --gold: #dca12e;
+  --soft: #f6fafb;
+  --shadow: 0 18px 50px rgba(14, 51, 61, 0.12);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  color: var(--ink);
+  background:
+    linear-gradient(135deg, rgba(15, 100, 120, 0.12), transparent 34%),
+    linear-gradient(315deg, rgba(220, 161, 46, 0.14), transparent 32%),
+    var(--bg);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}

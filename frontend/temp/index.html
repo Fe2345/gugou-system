@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户账户管理</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <section class="auth-card" aria-label="用户账户管理">
+      <div class="brand">
+        <div class="brand-mark">U</div>
+        <div>
+          <h1>用户账户管理</h1>
+          <p>安全便捷地完成账号访问与密码恢复</p>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="账户入口">
+        <button class="tab active" type="button" data-route="login">登录</button>
+        <button class="tab" type="button" data-route="register">注册</button>
+        <button class="tab" type="button" data-route="forgot">找回密码</button>
+      </nav>
+
+      <div id="message" class="message" hidden></div>
+
+      <section id="login" class="view active">
+        <div class="view-head">
+          <p class="eyebrow">统一入口</p>
+          <h2>欢迎登录</h2>
+        </div>
+        <form id="loginForm" class="form">
+          <label>
+            <span>手机号或账号</span>
+            <input name="account" autocomplete="username" placeholder="请输入手机号或账号">
+          </label>
+          <label>
+            <span>密码</span>
+            <input name="password" type="password" autocomplete="current-password" placeholder="请输入密码">
+          </label>
+          <button class="primary" type="submit">登录</button>
+          <div class="form-links">
+            <button type="button" data-route="register">立即注册</button>
+            <button type="button" data-route="forgot">忘记密码</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="register" class="view">
+        <div class="view-head">
+          <p class="eyebrow">新用户建档</p>
+          <h2>创建账号</h2>
+        </div>
+        <form id="registerForm" class="form">
+          <label>
+            <span>手机号</span>
+            <input name="phone" autocomplete="tel" placeholder="请输入 11 位手机号">
+          </label>
+          <label>
+            <span>密码</span>
+            <input name="password" type="password" autocomplete="new-password" placeholder="至少 6 位">
+          </label>
+          <label>
+            <span>确认密码</span>
+            <input name="confirmPassword" type="password" autocomplete="new-password" placeholder="再次输入密码">
+          </label>
+          <label class="check-line">
+            <input name="agreement" type="checkbox">
+            <span>我已阅读并同意《用户协议》</span>
+          </label>
+          <button class="primary" type="submit">注册</button>
+          <div class="form-links single">
+            <button type="button" data-route="login">已有账号，去登录</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="forgot" class="view">
+        <div class="view-head">
+          <p class="eyebrow">账户恢复</p>
+          <h2>找回密码</h2>
+        </div>
+        <form id="forgotForm" class="form">
+          <label>
+            <span>手机号</span>
+            <input name="phone" autocomplete="tel" placeholder="请输入注册手机号">
+          </label>
+          <label>
+            <span>新密码</span>
+            <input name="password" type="password" autocomplete="new-password" placeholder="设置新密码">
+          </label>
+          <button class="primary" type="submit">确认修改</button>
+          <div class="form-links single">
+            <button type="button" data-route="login">返回登录</button>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

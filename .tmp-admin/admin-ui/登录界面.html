@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>谷购后台 - 管理员鉴权</title>
+    <!-- 引入思源黑体或Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7d73e6; /* 核心二次元紫 */
+            --accent-color: #00f2fe;  /* 辅助亮青色 */
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans SC', 'Inter', 'Microsoft YaHei', sans-serif; }
+
+        body, html { height: 100%; overflow: hidden; }
+
+        body {
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        /* 装饰背景元素 - 增加设计感 */
+        .bg-decoration {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: var(--primary-color);
+            filter: blur(120px);
+            opacity: 0.15;
+            z-index: 0;
+            border-radius: 50%;
+        }
+
+        /* 飘落的粒子 - 增强二次元氛围 */
+        .particle-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: particleRise linear infinite;
+        }
+
+        @keyframes particleRise {
+            0% { transform: translateY(100%) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100%) translateX(calc(10px * var(--particle-offset))) rotate(360deg); opacity: 0; }
+        }
+
+        /* 登录卡片 - 玻璃拟态核心 */
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 40px 50px;
+            width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 居中对齐所有元素 */
+        }
+
+        .login-card::before {
+            content: "ADMIN ACCESS";
+            position: absolute;
+            top: -20px;
+            right: 30px;
+            font-size: 30px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.03);
+            pointer-events: none;
+        }
+
+        /* Logo 容器样式 */
+        .logo-wrapper {
+            margin-bottom: 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* SVG Logo 样式与动画 */
+        .logo-svg {
+            width: 90px;
+            height: 90px;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 10px rgba(125, 115, 230, 0.5));
+            animation: logoPulse 5s ease-in-out infinite;
+        }
+
+        /* SVG 图形霓虹光边动画 */
+        .logo-svg .neon-path {
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 3px var(--accent-color));
+            animation: neonBlink 3s ease-in-out infinite, logoDraw 1.5s ease-in-out forwards;
+        }
+
+        /* SVG 图形渐变 */
+        .logo-svg .neon-path.stroke1 { stroke: url(#guguogradient1); }
+        .logo-svg .neon-path.stroke2 { stroke: url(#guguogradient2); }
+        .logo-svg .inner-path { fill: url(#guguogradient3); }
+
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(125, 115, 230, 0.5)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(0, 242, 254, 0.8)); }
+        }
+
+        @keyframes neonBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        @keyframes logoDraw {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .login-title {
+            font-weight: 700;
+            font-size: 24px;
+            margin-bottom: 5px;
+            background: linear-gradient(to right, #fff, var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-subtitle {
+            font-size: 12px;
+            color: #94a3b8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* 输入框美化 */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .login-card input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 15px rgba(125, 115, 230, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* 按钮美化 */
+        .login-card button[type="submit"] {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-color), #6366f1);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(125, 115, 230, 0.3);
+        }
+
+        .login-card button[type="submit"]:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 20px -3px rgba(125, 115, 230, 0.4);
+        }
+
+        /* 辅助链接 */
+        .links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.3s;
+        }
+
+        .links a:hover {
+            color: var(--accent-color);
+        }
+
+        /* 错误提示动效 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-msg {
+            color: #fb7185;
+            font-size: 13px;
+            background: rgba(251, 113, 133, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            width: 100%;
+            display: none;
+            animation: shake 0.4s ease-in-out;
+            border-left: 3px solid #fb7185;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 装饰光晕 -->
+<div class="bg-decoration" style="top: 20%; left: 20%;"></div>
+<div class="bg-decoration" style="bottom: 20%; right: 20%; background: var(--accent-color);"></div>
+
+<!-- 飘落粒子 -->
+<div class="particle-container">
+    <div class="particle" style="width: 2px; height: 2px; top: 10%; left: 15%; --particle-offset: 5; animation-duration: 6s; animation-delay: 0s;"></div>
+    <div class="particle" style="width: 3px; height: 3px; top: 30%; left: 70%; --particle-offset: -3; animation-duration: 8s; animation-delay: 1s;"></div>
+    <div class="particle" style="width: 1.5px; height: 1.5px; top: 50%; left: 80%; --particle-offset: 10; animation-duration: 5s; animation-delay: 2.5s;"></div>
+    <div class="particle" style="width: 2.5px; height: 2.5px; top: 70%; left: 30%; --particle-offset: -7; animation-duration: 7s; animation-delay: 4s;"></div>
+    <div class="particle" style="width: 2px; height: 2px; top: 90%; left: 95%; --particle-offset: 2; animation-duration: 6.5s; animation-delay: 0.5s;"></div>
+</div>
+
+<div class="login-card">
+    
+    <!-- 这里是“虹光谷徽” SVG Logo 代码 -->
+    <div class="logo-wrapper">
+        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- 定义用于 Logo 内部和线条的渐变 -->
+                <linearGradient id="guguogradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color: var(--accent-color); stop-opacity: 1" />
+                    <stop offset="100%" style="stop-color: var(--primary-color); stop-opacity: 1" />
+                </linearGradient>
+                <linearGradient id="guguogradient2" x1="100%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color: var(--primary-color); stop-opacity: 0.8" />
+                    <stop offset="100%" style="stop-color: var(--accent-color); stop-opacity: 1" />
+                </linearGradient>
+                <linearGradient id="guguogradient3" x1="50%" y1="0%" x2="50%" y2="100%">
+                    <stop offset="0%" style="stop-color: #fff; stop-opacity: 0.2" />
+                    <stop offset="100%" style="stop-color: var(--accent-color); stop-opacity: 0.8" />
+                </linearGradient>
+            </defs>
+            
+            <!-- 抽象的六角星形徽章外圈 - 虹光线条 -->
+            <path class="neon-path stroke1" d="M 50,10 L 85,28 L 85,72 L 50,90 L 15,72 L 15,28 Z" style="stroke-dasharray: 250; stroke-dashoffset: 250;"></path>
+            
+            <!-- 抽象的“谷”字结构 - 虹光线条 -->
+            <path class="neon-path stroke2" d="M 50,30 L 65,45 L 35,45 Z M 40,55 L 60,55 M 30,65 L 70,65 M 50,65 L 50,80 L 35,85 M 50,80 L 65,85" style="stroke-dasharray: 100; stroke-dashoffset: 100;"></path>
+
+            <!-- 内部填充光晕 -->
+            <path class="inner-path" d="M 50,30 L 65,45 L 35,45 Z M 40,55 L 60,55 M 30,65 L 70,65" opacity="0.3"></path>
+        </svg>
+        <div class="login-title">谷购后台管理</div>
+        <div class="login-subtitle">GUGOU Goods Asset</div>
+    </div>
+    
+    <div class="error-msg" id="errorMsg">身份验证失败，请重新检查凭据</div>
+
+    <form id="loginForm">
+        <div class="input-group">
+            <input type="text" id="adminId" placeholder="管理员工号 / UID" required>
+        </div>
+        <div class="input-group">
+            <input type="password" id="adminPassword" placeholder="访问秘钥" required>
+        </div>
+        <button type="submit">进入系统</button>
+    </form>
+
+    <div class="links">
+        <a href="#">申请权限</a>
+        <a href="#">丢失秘钥?</a>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', function(e){
+        e.preventDefault();
+        const adminId = document.getElementById('adminId').value;
+        const adminPassword = document.getElementById('adminPassword').value;
+
+        // 这里可以添加更酷炫的加载动画
+        if(adminId === 'admin' && adminPassword === '123456'){
+            alert('验证成功，正在同步资产数据...');
+            // 这里通常是 window.location.href = 'dashboard.html';
+        } else {
+            errorMsg.style.display = 'block';
+            // 每次提交后重置错误消息的动画，使其再次触发
+            errorMsg.style.animation = 'none';
+            errorMsg.offsetHeight; /* 触发 reflow */
+            errorMsg.style.animation = 'shake 0.4s ease-in-out';
+        }
+    });
+</script>
+
+</body>
+</html>

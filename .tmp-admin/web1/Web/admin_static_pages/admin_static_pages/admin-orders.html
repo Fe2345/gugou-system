@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!--
+  编写日期：2026-05-06
+  用途：谷购系统管理员端订单管理页面静态原型
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>订单管理页面</title>
+  <link rel="stylesheet" href="admin-common.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">谷购后台</div>
+      <div class="brand-sub">管理员静态页面原型</div>
+      <div class="nav-title">管理导航</div>
+      <ul class="nav">
+        <li><a href="#">登录页面</a></li>
+        <li><a href="#">后台首页页面</a></li>
+        <li><a href="#">用户管理页面</a></li>
+        <li><a href="#">商品管理页面</a></li>
+        <li><a href="admin-orders.html" class="active">订单管理页面</a></li>
+        <li><a href="admin-exchange.html">换物管理页面</a></li>
+        <li><a href="admin-team.html">拼团管理页面</a></li>
+        <li><a href="admin-price.html">价格记录页面</a></li>
+      </ul>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">订单管理页面</h1>
+          <p class="page-desc">用于查看订单状态、处理异常订单、跟踪发货与收货进度。</p>
+        </div>
+        <div class="admin-chip">当前管理员：运营管理员 A0001</div>
+      </div>
+
+      <section class="metrics">
+        <div class="metric"><div class="metric-label">今日新增订单</div><div class="metric-value">128</div><div class="metric-note">较昨日增加 12 单</div></div>
+        <div class="metric"><div class="metric-label">待发货订单</div><div class="metric-value">36</div><div class="metric-note">需优先跟进</div></div>
+        <div class="metric"><div class="metric-label">异常处理中</div><div class="metric-value">9</div><div class="metric-note">退款与纠纷混合</div></div>
+        <div class="metric"><div class="metric-label">已完成订单</div><div class="metric-value">452</div><div class="metric-note">本周累计</div></div>
+      </section>
+
+      <section class="toolbar">
+        <input class="input" type="text" placeholder="输入订单编号或买家昵称">
+        <select class="select"><option>全部状态</option><option>待支付</option><option>已支付</option><option>待发货</option><option>待收货</option><option>已完成</option><option>异常处理中</option></select>
+        <select class="select"><option>全部时间</option><option>今天</option><option>近3天</option><option>近7天</option></select>
+        <button class="btn btn-primary">查询订单</button>
+        <button class="btn btn-light">导出报表</button>
+      </section>
+
+      <section class="content-grid">
+        <div class="table-wrap">
+          <div class="table-head">
+            <div>
+              <h2 class="table-title">订单列表</h2>
+              <p class="table-sub">静态展示关键订单字段与操作入口</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn-light">批量标记发货</button>
+              <button class="btn btn-danger">异常挂起</button>
+            </div>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>订单编号</th>
+                <th>买家</th>
+                <th>卖家</th>
+                <th>商品</th>
+                <th>金额</th>
+                <th>状态</th>
+                <th>下单时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>O202605061030010001</td>
+                <td>星野</td>
+                <td>柚子茶</td>
+                <td>吧唧套组 A</td>
+                <td>¥128.00</td>
+                <td><span class="badge badge-orange">待发货</span></td>
+                <td>2026-05-06 10:30</td>
+                <td class="actions"><button class="btn btn-light">查看</button><button class="btn btn-success">发货</button></td>
+              </tr>
+              <tr>
+                <td>O202605061122210002</td>
+                <td>白昼</td>
+                <td>林深</td>
+                <td>色纸限定款</td>
+                <td>¥89.00</td>
+                <td><span class="badge badge-red">异常处理</span></td>
+                <td>2026-05-06 11:22</td>
+                <td class="actions"><button class="btn btn-light">详情</button><button class="btn btn-danger">介入</button></td>
+              </tr>
+              <tr>
+                <td>O202605051558100018</td>
+                <td>月海</td>
+                <td>塔塔</td>
+                <td>立牌单品</td>
+                <td>¥56.00</td>
+                <td><span class="badge badge-green">已完成</span></td>
+                <td>2026-05-05 15:58</td>
+                <td class="actions"><button class="btn btn-light">查看</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title">异常订单处理</h2>
+          <p class="panel-sub">管理员可在此静态原型中查看处理步骤</p>
+          <div class="panel-list">
+            <div class="list-item"><strong>退款申请</strong>买家提交退款原因后，管理员核对付款与物流状态。</div>
+            <div class="list-item"><strong>超时未发货</strong>系统自动标记后，管理员提醒卖家并记录跟进结果。</div>
+            <div class="list-item"><strong>收货争议</strong>管理员查看订单详情、聊天记录与物流信息后进行处理。</div>
+          </div>
+          <div class="footer-note">当前页面为静态设计稿，后续可接入订单详情与处理记录接口。</div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="GBK">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户首页</title>
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <span>G</span>
+        <strong>谷子交易系统</strong>
+      </div>
+      <nav class="nav" aria-label="顶部导航栏">
+        <button type="button">商品库</button>
+        <button type="button">交易市场</button>
+        <button type="button">我的资产</button>
+        <button type="button">价格行情</button>
+        <button type="button">换物中心</button>
+        <button type="button">拼团中心</button>
+        <button type="button">我的订单</button>
+        <button type="button">个人中心</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">首页总览</p>
+        <h1>欢迎进入谷子交易系统</h1>
+        <p>集中展示核心功能入口、市场推荐和个人数据，让用户进入系统后能快速找到主要业务。</p>
+      </div>
+      <form class="search-box">
+        <input type="search" placeholder="搜索商品名称、IP、角色、品类">
+        <button type="button">搜索</button>
+      </form>
+    </section>
+
+    <section class="data-grid" aria-label="个人数据概览">
+      <article class="data-card">
+        <span>我的资产数量</span>
+        <strong>36</strong>
+        <p>已录入收藏谷子</p>
+      </article>
+      <article class="data-card">
+        <span>资产估值</span>
+        <strong>￥ 4,280</strong>
+        <p>根据近期成交价格估算</p>
+      </article>
+      <article class="data-card">
+        <span>待付款订单</span>
+        <strong>2</strong>
+        <p>等待用户完成付款</p>
+      </article>
+      <article class="data-card">
+        <span>待收货订单</span>
+        <strong>5</strong>
+        <p>商品正在运输或待确认</p>
+      </article>
+    </section>
+
+    <section class="quick-section">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">快捷入口</p>
+          <h2>常用功能</h2>
+        </div>
+      </div>
+      <div class="quick-grid">
+        <button type="button">
+          <strong>录入资产</strong>
+          <span>登记已有谷子和入手信息</span>
+        </button>
+        <button type="button">
+          <strong>查看行情</strong>
+          <span>查看价格趋势和市场热度</span>
+        </button>
+        <button type="button">
+          <strong>发布换物</strong>
+          <span>发布闲置谷子的交换需求</span>
+        </button>
+        <button type="button">
+          <strong>发起拼团</strong>
+          <span>创建拼团并等待用户加入</span>
+        </button>
+        <button type="button">
+          <strong>查看订单</strong>
+          <span>查看付款、发货、收货状态</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="recommend-section">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">推荐展示</p>
+          <h2>重点信息</h2>
+        </div>
+      </div>
+
+      <div class="recommend-grid">
+        <article class="panel">
+          <div class="panel-title">
+            <h3>热门谷子</h3>
+            <span>热度榜</span>
+          </div>
+          <ul>
+            <li><strong>星轨徽章套组</strong><span>浏览 2.4k</span></li>
+            <li><strong>幻海角色立牌</strong><span>收藏 918</span></li>
+            <li><strong>限定拍立得卡</strong><span>关注 786</span></li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <div class="panel-title">
+            <h3>近期成交商品</h3>
+            <span>市场动态</span>
+          </div>
+          <ul>
+            <li><strong>流光吧唧</strong><span>￥ 128 成交</span></li>
+            <li><strong>周年亚克力牌</strong><span>￥ 96 成交</span></li>
+            <li><strong>角色色纸</strong><span>￥ 58 成交</span></li>
+          </ul>
+        </article>
+
+        <article class="panel highlight">
+          <div class="panel-title">
+            <h3>热门拼团</h3>
+            <span>正在成团</span>
+          </div>
+          <ul>
+            <li><strong>春日主题吧唧团</strong><span>差 3 人</span></li>
+            <li><strong>角色立牌团购</strong><span>差 5 人</span></li>
+            <li><strong>典藏卡包拼团</strong><span>差 2 人</span></li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <div class="panel-title">
+            <h3>热门换物</h3>
+            <span>匹配推荐</span>
+          </div>
+          <ul>
+            <li><strong>限定徽章换色纸</strong><span>匹配 12 条</span></li>
+            <li><strong>立牌换拍立得</strong><span>匹配 8 条</span></li>
+            <li><strong>卡包换吧唧</strong><span>匹配 6 条</span></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

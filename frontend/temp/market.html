@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="GBK">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>交易市场</title>
+  <link rel="stylesheet" href="market.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <span>G</span>
+        <strong>谷子交易系统</strong>
+      </div>
+      <nav class="nav" aria-label="顶部导航">
+        <button type="button">商品库</button>
+        <button type="button" class="active">交易市场</button>
+        <button type="button">我的资产</button>
+        <button type="button">价格行情</button>
+        <button type="button">换物中心</button>
+        <button type="button">拼团中心</button>
+        <button type="button">我的订单</button>
+        <button type="button">个人中心</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="market-hero">
+      <div class="hero-title">
+        <p class="eyebrow">交易市场</p>
+        <h1>找商品，也发布自己的谷子</h1>
+        <p>按商品、IP、角色和品类快速检索在售商品，结合参考价和卖家信用辅助交易决策。</p>
+      </div>
+      <div class="search-area">
+        <form class="search-box">
+          <input type="search" placeholder="搜索商品 / IP / 角色 / 品类">
+          <button type="button">搜索</button>
+        </form>
+        <div class="hero-actions">
+          <button class="primary" type="button">发布出售商品</button>
+          <button class="secondary" type="button">我的发布</button>
+        </div>
+        <div class="hot-words">
+          <span>热门搜索：</span>
+          <button type="button">泡泡马特</button>
+          <button type="button">盲盒</button>
+          <button type="button">海贼王</button>
+          <button type="button">立牌</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="market-layout">
+      <aside class="filter-panel" aria-label="筛选条件">
+        <div class="section-head">
+          <p class="eyebrow">筛选条件</p>
+          <h2>精准查找</h2>
+        </div>
+
+        <label>
+          <span>IP 分类</span>
+          <select>
+            <option>全部 IP</option>
+            <option>动漫</option>
+            <option>游戏</option>
+            <option>虚拟偶像</option>
+            <option>影视</option>
+          </select>
+        </label>
+        <label>
+          <span>角色分类</span>
+          <input type="text" placeholder="输入角色名称">
+        </label>
+        <label>
+          <span>商品品类</span>
+          <select>
+            <option>全部品类</option>
+            <option>徽章</option>
+            <option>立牌</option>
+            <option>色纸</option>
+            <option>吧唧</option>
+            <option>卡片</option>
+            <option>挂件</option>
+          </select>
+        </label>
+        <label>
+          <span>价格区间</span>
+          <select>
+            <option>不限价格</option>
+            <option>0 到 50</option>
+            <option>50 到 100</option>
+            <option>100 到 300</option>
+            <option>300 以上</option>
+          </select>
+        </label>
+        <div class="price-custom">
+          <input type="number" placeholder="最低价">
+          <input type="number" placeholder="最高价">
+        </div>
+        <label>
+          <span>商品状态</span>
+          <select>
+            <option>全部状态</option>
+            <option>全新</option>
+            <option>拆封</option>
+            <option>轻微瑕疵</option>
+            <option>二手</option>
+          </select>
+        </label>
+        <label>
+          <span>卖家信用</span>
+          <select>
+            <option>全部卖家</option>
+            <option>高信用卖家</option>
+            <option>普通卖家</option>
+            <option>新卖家</option>
+          </select>
+        </label>
+        <label>
+          <span>排序方式</span>
+          <select>
+            <option>默认排序</option>
+            <option>价格升序</option>
+            <option>价格降序</option>
+            <option>发布时间</option>
+            <option>成交热度</option>
+          </select>
+        </label>
+        <button class="primary full" type="button">应用筛选</button>
+      </aside>
+
+      <section class="goods-panel">
+        <div class="section-head list-head">
+          <div>
+            <p class="eyebrow">在售商品列表</p>
+            <h2>当前在售</h2>
+          </div>
+          <span>1 件商品</span>
+        </div>
+
+        <article class="sale-card">
+          <img src="图片/乌索普.jpg" alt="泡泡马特乌索普盲盒">
+          <div class="sale-info">
+            <div class="sale-title">
+              <h3>泡泡马特乌索普盲盒</h3>
+              <button type="button">收藏</button>
+            </div>
+            <div class="tags">
+              <span>海贼王</span>
+              <span>乌索普</span>
+              <span>盲盒</span>
+            </div>
+            <p class="desc">仅拆开，摆放，成色较好，有购买记录。</p>
+            <div class="price-line">
+              <strong>出售价格：￥59</strong>
+              <span>近期参考价：￥65</span>
+            </div>
+            <div class="meta-grid">
+              <div>
+                <span>商品状态</span>
+                <strong>拆封 / 成色较好</strong>
+              </div>
+              <div>
+                <span>卖家信用</span>
+                <strong>信用良好 · 成交 18 次 · 好评率 98%</strong>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="secondary" type="button">查看详情</button>
+              <button class="primary" type="button">立即购买</button>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <aside class="assist-panel" aria-label="交易辅助栏">
+        <section class="assist-card">
+          <div class="section-head">
+            <p class="eyebrow">我的交易</p>
+            <h2>交易概览</h2>
+          </div>
+          <div class="trade-stats">
+            <div><span>待付款</span><strong>2</strong></div>
+            <div><span>待发货</span><strong>1</strong></div>
+            <div><span>待收货</span><strong>1</strong></div>
+            <div><span>已完成</span><strong>8</strong></div>
+          </div>
+        </section>
+
+        <section class="assist-card">
+          <div class="section-head">
+            <p class="eyebrow">我的发布</p>
+            <h2>发布状态</h2>
+          </div>
+          <div class="publish-row">
+            <span>出售商品</span>
+            <strong>3</strong>
+          </div>
+          <div class="publish-row">
+            <span>审核中</span>
+            <strong>1</strong>
+          </div>
+        </section>
+
+        <section class="assist-card safe-card">
+          <div class="section-head">
+            <p class="eyebrow">安全交易提示</p>
+            <h2>交易前确认</h2>
+          </div>
+          <ul>
+            <li>查看卖家信用和历史成交</li>
+            <li>确认商品状态和瑕疵说明</li>
+            <li>参考近期成交价再下单</li>
+            <li>优先使用平台支付</li>
+          </ul>
+        </section>
+
+        <section class="assist-card">
+          <div class="section-head">
+            <p class="eyebrow">推荐商品</p>
+            <h2>相关谷子</h2>
+          </div>
+          <div class="recommend-item">
+            <strong>同 IP 角色盲盒</strong>
+            <span>参考价 ￥60-80</span>
+          </div>
+          <div class="recommend-item">
+            <strong>海贼王挂件</strong>
+            <span>热度上升</span>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

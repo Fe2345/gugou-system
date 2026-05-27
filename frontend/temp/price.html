@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="GBK">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>价格行情</title>
+  <link rel="stylesheet" href="price.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <span>G</span>
+        <strong>谷子交易系统</strong>
+      </div>
+      <nav class="nav" aria-label="顶部导航">
+        <button type="button">商品库</button>
+        <button type="button">交易市场</button>
+        <button type="button">我的资产</button>
+        <button type="button" class="active">价格行情</button>
+        <button type="button">换物中心</button>
+        <button type="button">拼团中心</button>
+        <button type="button">我的订单</button>
+        <button type="button">个人中心</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="query-panel">
+      <div>
+        <p class="eyebrow">价格行情</p>
+        <h1>查询谷子参考价与价格趋势</h1>
+        <p>输入商品名称、IP 或角色，查看当前参考价、近期涨跌和成交依据。</p>
+      </div>
+      <form class="query-form">
+        <input type="search" value="结城理 落水砖" aria-label="搜索商品" placeholder="输入商品名称 / IP / 角色">
+        <div class="range-tabs" aria-label="时间范围">
+          <button type="button">近7天</button>
+          <button type="button">近30天</button>
+          <button type="button" class="active">近90天</button>
+        </div>
+        <button class="primary" type="button">查询</button>
+      </form>
+    </section>
+
+    <section class="summary-panel">
+      <div class="product-info">
+        <p class="eyebrow">当前商品</p>
+        <h2>结城理 落水砖</h2>
+        <div class="meta-tags">
+          <span>女神异闻录3</span>
+          <span>结城理</span>
+          <span>亚克力砖</span>
+        </div>
+      </div>
+      <div class="metric-grid" aria-label="价格指标">
+        <article>
+          <span>当前参考价</span>
+          <strong>￥286</strong>
+        </article>
+        <article>
+          <span>近90天均价</span>
+          <strong>￥274</strong>
+        </article>
+        <article>
+          <span>最高成交价</span>
+          <strong>￥335</strong>
+        </article>
+        <article>
+          <span>最低成交价</span>
+          <strong>￥218</strong>
+        </article>
+        <article class="up">
+          <span>近30天涨跌</span>
+          <strong>+12.4%</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="chart-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">价格趋势图</p>
+          <h2>近90天每周平均成交价</h2>
+        </div>
+        <span>当前参考价辅助线：￥286</span>
+      </div>
+
+      <div class="chart-wrap">
+        <svg class="line-chart" viewBox="0 0 920 420" role="img" aria-label="结城理落水砖近90天价格变化折线图">
+          <line class="grid-line" x1="70" y1="60" x2="860" y2="60"></line>
+          <line class="grid-line" x1="70" y1="130" x2="860" y2="130"></line>
+          <line class="grid-line" x1="70" y1="200" x2="860" y2="200"></line>
+          <line class="grid-line" x1="70" y1="270" x2="860" y2="270"></line>
+          <line class="grid-line" x1="70" y1="340" x2="860" y2="340"></line>
+
+          <text x="20" y="65">￥320</text>
+          <text x="20" y="135">￥290</text>
+          <text x="20" y="205">￥260</text>
+          <text x="20" y="275">￥230</text>
+          <text x="20" y="345">￥200</text>
+
+          <line class="axis" x1="70" y1="40" x2="70" y2="340"></line>
+          <line class="axis" x1="70" y1="340" x2="860" y2="340"></line>
+          <line class="reference" x1="70" y1="139" x2="860" y2="139"></line>
+          <text class="reference-text" x="732" y="128">当前参考价 ￥286</text>
+
+          <polyline class="trend-line" points="70,265 168,235 267,251 366,209 465,181 563,151 662,163 761,126 860,139"></polyline>
+
+          <g class="point">
+            <circle cx="70" cy="265" r="6"></circle>
+            <text x="88" y="286">最低点 ￥232</text>
+          </g>
+          <g class="point">
+            <circle cx="168" cy="235" r="5"></circle>
+            <circle cx="267" cy="251" r="5"></circle>
+            <circle cx="366" cy="209" r="5"></circle>
+            <circle cx="465" cy="181" r="5"></circle>
+            <circle cx="563" cy="151" r="5"></circle>
+            <circle cx="662" cy="163" r="5"></circle>
+          </g>
+          <g class="point high">
+            <circle cx="761" cy="126" r="6"></circle>
+            <text x="700" y="104">最高点 ￥292</text>
+          </g>
+          <g class="point current">
+            <circle cx="860" cy="139" r="7"></circle>
+            <text x="774" y="170">当前点 ￥286</text>
+          </g>
+
+          <text class="x-label" x="48" y="382">3月第1周</text>
+          <text class="x-label" x="146" y="382">3月第2周</text>
+          <text class="x-label" x="245" y="382">3月第3周</text>
+          <text class="x-label" x="344" y="382">3月第4周</text>
+          <text class="x-label" x="443" y="382">4月第1周</text>
+          <text class="x-label" x="541" y="382">4月第2周</text>
+          <text class="x-label" x="640" y="382">4月第3周</text>
+          <text class="x-label" x="739" y="382">4月第4周</text>
+          <text class="x-label" x="838" y="382">5月第1周</text>
+        </svg>
+      </div>
+
+      <p class="chart-note">结城理落水砖近90天价格整体呈上升趋势，3月初价格处于较低水平，4月中下旬明显上涨，5月初略有回调，但整体仍高于前期均值，说明该商品近期市场热度较高。</p>
+    </section>
+
+    <section class="bottom-layout">
+      <section class="table-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">近期成交参考</p>
+            <h2>成交记录</h2>
+          </div>
+          <span>基于平台交易统计</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>成交时间</th>
+                <th>商品名称</th>
+                <th>成交价</th>
+                <th>商品状态</th>
+                <th>成交方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-05-03</td>
+                <td>结城理 落水砖</td>
+                <td>￥286</td>
+                <td>全新未拆</td>
+                <td>平台交易</td>
+              </tr>
+              <tr>
+                <td>2026-04-28</td>
+                <td>结城理 落水砖</td>
+                <td>￥292</td>
+                <td>全新未拆</td>
+                <td>平台交易</td>
+              </tr>
+              <tr>
+                <td>2026-04-21</td>
+                <td>结城理 落水砖</td>
+                <td>￥276</td>
+                <td>轻微瑕疵</td>
+                <td>平台交易</td>
+              </tr>
+              <tr>
+                <td>2026-04-12</td>
+                <td>结城理 落水砖</td>
+                <td>￥281</td>
+                <td>全新未拆</td>
+                <td>平台交易</td>
+              </tr>
+              <tr>
+                <td>2026-03-26</td>
+                <td>结城理 落水砖</td>
+                <td>￥256</td>
+                <td>拆封自留</td>
+                <td>平台交易</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="conclusion-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">行情结论</p>
+            <h2>价格判断</h2>
+          </div>
+        </div>
+        <ul>
+          <li>当前参考价为￥286，较近90天均价略高。</li>
+          <li>商品整体呈上涨趋势，近期处于相对高位。</li>
+          <li>若用户计划买入，需关注短期回调风险。</li>
+          <li>若用户计划出售，当前价格区间较适合挂出。</li>
+        </ul>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

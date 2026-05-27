@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--
+  编写日期：2026-05-06
+  用途：谷购系统管理员端拼团管理页面静态原型
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>拼团管理页面</title>
+  <link rel="stylesheet" href="admin-common.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">谷购后台</div>
+      <div class="brand-sub">管理员静态页面原型</div>
+      <div class="nav-title">管理导航</div>
+      <ul class="nav">
+        <li><a href="#">登录页面</a></li>
+        <li><a href="#">后台首页页面</a></li>
+        <li><a href="#">用户管理页面</a></li>
+        <li><a href="#">商品管理页面</a></li>
+        <li><a href="admin-orders.html">订单管理页面</a></li>
+        <li><a href="admin-exchange.html">换物管理页面</a></li>
+        <li><a href="admin-team.html" class="active">拼团管理页面</a></li>
+        <li><a href="admin-price.html">价格记录页面</a></li>
+      </ul>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">拼团管理页面</h1>
+          <p class="page-desc">用于查看拼团项目、管理拼团进度、处理成团与失败状态。</p>
+        </div>
+        <div class="admin-chip">当前管理员：拼团管理员 A0003</div>
+      </div>
+
+      <section class="metrics">
+        <div class="metric"><div class="metric-label">招募中项目</div><div class="metric-value">24</div><div class="metric-note">需关注截止时间</div></div>
+        <div class="metric"><div class="metric-label">即将成团</div><div class="metric-value">6</div><div class="metric-note">当前人数接近目标</div></div>
+        <div class="metric"><div class="metric-label">已成团项目</div><div class="metric-value">42</div><div class="metric-note">本月累计</div></div>
+        <div class="metric"><div class="metric-label">失败项目</div><div class="metric-value">5</div><div class="metric-note">需做原因分析</div></div>
+      </section>
+
+      <section class="toolbar">
+        <input class="input" type="text" placeholder="输入拼团编号或商品名称">
+        <select class="select"><option>全部状态</option><option>待发布</option><option>招募中</option><option>已成团</option><option>已失败</option><option>已结束</option></select>
+        <button class="btn btn-primary">查询拼团</button>
+        <button class="btn btn-light">导出项目</button>
+      </section>
+
+      <section class="content-grid">
+        <div class="table-wrap">
+          <div class="table-head">
+            <div>
+              <h2 class="table-title">拼团项目列表</h2>
+              <p class="table-sub">用于静态展示团长、目标人数、团购价与状态</p>
+            </div>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>拼团编号</th>
+                <th>商品</th>
+                <th>发起用户</th>
+                <th>人数进度</th>
+                <th>团购价</th>
+                <th>状态</th>
+                <th>截止时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>T202605060001</td>
+                <td>色纸套组 A</td>
+                <td>团长阿夏</td>
+                <td>4 / 5</td>
+                <td>¥69.00</td>
+                <td><span class="badge badge-blue">招募中</span></td>
+                <td>2026-05-08 20:00</td>
+              </tr>
+              <tr>
+                <td>T202605050014</td>
+                <td>吧唧福袋</td>
+                <td>风铃</td>
+                <td>5 / 5</td>
+                <td>¥118.00</td>
+                <td><span class="badge badge-green">已成团</span></td>
+                <td>2026-05-07 18:00</td>
+              </tr>
+              <tr>
+                <td>T202605040009</td>
+                <td>亚克力立牌</td>
+                <td>七濑</td>
+                <td>2 / 6</td>
+                <td>¥52.00</td>
+                <td><span class="badge badge-red">已失败</span></td>
+                <td>2026-05-05 12:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title">拼团管理动作</h2>
+          <p class="panel-sub">静态展示后台处理入口</p>
+          <div class="panel-list">
+            <div class="list-item"><strong>项目审核</strong>核对商品信息、团购价格、截止时间与人数设置是否合理。</div>
+            <div class="list-item"><strong>状态维护</strong>当人数达到目标时可标记为已成团，超时未满足时可标记为已失败。</div>
+            <div class="list-item"><strong>成员查看</strong>可查看拼团参与记录，用于后续对账与通知。</div>
+          </div>
+          <div class="actions" style="margin-top:14px;">
+            <button class="btn btn-primary">查看参与成员</button>
+            <button class="btn btn-light">更新状态</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

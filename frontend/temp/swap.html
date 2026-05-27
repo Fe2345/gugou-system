@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="GBK">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>换物中心</title>
+  <link rel="stylesheet" href="swap.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <span>G</span>
+        <strong>谷子交易系统</strong>
+      </div>
+      <nav class="nav" aria-label="顶部导航">
+        <button type="button">商品库</button>
+        <button type="button">交易市场</button>
+        <button type="button">我的资产</button>
+        <button type="button">价格行情</button>
+        <button type="button" class="active">换物中心</button>
+        <button type="button">拼团中心</button>
+        <button type="button">我的订单</button>
+        <button type="button">个人中心</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">换物中心</p>
+        <h1>发布需求，匹配想换的谷子</h1>
+        <p>围绕“我能提供什么”和“我想换什么”展示换物需求，帮助用户快速找到合适的交换对象。</p>
+      </div>
+      <div class="hero-tools">
+        <form class="search-box">
+          <input type="search" placeholder="输入商品名称 / IP / 角色">
+          <button type="button">搜索</button>
+        </form>
+        <div class="mode-tabs">
+          <button type="button" class="active">我想要的</button>
+          <button type="button">我能提供的</button>
+          <button type="button">最新发布</button>
+        </div>
+        <div class="hero-actions">
+          <button class="primary" type="button">发起换物</button>
+          <button class="secondary" type="button">我的换物</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="swap-layout">
+      <aside class="filter-panel" aria-label="换物筛选条件">
+        <div class="section-head">
+          <p class="eyebrow">筛选条件</p>
+          <h2>换物筛选</h2>
+        </div>
+
+        <label>
+          <span>IP 分类</span>
+          <select>
+            <option>全部 IP</option>
+            <option>女神异闻录</option>
+            <option>蓝色监狱</option>
+            <option>咒术回战</option>
+            <option>原神</option>
+            <option>名侦探柯南</option>
+          </select>
+        </label>
+        <label>
+          <span>商品品类</span>
+          <select>
+            <option>全部品类</option>
+            <option>吧唧</option>
+            <option>立牌</option>
+            <option>色纸</option>
+            <option>卡片</option>
+            <option>挂件</option>
+            <option>亚克力砖</option>
+          </select>
+        </label>
+        <label>
+          <span>换物状态</span>
+          <select>
+            <option>全部状态</option>
+            <option>可交换</option>
+            <option>匹配中</option>
+            <option>待确认</option>
+          </select>
+        </label>
+        <label>
+          <span>是否补差价</span>
+          <select>
+            <option>不限</option>
+            <option>不补差价</option>
+            <option>可补差价</option>
+            <option>需协商</option>
+          </select>
+        </label>
+        <label>
+          <span>发布距离</span>
+          <select>
+            <option>全部地区</option>
+            <option>同城优先</option>
+          </select>
+        </label>
+        <label>
+          <span>用户信用</span>
+          <select>
+            <option>全部用户</option>
+            <option>高信用用户</option>
+            <option>普通用户</option>
+          </select>
+        </label>
+        <button class="primary full" type="button">应用筛选</button>
+      </aside>
+
+      <section class="list-panel">
+        <div class="section-head list-head">
+          <div>
+            <p class="eyebrow">换物广场</p>
+            <h2>换物需求列表</h2>
+          </div>
+          <span>4 条需求</span>
+        </div>
+
+        <article class="swap-card">
+          <div class="card-meta">
+            <strong>换物需求 W001</strong>
+            <span>发布人：星海收藏家 · 信用良好 · 2026-05-04</span>
+          </div>
+          <div class="compare">
+            <section>
+              <p class="label">我提供</p>
+              <h3>蓝锁 千切豹马 方形吧唧</h3>
+              <ul>
+                <li>品类：徽章</li>
+                <li>状态：全新未拆</li>
+                <li>参考价：￥48</li>
+              </ul>
+            </section>
+            <div class="arrow">换</div>
+            <section>
+              <p class="label want">我想换</p>
+              <h3>结城理 落水砖</h3>
+              <ul>
+                <li>品类：亚克力砖</li>
+                <li>期望状态：全新或轻微拆封</li>
+                <li>补差价：可协商</li>
+              </ul>
+            </section>
+          </div>
+          <div class="card-bottom">
+            <span class="status open">可交换</span>
+            <div class="card-actions">
+              <button class="secondary" type="button">查看详情</button>
+              <button class="primary" type="button">发起交换</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="swap-card">
+          <div class="card-meta">
+            <strong>换物需求 W002</strong>
+            <span>发布人：月见谷仓 · 普通用户 · 2026-05-03</span>
+          </div>
+          <div class="compare">
+            <section>
+              <p class="label">我提供</p>
+              <h3>咒术回战 五条悟 拍立得卡 3张</h3>
+              <ul>
+                <li>品类：卡片</li>
+                <li>状态：拆封自留</li>
+                <li>参考价：￥72</li>
+              </ul>
+            </section>
+            <div class="arrow">换</div>
+            <section>
+              <p class="label want">我想换</p>
+              <h3>原神 魈 流沙亚克力挂件</h3>
+              <ul>
+                <li>品类：挂件</li>
+                <li>期望状态：成色较好</li>
+                <li>补差价：不补差价</li>
+              </ul>
+            </section>
+          </div>
+          <div class="card-bottom">
+            <span class="status matching">匹配中</span>
+            <div class="card-actions single">
+              <button class="secondary" type="button">查看详情</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="swap-card">
+          <div class="card-meta">
+            <strong>换物需求 W003</strong>
+            <span>发布人：纸片人仓库 · 高信用用户 · 2026-05-02</span>
+          </div>
+          <div class="compare">
+            <section>
+              <p class="label">我提供</p>
+              <h3>排球少年 影山飞雄 亚克力立牌</h3>
+              <ul>
+                <li>品类：立牌</li>
+                <li>状态：全新未拆</li>
+                <li>参考价：￥82</li>
+              </ul>
+            </section>
+            <div class="arrow">换</div>
+            <section>
+              <p class="label want">我想换</p>
+              <h3>名侦探柯南 灰原哀 色纸</h3>
+              <ul>
+                <li>品类：色纸</li>
+                <li>期望状态：全新或拆封</li>
+                <li>补差价：可补￥20</li>
+              </ul>
+            </section>
+          </div>
+          <div class="card-bottom">
+            <span class="status open">可交换</span>
+            <div class="card-actions">
+              <button class="secondary" type="button">查看详情</button>
+              <button class="primary" type="button">发起交换</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="swap-card">
+          <div class="card-meta">
+            <strong>换物需求 W004</strong>
+            <span>发布人：小狗谷铺 · 信用良好 · 2026-05-01</span>
+          </div>
+          <div class="compare">
+            <section>
+              <p class="label">我提供</p>
+              <h3>葬送的芙莉莲 镭射票 2张</h3>
+              <ul>
+                <li>品类：票卡</li>
+                <li>状态：成色较好</li>
+                <li>参考价：￥52</li>
+              </ul>
+            </section>
+            <div class="arrow">换</div>
+            <section>
+              <p class="label want">我想换</p>
+              <h3>蓝锁 千切豹马 吧唧</h3>
+              <ul>
+                <li>品类：吧唧</li>
+                <li>期望状态：全新未拆</li>
+                <li>补差价：不补差价</li>
+              </ul>
+            </section>
+          </div>
+          <div class="card-bottom">
+            <span class="status pending">待确认</span>
+            <div class="card-actions single">
+              <button class="secondary" type="button">查看详情</button>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <aside class="right-panel" aria-label="我的换物状态">
+        <section class="state-card">
+          <div class="section-head">
+            <p class="eyebrow">我的换物</p>
+            <h2>状态看板</h2>
+          </div>
+          <div class="state-grid">
+            <div><span>我发起的</span><strong>3</strong></div>
+            <div><span>我收到的</span><strong>2</strong></div>
+            <div><span>匹配中</span><strong>2</strong></div>
+            <div><span>待确认</span><strong>1</strong></div>
+            <div><span>已完成</span><strong>5</strong></div>
+            <div><span>已取消</span><strong>1</strong></div>
+          </div>
+          <button class="primary full" type="button">查看全部换物记录</button>
+        </section>
+
+        <section class="state-card">
+          <div class="section-head">
+            <p class="eyebrow">待处理提醒</p>
+            <h2>需要确认</h2>
+          </div>
+          <div class="notice">
+            <strong>W006</strong>
+            <span>对方已接受换物，请确认商品状态。</span>
+          </div>
+          <div class="notice">
+            <strong>W008</strong>
+            <span>对方要求补差价￥15，请查看详情。</span>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

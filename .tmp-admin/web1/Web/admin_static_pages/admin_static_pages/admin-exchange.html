@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!--
+  编写日期：2026-05-06
+  用途：谷购系统管理员端换物管理页面静态原型
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>换物管理页面</title>
+  <link rel="stylesheet" href="admin-common.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">谷购后台</div>
+      <div class="brand-sub">管理员静态页面原型</div>
+      <div class="nav-title">管理导航</div>
+      <ul class="nav">
+        <li><a href="#">登录页面</a></li>
+        <li><a href="#">后台首页页面</a></li>
+        <li><a href="#">用户管理页面</a></li>
+        <li><a href="#">商品管理页面</a></li>
+        <li><a href="admin-orders.html">订单管理页面</a></li>
+        <li><a href="admin-exchange.html" class="active">换物管理页面</a></li>
+        <li><a href="admin-team.html">拼团管理页面</a></li>
+        <li><a href="admin-price.html">价格记录页面</a></li>
+      </ul>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">换物管理页面</h1>
+          <p class="page-desc">用于审核换物请求、查看匹配状态、处理取消与失效记录。</p>
+        </div>
+        <div class="admin-chip">当前管理员：业务管理员 A0002</div>
+      </div>
+
+      <section class="metrics">
+        <div class="metric"><div class="metric-label">待匹配请求</div><div class="metric-value">18</div><div class="metric-note">可重点筛选热门商品</div></div>
+        <div class="metric"><div class="metric-label">匹配中请求</div><div class="metric-value">11</div><div class="metric-note">仍需双方确认</div></div>
+        <div class="metric"><div class="metric-label">已完成换物</div><div class="metric-value">63</div><div class="metric-note">本月累计</div></div>
+        <div class="metric"><div class="metric-label">已失效请求</div><div class="metric-value">7</div><div class="metric-note">需归档处理</div></div>
+      </section>
+
+      <section class="toolbar">
+        <input class="input" type="text" placeholder="输入换物请求编号或发起用户">
+        <select class="select"><option>全部状态</option><option>待匹配</option><option>匹配中</option><option>待确认</option><option>已完成</option><option>已取消</option><option>已失效</option></select>
+        <button class="btn btn-primary">查询请求</button>
+        <button class="btn btn-light">重置筛选</button>
+      </section>
+
+      <section class="content-grid">
+        <div class="table-wrap">
+          <div class="table-head">
+            <div>
+              <h2 class="table-title">换物请求列表</h2>
+              <p class="table-sub">展示发起用户、换出资产、目标条件与状态</p>
+            </div>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>请求编号</th>
+                <th>发起用户</th>
+                <th>换出资产</th>
+                <th>目标条件</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>E202605060001</td>
+                <td>星川</td>
+                <td>立牌限定 A</td>
+                <td>同系列色纸 或 吧唧</td>
+                <td><span class="badge badge-blue">待匹配</span></td>
+                <td>2026-05-06 09:20</td>
+                <td class="actions"><button class="btn btn-light">查看</button><button class="btn btn-success">标记匹配</button></td>
+              </tr>
+              <tr>
+                <td>E202605050013</td>
+                <td>阿零</td>
+                <td>吧唧套组 B</td>
+                <td>等价交换，接受补差</td>
+                <td><span class="badge badge-orange">待确认</span></td>
+                <td>2026-05-05 16:10</td>
+                <td class="actions"><button class="btn btn-light">详情</button><button class="btn btn-primary">跟进</button></td>
+              </tr>
+              <tr>
+                <td>E202605040021</td>
+                <td>雾野</td>
+                <td>拍立得单张</td>
+                <td>同角色周边优先</td>
+                <td><span class="badge badge-gray">已失效</span></td>
+                <td>2026-05-04 13:40</td>
+                <td class="actions"><button class="btn btn-light">查看</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="form-card">
+          <h2 class="form-title">换物审核备注</h2>
+          <p class="form-sub">仅展示静态表单布局，后续可接入提交逻辑</p>
+          <div class="form-grid">
+            <input class="input" type="text" placeholder="请求编号">
+            <select class="select"><option>审核结果</option><option>通过</option><option>退回修改</option><option>标记失效</option></select>
+            <div class="form-row-full"><textarea class="textarea" placeholder="填写审核说明、风控备注或跟进结果"></textarea></div>
+            <button class="btn btn-primary">保存备注</button>
+            <button class="btn btn-light">清空内容</button>
+          </div>
+          <div class="footer-note">可扩展为换物匹配建议、资产锁定状态展示、审核日志记录等功能。</div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

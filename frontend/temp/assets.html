@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="GBK">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的资产</title>
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <span>G</span>
+        <strong>谷子交易系统</strong>
+      </div>
+      <nav class="nav" aria-label="顶部导航">
+        <button type="button">商品库</button>
+        <button type="button">交易市场</button>
+        <button type="button" class="active">我的资产</button>
+        <button type="button">价格行情</button>
+        <button type="button">换物中心</button>
+        <button type="button">拼团中心</button>
+        <button type="button">我的订单</button>
+        <button type="button">个人中心</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="page-head">
+      <div>
+        <p class="eyebrow">资产管理</p>
+        <h1>我的资产</h1>
+        <p>集中查看已录入的谷子资产、入手成本、当前估值和流转状态。</p>
+      </div>
+      <button class="primary" type="button">新增资产</button>
+    </section>
+
+    <section class="overview-grid" aria-label="资产概览">
+      <article class="overview-card">
+        <span>资产总件数</span>
+        <strong>126 件</strong>
+        <p>已录入谷子数量</p>
+      </article>
+      <article class="overview-card">
+        <span>资产种类数</span>
+        <strong>48 类</strong>
+        <p>不同商品档案数量</p>
+      </article>
+      <article class="overview-card">
+        <span>入手总成本</span>
+        <strong>￥3860</strong>
+        <p>用户录入购买成本</p>
+      </article>
+      <article class="overview-card">
+        <span>当前总估值</span>
+        <strong>￥4520</strong>
+        <p>按参考价估算</p>
+      </article>
+      <article class="overview-card gain">
+        <span>估值变化</span>
+        <strong>+￥660</strong>
+        <p>相较入手成本上涨</p>
+      </article>
+    </section>
+
+    <section class="toolbar" aria-label="筛选与操作栏">
+      <div class="search-box">
+        <input type="search" placeholder="搜索商品名称 / IP / 角色">
+      </div>
+      <select aria-label="状态筛选">
+        <option>全部状态</option>
+        <option>持有中</option>
+        <option>待出售</option>
+        <option>待换物</option>
+        <option>已出售</option>
+      </select>
+      <select aria-label="排序方式">
+        <option>按入手时间</option>
+        <option>当前估值</option>
+        <option>估值变化</option>
+      </select>
+      <button class="primary" type="button">新增资产</button>
+    </section>
+
+    <section class="table-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">资产表格</p>
+          <h2>资产明细</h2>
+        </div>
+        <span>共 8 条示例数据</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>资产编号</th>
+              <th>商品名称</th>
+              <th>IP/角色</th>
+              <th>品类</th>
+              <th>数量</th>
+              <th>入手价</th>
+              <th>当前估值</th>
+              <th>估值变化</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>A001</td>
+              <td>蓝锁 千切豹马 方形吧唧</td>
+              <td>蓝色监狱 / 千切豹马</td>
+              <td>徽章</td>
+              <td>2</td>
+              <td>￥76</td>
+              <td>￥96</td>
+              <td class="up">+￥20</td>
+              <td><span class="status hold">持有中</span></td>
+              <td class="actions">详情 / 编辑 / 出售 / 换物</td>
+            </tr>
+            <tr>
+              <td>A002</td>
+              <td>排球少年 影山飞雄 亚克力立牌</td>
+              <td>排球少年 / 影山飞雄</td>
+              <td>立牌</td>
+              <td>1</td>
+              <td>￥88</td>
+              <td>￥82</td>
+              <td class="down">-￥6</td>
+              <td><span class="status hold">持有中</span></td>
+              <td class="actions">详情 / 编辑 / 出售 / 换物</td>
+            </tr>
+            <tr>
+              <td>A003</td>
+              <td>咒术回战 五条悟 拍立得卡</td>
+              <td>咒术回战 / 五条悟</td>
+              <td>卡片</td>
+              <td>3</td>
+              <td>￥45</td>
+              <td>￥72</td>
+              <td class="up">+￥27</td>
+              <td><span class="status sale">待出售</span></td>
+              <td class="actions">详情 / 编辑</td>
+            </tr>
+            <tr>
+              <td>A004</td>
+              <td>原神 魈 流沙亚克力挂件</td>
+              <td>原神 / 魈</td>
+              <td>挂件</td>
+              <td>1</td>
+              <td>￥58</td>
+              <td>￥64</td>
+              <td class="up">+￥6</td>
+              <td><span class="status trade">待换物</span></td>
+              <td class="actions">详情 / 编辑</td>
+            </tr>
+            <tr>
+              <td>A005</td>
+              <td>名侦探柯南 灰原哀 色纸</td>
+              <td>名侦探柯南 / 灰原哀</td>
+              <td>色纸</td>
+              <td>1</td>
+              <td>￥35</td>
+              <td>￥35</td>
+              <td>￥0</td>
+              <td><span class="status hold">持有中</span></td>
+              <td class="actions">详情 / 编辑 / 出售 / 换物</td>
+            </tr>
+            <tr>
+              <td>A006</td>
+              <td>葬送的芙莉莲 芙莉莲 镭射票</td>
+              <td>葬送的芙莉莲 / 芙莉莲</td>
+              <td>票卡</td>
+              <td>4</td>
+              <td>￥40</td>
+              <td>￥52</td>
+              <td class="up">+￥12</td>
+              <td><span class="status hold">持有中</span></td>
+              <td class="actions">详情 / 编辑 / 出售 / 换物</td>
+            </tr>
+            <tr>
+              <td>A007</td>
+              <td>崩坏：星穹铁道 丹恒 吧唧套装</td>
+              <td>崩坏：星穹铁道 / 丹恒</td>
+              <td>徽章套装</td>
+              <td>1</td>
+              <td>￥120</td>
+              <td>￥108</td>
+              <td class="down">-￥12</td>
+              <td><span class="status sale">待出售</span></td>
+              <td class="actions">详情 / 编辑</td>
+            </tr>
+            <tr>
+              <td>A008</td>
+              <td>时光代理人 陆光 透卡</td>
+              <td>时光代理人 / 陆光</td>
+              <td>透卡</td>
+              <td>2</td>
+              <td>￥30</td>
+              <td>￥38</td>
+              <td class="up">+￥8</td>
+              <td><span class="status done">已换出</span></td>
+              <td class="actions">详情</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

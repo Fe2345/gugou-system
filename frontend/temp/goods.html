@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="GBK">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品库</title>
+  <link rel="stylesheet" href="goods.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <span>G</span>
+        <strong>商品库</strong>
+      </div>
+      <nav class="nav" aria-label="商品库导航">
+        <button type="button">商品档案</button>
+        <button type="button">IP 分类</button>
+        <button type="button">角色索引</button>
+        <button type="button">价格参考</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">商品基础档案</p>
+        <h1>谷子商品库</h1>
+        <p>按商品名称、IP、角色和周边品类集中管理商品信息，后续可作为交易、估值和行情查询的数据基础。</p>
+      </div>
+      <form class="search-box">
+        <input type="search" placeholder="搜索商品名称、IP、角色">
+        <button type="button">搜索</button>
+      </form>
+    </section>
+
+    <section class="layout">
+      <aside class="filter-panel" aria-label="分类筛选">
+        <div class="section-head">
+          <p class="eyebrow">分类筛选</p>
+          <h2>筛选条件</h2>
+        </div>
+
+        <label>
+          <span>IP</span>
+          <input type="text" placeholder="请输入 IP 名称">
+        </label>
+        <label>
+          <span>角色</span>
+          <input type="text" placeholder="请输入角色名称">
+        </label>
+        <label>
+          <span>品类</span>
+          <select>
+            <option>全部品类</option>
+            <option>徽章</option>
+            <option>立牌</option>
+            <option>色纸</option>
+            <option>拍立得</option>
+            <option>卡片</option>
+          </select>
+        </label>
+        <label>
+          <span>发售时间</span>
+          <select>
+            <option>不限时间</option>
+            <option>近一个月</option>
+            <option>近三个月</option>
+            <option>近一年</option>
+            <option>更早发售</option>
+          </select>
+        </label>
+        <label>
+          <span>价格区间</span>
+          <div class="price-row">
+            <input type="number" placeholder="最低价">
+            <input type="number" placeholder="最高价">
+          </div>
+        </label>
+        <button class="secondary" type="button">应用筛选</button>
+      </aside>
+
+      <section class="content">
+        <section class="upload-panel">
+          <div class="section-head">
+            <p class="eyebrow">自定义商品</p>
+            <h2>添加商品档案</h2>
+          </div>
+          <form id="productForm" class="product-form">
+            <label class="upload-box">
+              <input id="imageInput" name="image" type="file" accept="image/*">
+              <span id="uploadText">上传商品图片</span>
+              <img id="imagePreview" alt="商品图片预览" hidden>
+            </label>
+            <div class="form-grid">
+              <label>
+                <span>商品名称</span>
+                <input name="name" type="text" placeholder="请输入商品名称">
+              </label>
+              <label>
+                <span>参考价</span>
+                <input name="price" type="number" min="0" step="0.01" placeholder="请输入自定义价格">
+              </label>
+              <label>
+                <span>IP</span>
+                <input name="ip" type="text" placeholder="可选">
+              </label>
+              <label>
+                <span>角色</span>
+                <input name="role" type="text" placeholder="可选">
+              </label>
+              <label>
+                <span>品类</span>
+                <input name="category" type="text" placeholder="可选">
+              </label>
+              <button class="primary" type="submit">添加到商品列表</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="list-panel">
+          <div class="section-head list-head">
+            <div>
+              <p class="eyebrow">商品列表</p>
+              <h2>商品档案</h2>
+            </div>
+            <span id="productCount">1 件商品</span>
+          </div>
+          <div id="productGrid" class="product-grid">
+            <article class="product-card">
+              <img src="图片/阿米娅.jpg" alt="阿米娅秋叶原悠星立牌">
+              <div class="product-info">
+                <strong class="product-price">￥ 85.00</strong>
+                <h3>阿米娅</h3>
+                <p>阿米娅秋叶原悠星立牌</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="detail-panel">
+          <div class="section-head">
+            <p class="eyebrow">商品详情</p>
+            <h2>详情信息占位</h2>
+          </div>
+          <div class="detail-grid">
+            <article>
+              <span>基础信息</span>
+              <p>展示商品名称、IP、角色、品类、发售时间等档案信息。</p>
+            </article>
+            <article>
+              <span>参考价格</span>
+              <p>展示用户自定义价格或平台参考价。</p>
+            </article>
+            <article>
+              <span>近期成交</span>
+              <p>后续可接入近期成交记录。</p>
+            </article>
+            <article>
+              <span>价格趋势入口</span>
+              <p>后续可跳转到价格行情分析页面。</p>
+            </article>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script src="goods.js"></script>
+</body>
+</html>
