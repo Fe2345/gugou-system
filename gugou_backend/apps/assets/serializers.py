@@ -27,23 +27,35 @@ class AssetSerializer(serializers.ModelSerializer):
 
 class AssetCreateSerializer(serializers.Serializer):
     """资产创建序列化器"""
-    productId = serializers.CharField(max_length=25)
+    productId = serializers.CharField(max_length=25, required=False, default="", allow_blank=True)
     productName = serializers.CharField(max_length=100, required=False, default="")
+    ipName = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    characterName = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    category = serializers.CharField(max_length=20, required=False, default="other", allow_blank=True)
     quantity = serializers.IntegerField(min_value=1, default=1)
     acquirePrice = serializers.DecimalField(max_digits=10, decimal_places=2, default=0)
     description = serializers.CharField(required=False, default="", allow_blank=True)
 
-    def validate_productId(self, value):
-        from apps.products.models import Product
-        try:
-            Product.objects.get(product_id=value)
-        except Product.DoesNotExist:
-            raise serializers.ValidationError("关联商品不存在")
-        return value
-
     def create(self, validated_data):
         from apps.products.models import Product
-        product = Product.objects.get(product_id=validated_data["productId"])
+        from apps.common.id_generator import generate_product_id
+
+        product_id = validated_data.get("productId")
+        if product_id:
+            product = Product.objects.get(product_id=product_id)
+        else:
+            product = Product.objects.create(
+                product_id=generate_product_id(),
+                name=validated_data.get("productName", "未命名商品"),
+                ip_name=validated_data.get("ipName", ""),
+                character_name=validated_data.get("characterName", ""),
+                category=validated_data.get("category", "other"),
+                status="active",
+            )
+
+        acquire_price = validated_data.get("acquirePrice", 0)
+        current_value = product.reference_price if product.reference_price > 0 else acquire_price
+
         request = self.context.get("request")
         owner = request.user if request and request.user.is_authenticated else None
         asset = UserAsset(
@@ -51,8 +63,8 @@ class AssetCreateSerializer(serializers.Serializer):
             owner=owner,
             product=product,
             quantity=validated_data.get("quantity", 1),
-            acquire_price=validated_data.get("acquirePrice", 0),
-            current_value=validated_data.get("acquirePrice", 0),
+            acquire_price=acquire_price,
+            current_value=current_value,
             description=validated_data.get("description", ""),
         )
         asset.save()

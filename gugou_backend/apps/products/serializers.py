@@ -26,7 +26,7 @@ class ProductCreateSerializer(serializers.Serializer):
     characterName = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     category = serializers.CharField(max_length=20)
     referencePrice = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
-    mainImage = serializers.URLField(required=False, default="", allow_blank=True)
+    mainImage = serializers.CharField(required=False, default="", allow_blank=True)
     description = serializers.CharField(required=False, default="", allow_blank=True)
 
     def create(self, validated_data):
@@ -54,7 +54,7 @@ class ProductUpdateSerializer(serializers.Serializer):
     characterName = serializers.CharField(max_length=50, required=False, allow_blank=True)
     category = serializers.CharField(max_length=20, required=False)
     referencePrice = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
-    mainImage = serializers.URLField(required=False, allow_blank=True)
+    mainImage = serializers.CharField(required=False, allow_blank=True)
     description = serializers.CharField(required=False, allow_blank=True)
     status = serializers.ChoiceField(choices=Product.Status.choices, required=False)
 

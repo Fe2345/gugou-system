@@ -26,6 +26,14 @@ class ProductListView(APIView):
         if category:
             queryset = queryset.filter(category=category)
 
+        ip_name = request.query_params.get("ipName", "").strip()
+        if ip_name:
+            queryset = queryset.filter(ip_name__icontains=ip_name)
+
+        character_name = request.query_params.get("characterName", "").strip()
+        if character_name:
+            queryset = queryset.filter(character_name__icontains=character_name)
+
         # 分页
         try:
             page = int(request.query_params.get("page", 1))
@@ -97,5 +105,5 @@ class ProductCategoriesView(APIView):
 
     def get(self, request):
         """获取品类列表"""
-        categories = [c.label for c in Product.Category]
+        categories = [{"value": c.value, "label": c.label} for c in Product.Category]
         return success(data=categories)
