@@ -90,8 +90,8 @@ export async function addAsset(data: AssetForm): Promise<ApiResponse<void>> {
       currentValue: data.acquirePrice,
       status: 'holding',
       description: data.description || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
     return { code: 200, message: 'ok', data: undefined }
   }
@@ -138,7 +138,7 @@ export async function operateAsset(operation: AssetOperation): Promise<ApiRespon
         asset.status = 'sold'
         break
     }
-    asset.updatedAt = new Date().toISOString()
+    asset.updated_at = new Date().toISOString()
     return { code: 200, message: 'ok', data: undefined }
   }
   const { default: request } = await import('@/utils/request')

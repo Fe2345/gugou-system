@@ -41,7 +41,7 @@ async function loadGoods() {
       status: filterStatus.value !== 'all' ? filterStatus.value : undefined,
       category: filterCategory.value || undefined,
     })
-    goods.value = res.data.list
+    goods.value = res.data.results
   } catch (e) {
     console.error('加载商品失败', e)
   } finally {
