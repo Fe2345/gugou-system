@@ -1,5 +1,59 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
+import { getMarketList, getMyListings, type MarketItem } from '@/api/market'
+
+const router = useRouter()
+const listings = ref<MarketItem[]>([])
+const myListings = ref<MarketItem[]>([])
+const loading = ref(false)
+const totalCount = ref(0)
+const myCount = ref(0)
+
+const statusMap: Record<string, string> = {
+  active: '在售',
+  locked: '锁定',
+  sold: '已售',
+  cancelled: '已取消',
+  removed: '已下架',
+}
+
+async function loadListings() {
+  loading.value = true
+  try {
+    const res = await getMarketList({ page: 1, page_size: 20 })
+    if (res.code === 200) {
+      listings.value = res.data.results
+      totalCount.value = res.data.count
+    }
+  } catch (e) {
+    console.error('加载挂单列表失败', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadMyListings() {
+  try {
+    const res = await getMyListings({ page: 1, page_size: 20 })
+    if (res.code === 200) {
+      myListings.value = res.data.results
+      myCount.value = res.data.count
+    }
+  } catch (e) {
+    console.error('加载我的挂单失败', e)
+  }
+}
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+onMounted(() => {
+  loadListings()
+  loadMyListings()
+})
 </script>
 
 <template>
@@ -17,8 +71,8 @@ import TopBar from '@/layouts/TopBar.vue'
           <button type="button">搜索</button>
         </form>
         <div class="hero-actions">
-          <button class="primary" type="button">发布在售谷子</button>
-          <button class="secondary" type="button">我的发布</button>
+          <button class="primary" type="button" @click="router.push('/market/publish')">发布在售谷子</button>
+          <button class="secondary" type="button" @click="router.push('/market/my')">我的发布</button>
         </div>
         <div class="hot-words">
           <span>热门搜索：</span>
@@ -50,14 +104,8 @@ import TopBar from '@/layouts/TopBar.vue'
           <input type="number" placeholder="最低价">
           <input type="number" placeholder="最高价">
         </div>
-        <label><span>谷子状态</span>
-          <select><option>全部状态</option><option>全新</option><option>拆封</option><option>微瑕疵</option><option>损坏</option></select>
-        </label>
-        <label><span>卖家信誉</span>
-          <select><option>全部信誉</option><option>优秀信誉</option><option>普通信誉</option><option>新人</option></select>
-        </label>
         <label><span>排列方式</span>
-          <select><option>默认排序</option><option>价格低到高</option><option>价格高到低</option><option>发布时间</option><option>成交热度</option></select>
+          <select><option>默认排序</option><option>价格低到高</option><option>价格高到低</option><option>发布时间</option></select>
         </label>
         <button class="primary full" type="button">应用筛选</button>
       </aside>
@@ -68,52 +116,51 @@ import TopBar from '@/layouts/TopBar.vue'
             <p class="eyebrow">在售谷子列表</p>
             <h2>当前挂牌</h2>
           </div>
-          <span>1 个谷子</span>
+          <span>{{ totalCount }} 个谷子</span>
         </div>
 
-        <article class="sale-card">
-          <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80" alt="精灵宝可梦限定玛奇朵盲盒">
-          <div class="sale-info">
-            <div class="sale-title">
-              <h3>精灵宝可梦限定玛奇朵盲盒</h3>
-              <button type="button">收藏</button>
+        <div v-if="loading" class="empty-state">
+          <strong>加载中...</strong>
+        </div>
+
+        <div v-else-if="listings.length === 0" class="empty-state">
+          <strong>暂无挂单</strong>
+          <p>还没有人发布谷子，快来第一个发布吧</p>
+        </div>
+
+        <div v-else class="sale-list">
+          <article v-for="item in listings" :key="item.listing_id" class="sale-card">
+            <img :src="item.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80'" :alt="item.product_name">
+            <div class="sale-info">
+              <div class="sale-title">
+                <h3>{{ item.product_name }}</h3>
+                <span class="listing-status">{{ statusMap[item.status] || item.status }}</span>
+              </div>
+              <p class="desc">{{ item.description || '暂无描述' }}</p>
+              <div class="price-line">
+                <strong>售价：¥{{ item.price }}</strong>
+              </div>
+              <div class="meta-grid">
+                <div><span>数量</span><strong>{{ item.quantity }}</strong></div>
+                <div><span>卖家</span><strong>{{ item.seller_name }}</strong></div>
+                <div><span>发布时间</span><strong>{{ formatDate(item.created_at) }}</strong></div>
+                <div><span>挂单编号</span><strong>{{ item.listing_id }}</strong></div>
+              </div>
+              <div class="card-actions">
+                <button class="secondary" type="button" @click="router.push(`/market/${item.listing_id}`)">查看详情</button>
+                <button class="primary" type="button" @click="router.push(`/my-orders/create?listing=${item.listing_id}`)">发起交易</button>
+              </div>
             </div>
-            <div class="tags">
-              <span>精灵宝可梦</span><span>亚克力</span><span>盲盒</span>
-            </div>
-            <p class="desc">未拆开摆放，颜色较好，有原装记录。</p>
-            <div class="price-line">
-              <strong>售价：¥59</strong>
-              <span>近期参考价：¥65</span>
-            </div>
-            <div class="meta-grid">
-              <div><span>谷子状态</span><strong>拆封 / 颜色较好</strong></div>
-              <div><span>卖家信誉</span><strong>优秀信誉 · 成交 18 次 · 好评率 98%</strong></div>
-            </div>
-            <div class="card-actions">
-              <button class="secondary" type="button">查看详情</button>
-              <button class="primary" type="button">发起交易</button>
-            </div>
-          </div>
-        </article>
+          </article>
+        </div>
       </section>
 
       <aside class="assist-panel" aria-label="交易辅助">
         <section class="assist-card">
           <div class="section-head">
-            <p class="eyebrow">我的交易</p><h2>交易辅助</h2>
+            <p class="eyebrow">我的发布</p><h2>发布状态</h2>
           </div>
-          <div class="trade-stats">
-            <div><span>进行中</span><strong>2</strong></div>
-            <div><span>待发货</span><strong>1</strong></div>
-            <div><span>待收货</span><strong>1</strong></div>
-            <div><span>已完成</span><strong>8</strong></div>
-          </div>
-        </section>
-        <section class="assist-card">
-          <div class="section-head"><p class="eyebrow">我的发布</p><h2>发布状态</h2></div>
-          <div class="publish-row"><span>在售谷子</span><strong>3</strong></div>
-          <div class="publish-row"><span>已售出</span><strong>1</strong></div>
+          <div class="publish-row"><span>在售谷子</span><strong>{{ myCount }}</strong></div>
         </section>
         <section class="assist-card safe-card">
           <div class="section-head"><p class="eyebrow">安全与提示</p><h2>交易前确认</h2></div>
@@ -123,11 +170,6 @@ import TopBar from '@/layouts/TopBar.vue'
             <li>参考近期成交价做决策</li>
             <li>使用平台担保支付</li>
           </ul>
-        </section>
-        <section class="assist-card">
-          <div class="section-head"><p class="eyebrow">推荐谷子</p><h2>相关谷子</h2></div>
-          <div class="recommend-item"><strong>同 IP 角色盲盒</strong><span>参考价 ¥60-80</span></div>
-          <div class="recommend-item"><strong>亚克力挂件</strong><span>热度上升中</span></div>
         </section>
       </aside>
     </section>
@@ -170,18 +212,16 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .goods-panel { padding: 22px; }
 .list-head { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
 .list-head span { color: var(--muted); font-size: 14px; }
+.sale-list { display: grid; gap: 16px; }
 .sale-card { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 18px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); }
 .sale-card img { width: 100%; height: 300px; object-fit: contain; border-radius: 8px; background: #fff; }
 .sale-info { display: grid; gap: 14px; }
 .sale-title { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
 .sale-title h3 { font-size: 22px; }
-.sale-title button { min-height: 34px; border: 1px solid var(--line); border-radius: 7px; color: var(--accent); background: #fff; cursor: pointer; font: inherit; }
-.tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.tags span { padding: 6px 10px; border-radius: 7px; color: var(--accent); background: #eaf6f8; font-size: 13px; font-weight: 800; }
+.listing-status { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: #eaf6f8; color: var(--accent); }
 .desc { color: var(--muted); line-height: 1.7; }
 .price-line { display: flex; flex-wrap: wrap; gap: 14px; align-items: baseline; }
 .price-line strong { color: var(--accent); font-size: 24px; }
-.price-line span { color: var(--muted); }
 .meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .meta-grid div { padding: 12px; border-radius: 8px; background: #fff; }
 .meta-grid span { display: block; color: var(--muted); font-size: 13px; }
@@ -189,17 +229,16 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .assist-panel { align-self: start; display: grid; gap: 16px; }
 .assist-card { padding: 18px; }
-.trade-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.trade-stats div, .publish-row, .recommend-item { padding: 12px; border-radius: 8px; background: var(--soft); }
-.trade-stats span, .publish-row span, .recommend-item span { display: block; color: var(--muted); font-size: 13px; }
-.trade-stats strong, .publish-row strong { display: block; margin-top: 8px; font-size: 22px; }
-.publish-row + .publish-row, .recommend-item + .recommend-item { margin-top: 10px; }
+.publish-row { padding: 12px; border-radius: 8px; background: var(--soft); }
+.publish-row span { display: block; color: var(--muted); font-size: 13px; }
+.publish-row strong { display: block; margin-top: 8px; font-size: 22px; }
 .safe-card ul { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.9; }
-.recommend-item strong { display: block; margin-bottom: 8px; }
+.empty-state { min-height: 200px; display: grid; place-items: center; text-align: center; border: 1px dashed #bfd0d5; border-radius: 10px; color: var(--muted); background: var(--soft); }
+.empty-state strong { display: block; margin-bottom: 8px; color: var(--ink); font-size: 18px; }
 
 @media (max-width: 1100px) {
   .market-layout { grid-template-columns: 240px minmax(0, 1fr); }
-  .assist-panel { grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .assist-panel { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 860px) {
   .market-hero, .market-layout, .sale-card, .assist-panel { grid-template-columns: 1fr; }
@@ -208,6 +247,6 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
   .page { width: min(100% - 20px, 1240px); }
   .market-hero, .goods-panel { padding: 20px; }
   h1 { font-size: 30px; }
-  .search-box, .hero-actions, .price-custom, .meta-grid, .card-actions, .trade-stats { grid-template-columns: 1fr; }
+  .search-box, .hero-actions, .price-custom, .meta-grid, .card-actions { grid-template-columns: 1fr; }
 }
 </style>

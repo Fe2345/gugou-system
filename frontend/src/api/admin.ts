@@ -1,7 +1,7 @@
 import type { GoodsItem } from '@/types/goods'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
 
-const USE_MOCK = true
+const USE_MOCK = false
 
 function delay(ms = 500) {
   return new Promise(resolve => setTimeout(resolve, ms))

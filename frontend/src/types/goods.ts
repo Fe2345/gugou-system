@@ -8,7 +8,7 @@ export interface GoodsItem {
   mainImage: string
   description: string
   status: 'active' | 'inactive' | 'frozen' | 'archived'
-  created_at: string
+  createdAt: string
 }
 
 export interface GoodsForm {

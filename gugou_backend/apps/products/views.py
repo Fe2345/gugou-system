@@ -1,3 +1,4 @@
+from django.db.models import ProtectedError
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 
@@ -96,7 +97,10 @@ class ProductDetailView(APIView):
         product = self.get_object(product_id)
         if not product:
             return error(message="商品不存在", code=404)
-        product.delete()
+        try:
+            product.delete()
+        except ProtectedError:
+            return error(message="该商品已被资产、挂单或订单引用，无法删除", code=400)
         return success(message="删除成功")
 
 

@@ -55,6 +55,65 @@ const router = createRouter({
       component: () => import('@/views/user/OrdersView.vue'),
     },
     {
+      path: '/market/publish',
+      name: 'market-publish',
+      component: () => import('@/views/user/MarketPublishView.vue'),
+    },
+    {
+      path: '/market/my',
+      name: 'market-my',
+      component: () => import('@/views/user/MyMarketView.vue'),
+    },
+    {
+      path: '/market/:id',
+      name: 'market-detail',
+      component: () => import('@/views/user/MarketDetailView.vue'),
+      props: true,
+    },
+    {
+      path: '/my-orders/create',
+      name: 'order-create',
+      component: () => import('@/views/user/OrderCreateView.vue'),
+    },
+    {
+      path: '/my-orders/:id',
+      name: 'order-detail',
+      component: () => import('@/views/user/OrderDetailView.vue'),
+      props: true,
+    },
+    {
+      path: '/swap/publish',
+      name: 'swap-publish',
+      component: () => import('@/views/user/SwapPublishView.vue'),
+    },
+    {
+      path: '/swap/my',
+      name: 'swap-my',
+      component: () => import('@/views/user/MySwapView.vue'),
+    },
+    {
+      path: '/swap/:id',
+      name: 'swap-detail',
+      component: () => import('@/views/user/SwapDetailView.vue'),
+      props: true,
+    },
+    {
+      path: '/group/publish',
+      name: 'group-publish',
+      component: () => import('@/views/user/GroupPublishView.vue'),
+    },
+    {
+      path: '/group/my',
+      name: 'group-my',
+      component: () => import('@/views/user/MyGroupView.vue'),
+    },
+    {
+      path: '/group/:id',
+      name: 'group-detail',
+      component: () => import('@/views/user/GroupDetailView.vue'),
+      props: true,
+    },
+    {
       path: '/admin/login',
       name: 'admin-login',
       component: () => import('@/views/admin/AdminLoginView.vue'),

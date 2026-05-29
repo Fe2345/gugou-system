@@ -4,6 +4,7 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from apps.common.id_generator import generate_order_id, generate_payment_id
+from apps.market.models import Listing
 from .models import Order, OrderStatusLog, PaymentRecord
 
 logger = logging.getLogger("gugou")
@@ -14,8 +15,6 @@ class OrderCreateSerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value=1, default=1)
 
     def validate(self, attrs):
-        from apps.market.models import Listing
-
         # 验证挂单存在
         try:
             listing = Listing.objects.get(listing_id=attrs["listing_id"])
@@ -89,6 +88,9 @@ class PaymentCreateSerializer(serializers.Serializer):
         if order.status != Order.Status.PENDING_PAYMENT:
             raise serializers.ValidationError("订单状态不允许支付")
         return attrs
+
+    def update(self, instance, validated_data):
+        return self.create(validated_data)
 
     def create(self, validated_data):
         order = self.instance

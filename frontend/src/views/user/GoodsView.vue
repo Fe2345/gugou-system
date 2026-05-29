@@ -50,7 +50,7 @@ async function loadProducts(keyword?: string) {
   loading.value = true
   try {
     const res = await getGoodsList({ keyword })
-    products.value = res.data.results
+    products.value = res.data.list
   } catch (e) {
     console.error('加载产品失败', e)
   } finally {
@@ -87,7 +87,7 @@ async function handleAddProduct() {
 
   loading.value = true
   try {
-    await addGoods({
+    const res = await addGoods({
       name,
       referencePrice: Number(price),
       mainImage: selectedImage.value,
@@ -96,16 +96,20 @@ async function handleAddProduct() {
       category: form.category || 'other',
       description: form.description,
     })
-    form.name = ''
-    form.referencePrice = ''
-    form.ipName = ''
-    form.characterName = ''
-    form.category = ''
-    form.description = ''
-    selectedImage.value = ''
-    loadProducts()
-  } catch (e) {
-    console.error('添加产品失败', e)
+    if (res.code === 200) {
+      form.name = ''
+      form.referencePrice = ''
+      form.ipName = ''
+      form.characterName = ''
+      form.category = ''
+      form.description = ''
+      selectedImage.value = ''
+      loadProducts()
+    } else {
+      alert(res.message || '添加失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '添加失败')
   } finally {
     loading.value = false
   }
@@ -123,7 +127,7 @@ async function handleFilter() {
     if (filterForm.characterName.trim()) params.characterName = filterForm.characterName.trim()
     if (filterForm.category) params.category = filterForm.category
     const res = await getGoodsList(params)
-    products.value = res.data.results
+    products.value = res.data.list
   } catch (e) {
     console.error('筛选失败', e)
   } finally {
@@ -159,7 +163,7 @@ async function handleSaveEdit() {
   if (!editingProduct.value) return
   loading.value = true
   try {
-    await updateGoods(editingProduct.value.id, {
+    const res = await updateGoods(editingProduct.value.id, {
       name: editForm.name,
       referencePrice: Number(editForm.referencePrice),
       ipName: editForm.ipName,
@@ -167,10 +171,14 @@ async function handleSaveEdit() {
       category: editForm.category,
       description: editForm.description,
     })
-    editingProduct.value = null
-    await loadProducts()
-  } catch (e) {
-    console.error('编辑失败', e)
+    if (res.code === 200) {
+      editingProduct.value = null
+      await loadProducts()
+    } else {
+      alert(res.message || '编辑失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '编辑失败')
   } finally {
     loading.value = false
   }
@@ -191,12 +199,16 @@ async function handleDelete() {
   if (!productToDelete.value) return
   loading.value = true
   try {
-    await deleteGoods(productToDelete.value.id)
-    showDeleteConfirm.value = false
-    productToDelete.value = null
-    await loadProducts()
-  } catch (e) {
-    console.error('删除失败', e)
+    const res = await deleteGoods(productToDelete.value.id)
+    if (res.code === 200) {
+      showDeleteConfirm.value = false
+      productToDelete.value = null
+      await loadProducts()
+    } else {
+      alert(res.message || '删除失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '删除失败')
   } finally {
     loading.value = false
   }
@@ -207,10 +219,14 @@ async function toggleStatus(product: GoodsItem) {
   const newStatus = product.status === 'active' ? 'inactive' : 'active'
   loading.value = true
   try {
-    await updateGoods(product.id, { status: newStatus })
-    await loadProducts()
-  } catch (e) {
-    console.error('状态更新失败', e)
+    const res = await updateGoods(product.id, { status: newStatus })
+    if (res.code === 200) {
+      await loadProducts()
+    } else {
+      alert(res.message || '状态更新失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '状态更新失败')
   } finally {
     loading.value = false
   }
@@ -399,7 +415,7 @@ function getStatusClass(status: string) {
             <div class="field"><label>IP</label><span>{{ selectedProduct.ipName }}</span></div>
             <div class="field"><label>角色</label><span>{{ selectedProduct.characterName }}</span></div>
             <div class="field"><label>品类</label><span>{{ selectedProduct.category }}</span></div>
-            <div class="field"><label>创建时间</label><span>{{ selectedProduct.created_at }}</span></div>
+            <div class="field"><label>创建时间</label><span>{{ selectedProduct.createdAt }}</span></div>
           </div>
           <p class="detail-desc">{{ selectedProduct.description }}</p>
         </div>

@@ -19,8 +19,8 @@ export async function getGoodsList(params?: {
   keyword?: string
   category?: string
   page?: number
-  page_size?: number
-}): Promise<ApiResponse<PaginatedResponse<GoodsItem>>> {
+  pageSize?: number
+}): Promise<ApiResponse<{ list: GoodsItem[]; total: number; page: number; pageSize: number }>> {
   if (USE_MOCK) {
     await delay()
     let list = [...mockGoods]
@@ -31,7 +31,7 @@ export async function getGoodsList(params?: {
     if (params?.category) {
       list = list.filter(g => g.category === params.category)
     }
-    return { code: 200, message: 'ok', data: { results: list, count: list.length, page: params?.page || 1, page_size: params?.page_size || 10 } }
+    return { code: 200, message: 'ok', data: { list, total: list.length, page: params?.page || 1, pageSize: params?.pageSize || 10 } }
   }
   const { default: request } = await import('@/utils/request')
   return request.get('/products', { params })

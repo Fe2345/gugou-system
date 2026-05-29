@@ -1,20 +1,56 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import type { OrderItem } from '@/types/order'
+import { getOrderList } from '@/api/order'
 defineOptions({ name: 'AdminOrdersView' })
 
-const metrics = [
-  { label: '今日新增订单', value: '128', note: '较昨日增加 12 单' },
-  { label: '待发货订单', value: '36', note: '需优先跟进' },
-  { label: '异常处理中', value: '9', note: '退款与纠纷混合' },
-  { label: '已完成订单', value: '452', note: '本周累计' },
-]
+const orders = ref<OrderItem[]>([])
+const loading = ref(false)
+const totalCount = ref(0)
 
-const orders = ref([
-  { id: 'O202605061030010001', buyer: '星野', seller: '柚子茶', goods: '吧唧套组 A', amount: '￥128.00', status: 'pending', time: '2026-05-06 10:30' },
-  { id: 'O202605061122210002', buyer: '白昼', seller: '林深', goods: '色纸限定款', amount: '￥89.00', status: 'alert', time: '2026-05-06 11:22' },
-  { id: 'O202605051558100018', buyer: '月海', seller: '塔塔', goods: '立牌单品', amount: '￥56.00', status: 'done', time: '2026-05-05 15:58' },
-])
-const statusMap: Record<string, string> = { pending: '待发货', alert: '异常处理', done: '已完成' }
+const statusMap: Record<string, string> = {
+  created: '已创建',
+  pending_payment: '待付款',
+  paid: '已支付',
+  completed: '已完成',
+  cancelled: '已取消',
+  closed: '已关闭',
+  refunded: '已退款',
+}
+
+const statusClassMap: Record<string, string> = {
+  created: 'pending',
+  pending_payment: 'pending',
+  paid: 'alert',
+  completed: 'done',
+  cancelled: 'done',
+  closed: 'done',
+  refunded: 'alert',
+}
+
+async function loadOrders() {
+  loading.value = true
+  try {
+    const res = await getOrderList({ page: 1, page_size: 50 })
+    if (res.code === 200) {
+      orders.value = res.data.results
+      totalCount.value = res.data.count
+    }
+  } catch (e) {
+    console.error('加载订单失败', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+onMounted(() => {
+  loadOrders()
+})
 </script>
 
 <template>
@@ -27,45 +63,45 @@ const statusMap: Record<string, string> = { pending: '待发货', alert: '异常
   </section>
 
   <section class="data-grid">
-    <article v-for="(m, i) in metrics" :key="i" class="data-card">
-      <span>{{ m.label }}</span><strong>{{ m.value }}</strong><p>{{ m.note }}</p>
+    <article class="data-card">
+      <span>总订单数</span><strong>{{ totalCount }}</strong><p>全部订单</p>
+    </article>
+    <article class="data-card">
+      <span>待付款</span><strong>{{ orders.filter(o => o.status === 'pending_payment').length }}</strong><p>需跟进付款</p>
+    </article>
+    <article class="data-card">
+      <span>已支付</span><strong>{{ orders.filter(o => o.status === 'paid').length }}</strong><p>待确认完成</p>
+    </article>
+    <article class="data-card">
+      <span>已完成</span><strong>{{ orders.filter(o => o.status === 'completed').length }}</strong><p>交易完成</p>
     </article>
   </section>
 
   <section class="toolbar">
     <div class="search-box"><input type="search" placeholder="输入订单编号或买家昵称"></div>
-    <select><option>全部状态</option><option>待支付</option><option>已支付</option><option>待发货</option><option>待收货</option><option>已完成</option><option>异常处理中</option></select>
-    <select><option>全部时间</option><option>今天</option><option>近3天</option><option>近7天</option></select>
-    <button class="primary" type="button">查询订单</button>
-    <button class="secondary" type="button">导出报表</button>
+    <select><option>全部状态</option><option>待支付</option><option>已支付</option><option>已完成</option><option>已取消</option></select>
+    <button class="primary" type="button" @click="loadOrders">刷新订单</button>
   </section>
 
   <section class="content-row">
     <article class="table-panel">
       <div class="section-head">
         <div><p class="eyebrow">订单列表</p><h2>全部订单</h2></div>
-        <div class="head-actions">
-          <button class="secondary sm" type="button">批量发货</button>
-          <button class="danger sm" type="button">异常挂起</button>
-        </div>
+        <span class="count-badge">共 {{ totalCount }} 条</span>
       </div>
-      <div class="table-wrap">
+      <div v-if="loading" class="loading-state">加载中...</div>
+      <div v-else class="table-wrap">
         <table>
-          <thead><tr><th>订单编号</th><th>买家</th><th>卖家</th><th>商品</th><th>金额</th><th>状态</th><th>下单时间</th><th>操作</th></tr></thead>
+          <thead><tr><th>订单编号</th><th>买家</th><th>卖家</th><th>商品</th><th>金额</th><th>状态</th><th>下单时间</th></tr></thead>
           <tbody>
-            <tr v-for="(o, i) in orders" :key="i">
-              <td>{{ o.id }}</td>
-              <td>{{ o.buyer }}</td>
-              <td>{{ o.seller }}</td>
-              <td>{{ o.goods }}</td>
-              <td class="price">{{ o.amount }}</td>
-              <td><span class="status" :class="o.status">{{ statusMap[o.status] }}</span></td>
-              <td>{{ o.time }}</td>
-              <td class="actions">
-                <button class="secondary sm" type="button">查看</button>
-                <button v-if="o.status === 'pending'" class="primary sm" type="button">发货</button>
-                <button v-if="o.status === 'alert'" class="danger sm" type="button">介入</button>
-              </td>
+            <tr v-for="o in orders" :key="o.order_id">
+              <td>{{ o.order_id }}</td>
+              <td>{{ o.buyer_name }}</td>
+              <td>{{ o.seller_name }}</td>
+              <td>{{ o.product_name }}</td>
+              <td class="price">¥{{ Number(o.amount).toFixed(2) }}</td>
+              <td><span class="status" :class="statusClassMap[o.status]">{{ statusMap[o.status] }}</span></td>
+              <td>{{ formatDate(o.created_at) }}</td>
             </tr>
           </tbody>
         </table>
@@ -101,16 +137,13 @@ h1, h2, h3, p { margin: 0; } h1 { font-size: 32px; }
 select { height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; font: inherit; background: var(--soft); min-width: 120px; }
 .primary { height: 42px; padding: 0 18px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 800; cursor: pointer; font: inherit; }
 .primary:hover { background: var(--accent-dark); }
-.primary.sm { height: 32px; padding: 0 12px; font-size: 13px; }
 .secondary { height: 42px; padding: 0 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font-weight: 700; cursor: pointer; font: inherit; }
-.secondary.sm { height: 32px; padding: 0 12px; font-size: 13px; }
-.danger.sm { height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #fee2e2; color: #be123c; font-weight: 700; cursor: pointer; font: inherit; font-size: 13px; }
 
 .content-row { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.7fr); gap: 18px; align-items: start; }
 .table-panel { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); overflow: hidden; }
 .section-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--line); }
 .section-head .eyebrow { margin-bottom: 4px; }
-.head-actions { display: flex; gap: 8px; }
+.count-badge { color: var(--muted); font-size: 14px; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 14px 16px; border-bottom: 1px solid var(--line); text-align: left; font-size: 14px; white-space: nowrap; }
@@ -119,9 +152,9 @@ tr:last-child td { border-bottom: 0; }
 .price { color: #be123c; font-weight: 700; }
 .status { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .status.pending { background: #fef3c7; color: #b45309; }
-.status.alert { background: #ffe4e6; color: #be123c; }
+.status.alert { background: #dbeafe; color: #1d4ed8; }
 .status.done { background: #dcfce7; color: #15803d; }
-.actions { display: flex; gap: 6px; }
+.loading-state { padding: 40px; text-align: center; color: var(--muted); }
 
 .panel { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); padding: 18px; box-shadow: none; }
 .panel-title { margin-bottom: 14px; }

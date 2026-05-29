@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import type { OrderItem } from '@/types/order'
+import { getOrderList, cancelOrder, confirmOrder, createPayment, confirmPayment } from '@/api/order'
 
+const router = useRouter()
 const orders = ref<OrderItem[]>([])
+const loading = ref(false)
 const activeTab = ref('all')
 
 const tabs = [
@@ -34,62 +38,77 @@ const statusClassMap: Record<string, string> = {
   refunded: 'status-cancelled',
 }
 
-const filteredOrders = ref<OrderItem[]>([])
-
-function filterOrders() {
-  if (activeTab.value === 'all') {
-    filteredOrders.value = orders.value
-  } else {
-    filteredOrders.value = orders.value.filter(o => o.status === activeTab.value)
+async function loadOrders() {
+  loading.value = true
+  try {
+    const params: Record<string, any> = { page: 1, page_size: 50 }
+    if (activeTab.value !== 'all') {
+      params.status = activeTab.value
+    }
+    const res = await getOrderList(params)
+    if (res.code === 200) {
+      orders.value = res.data.results
+    }
+  } catch (e) {
+    console.error('加载订单失败', e)
+  } finally {
+    loading.value = false
   }
 }
 
 function switchTab(tab: string) {
   activeTab.value = tab
-  filterOrders()
+  loadOrders()
+}
+
+async function handlePay(order: OrderItem) {
+  try {
+    const res = await createPayment(order.order_id)
+    if (res.code === 200) {
+      const payRes = await confirmPayment(order.order_id, res.data.payment_id)
+      if (payRes.code === 200) {
+        alert('支付成功')
+        loadOrders()
+      }
+    }
+  } catch (e) {
+    alert('支付失败')
+  }
+}
+
+async function handleConfirm(order: OrderItem) {
+  try {
+    const res = await confirmOrder(order.order_id)
+    if (res.code === 200) {
+      alert('订单已完成')
+      loadOrders()
+    }
+  } catch (e) {
+    alert('操作失败')
+  }
+}
+
+async function handleCancel(order: OrderItem) {
+  if (!confirm('确定取消此订单？')) return
+  try {
+    const res = await cancelOrder(order.order_id, '用户主动取消')
+    if (res.code === 200) {
+      alert('订单已取消')
+      loadOrders()
+    }
+  } catch (e) {
+    alert('取消失败')
+  }
+}
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
 onMounted(() => {
-  // 模拟数据，后续接入 API
-  orders.value = [
-    {
-      order_id: 'O202605201030010001',
-      buyer_id: 'U202604270001',
-      buyer_name: '测试用户',
-      seller_id: 'U202604270002',
-      seller_name: '卖家A',
-      product_id: 'G202604270001',
-      product_name: '玛奇朵限定徽章',
-      quantity: 1,
-      amount: 128,
-      status: 'pending_payment',
-      paid_at: null,
-      completed_at: null,
-      created_at: '2026-05-20T10:30:00Z',
-    },
-    {
-      order_id: 'O202605191420010002',
-      buyer_id: 'U202604270001',
-      buyer_name: '测试用户',
-      seller_id: 'U202604270003',
-      seller_name: '卖家B',
-      product_id: 'G202604270002',
-      product_name: '深海明信片套装',
-      quantity: 2,
-      amount: 192,
-      status: 'paid',
-      paid_at: '2026-05-19T15:00:00Z',
-      completed_at: null,
-      created_at: '2026-05-19T14:20:00Z',
-    },
-  ]
-  filteredOrders.value = orders.value
+  loadOrders()
 })
-
-function formatDate(dateStr: string) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
-}
 </script>
 
 <template>
@@ -116,13 +135,17 @@ function formatDate(dateStr: string) {
         </button>
       </nav>
 
-      <div v-if="filteredOrders.length === 0" class="empty-state">
+      <div v-if="loading" class="empty-state">
+        <strong>加载中...</strong>
+      </div>
+
+      <div v-else-if="orders.length === 0" class="empty-state">
         <strong>暂无订单</strong>
         <p>您还没有相关订单记录</p>
       </div>
 
       <div v-else class="order-list">
-        <article v-for="order in filteredOrders" :key="order.order_id" class="order-card">
+        <article v-for="order in orders" :key="order.order_id" class="order-card">
           <div class="order-header">
             <span class="order-id">订单号：{{ order.order_id }}</span>
             <span class="order-date">{{ formatDate(order.created_at) }}</span>
@@ -136,14 +159,14 @@ function formatDate(dateStr: string) {
               <p>数量：{{ order.quantity }}</p>
             </div>
             <div class="order-price">
-              <strong>¥ {{ order.amount.toFixed(2) }}</strong>
+              <strong>¥ {{ Number(order.amount).toFixed(2) }}</strong>
             </div>
           </div>
           <div class="order-footer">
-            <button v-if="order.status === 'pending_payment'" class="primary" type="button">去付款</button>
-            <button v-if="order.status === 'paid'" class="primary" type="button">确认完成</button>
-            <button v-if="order.status === 'pending_payment'" class="secondary" type="button">取消订单</button>
-            <button class="secondary" type="button">查看详情</button>
+            <button v-if="order.status === 'pending_payment'" class="primary" type="button" @click="handlePay(order)">去付款</button>
+            <button v-if="order.status === 'paid'" class="primary" type="button" @click="handleConfirm(order)">确认完成</button>
+            <button v-if="order.status === 'pending_payment'" class="secondary" type="button" @click="handleCancel(order)">取消订单</button>
+            <button class="secondary" type="button" @click="router.push(`/my-orders/${order.order_id}`)">查看详情</button>
           </div>
         </article>
       </div>
@@ -296,11 +319,6 @@ h1 {
   color: #1d4ed8;
 }
 
-.status-shipped {
-  background: #e0e7ff;
-  color: #4338ca;
-}
-
 .status-completed {
   background: #dcfce7;
   color: #15803d;
@@ -316,14 +334,6 @@ h1 {
   align-items: center;
   gap: 16px;
   padding: 16px;
-}
-
-.order-image {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-  background: #f3f7f8;
 }
 
 .order-info {
