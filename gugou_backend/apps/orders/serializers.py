@@ -15,6 +15,20 @@ class OrderCreateSerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value=1, default=1)
 
     def validate(self, attrs):
+        from apps.credits.services import check_trading_permission, check_daily_order_limit
+
+        user = self.context["request"].user
+
+        # 检查信用分交易权限
+        allowed, msg = check_trading_permission(user)
+        if not allowed:
+            raise serializers.ValidationError({"credit": msg})
+
+        # 检查每日下单限制
+        allowed, msg = check_daily_order_limit(user)
+        if not allowed:
+            raise serializers.ValidationError({"credit": msg})
+
         # 验证挂单存在
         try:
             listing = Listing.objects.get(listing_id=attrs["listing_id"])
@@ -30,7 +44,6 @@ class OrderCreateSerializer(serializers.Serializer):
             raise serializers.ValidationError({"quantity": "购买数量超过挂单数量"})
 
         # 验证不能购买自己的挂单
-        user = self.context["request"].user
         if listing.seller == user:
             raise serializers.ValidationError({"listing_id": "不能购买自己的挂单"})
 
@@ -147,9 +160,10 @@ class PaymentSuccessSerializer(serializers.Serializer):
         )
 
         # 创建信用记录（买家获得信用）
+        from apps.credits.services import CREDIT_ORDER_BUYER_COMPLETE
         create_credit_record(
             user=payment.payer,
-            change_value=1,
+            change_value=CREDIT_ORDER_BUYER_COMPLETE,
             reason=f"完成交易订单 {order.order_id}",
             related_order=order,
         )
@@ -193,9 +207,10 @@ class OrderCompleteSerializer(serializers.Serializer):
             listing.save()
 
         # 卖家获得信用
+        from apps.credits.services import CREDIT_ORDER_SELLER_COMPLETE
         create_credit_record(
             user=order.seller,
-            change_value=1,
+            change_value=CREDIT_ORDER_SELLER_COMPLETE,
             reason=f"完成交易订单 {order.order_id}",
             related_order=order,
         )
@@ -214,11 +229,16 @@ class OrderCancelSerializer(serializers.Serializer):
         return attrs
 
     def save(self):
-        from apps.credits.services import create_credit_record
+        from apps.credits.services import (
+            create_credit_record,
+            CREDIT_ORDER_BUYER_CANCEL_PAID,
+            CREDIT_ORDER_SELLER_CANCEL_LOCKED,
+        )
 
         order = self.instance
         reason = self.validated_data.get("reason", "")
         original_status = order.status
+        operator = self.context["request"].user
 
         # 更新订单状态
         order.status = Order.Status.CANCELLED
@@ -237,17 +257,25 @@ class OrderCancelSerializer(serializers.Serializer):
             order=order,
             from_status=original_status,
             to_status=Order.Status.CANCELLED,
-            operator=self.context["request"].user,
+            operator=operator,
             note=reason or "用户取消订单",
         )
 
-        # 如果已支付，需要退款并记录信用
+        # 信用分处理
         if original_status == Order.Status.PAID:
-            # TODO: 实现退款逻辑
+            # 买家已付款后取消，扣信用
             create_credit_record(
                 user=order.buyer,
-                change_value=-1,
-                reason=f"取消订单 {order.order_id}",
+                change_value=CREDIT_ORDER_BUYER_CANCEL_PAID,
+                reason=f"已付款后取消订单 {order.order_id}",
+                related_order=order,
+            )
+        elif original_status == Order.Status.PENDING_PAYMENT and operator == order.seller:
+            # 卖家取消已锁定的待付款订单
+            create_credit_record(
+                user=order.seller,
+                change_value=CREDIT_ORDER_SELLER_CANCEL_LOCKED,
+                reason=f"卖家取消已锁定订单 {order.order_id}",
                 related_order=order,
             )
 

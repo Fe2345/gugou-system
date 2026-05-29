@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
+import { useUserStore } from '@/stores/user'
 import { createGroup } from '@/api/group'
 import { getGoodsList } from '@/api/goods'
 import type { GoodsItem } from '@/types/goods'
 
 const router = useRouter()
+const userStore = useUserStore()
+const creditScore = computed(() => userStore.userInfo?.creditScore ?? 100)
+const canJoinTeam = computed(() => creditScore.value >= 40)
 const goodsList = ref<GoodsItem[]>([])
 const submitting = ref(false)
 
@@ -76,8 +80,11 @@ onMounted(() => {
       <button class="secondary" type="button" @click="router.push('/group')">返回拼团</button>
     </section>
 
+    <div v-if="!canJoinTeam" class="credit-warning">
+      信用分过低（当前 {{ creditScore }} 分），禁止参与拼团。
+    </div>
+
     <section class="form-panel">
-      <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label>选择商品 <span class="required">*</span></label>
           <select v-model="form.product_id" required>
@@ -102,7 +109,7 @@ onMounted(() => {
         </div>
         <div class="form-actions">
           <button class="secondary" type="button" @click="router.push('/group')">取消</button>
-          <button class="primary" type="submit" :disabled="submitting">{{ submitting ? '发起中...' : '确认发起' }}</button>
+          <button class="primary" type="submit" :disabled="submitting || !canJoinTeam">{{ submitting ? '发起中...' : '确认发起' }}</button>
         </div>
       </form>
     </section>
@@ -129,4 +136,5 @@ input, select { width: 100%; height: 44px; border: 1px solid var(--line); border
 .primary:hover { background: var(--accent-dark); }
 .primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .secondary { border: 1px solid var(--line); color: var(--accent); background: #fff; }
+.credit-warning { padding: 14px 18px; border-radius: 8px; background: #fdecea; border: 1px solid #f0b8b3; color: #be123c; font-weight: 600; margin-bottom: 16px; }
 </style>

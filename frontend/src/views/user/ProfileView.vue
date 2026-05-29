@@ -5,9 +5,11 @@ import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
 import { getUserInfo, updateUserInfo, changePassword, changePhone, getLoginRecords } from '@/api/user'
 import { getAddresses, addAddress, updateAddress, deleteAddress, getDivisions } from '@/api/address'
+import { getCreditRecords, getCreditSummary } from '@/api/credit'
 import type { AddressItem, AddressForm, DivisionItem } from '@/api/address'
 import type { UserInfo } from '@/types/user'
 import type { LoginRecordItem } from '@/api/user'
+import type { CreditRecord, CreditSummary } from '@/api/credit'
 
 defineOptions({ name: 'ProfileView' })
 
@@ -45,6 +47,13 @@ const phoneForm = reactive({ phone: '' })
 const loginRecords = ref<LoginRecordItem[]>([])
 const loadingRecords = ref(false)
 
+// 信用记录
+const creditSummary = ref<CreditSummary | null>(null)
+const creditRecords = ref<CreditRecord[]>([])
+const loadingCredit = ref(false)
+const creditPage = ref(1)
+const creditTotal = ref(0)
+
 // --- 地址管理 ---
 const addresses = ref<AddressItem[]>([])
 const loadingAddresses = ref(false)
@@ -78,10 +87,17 @@ const roleMap: Record<string, string> = { user: '普通用户', admin: '管理�
 const statusMap: Record<string, string> = { normal: '正常', frozen: '冻结', disabled: '停用', deleted: '已注销' }
 
 function getCreditLevel(score: number) {
-  if (score >= 90) return '优秀用户'
-  if (score >= 70) return '良好用户'
-  if (score >= 50) return '一般用户'
-  return '需改善'
+  if (score >= 80) return '良好用户'
+  if (score >= 60) return '一般用户'
+  if (score >= 40) return '较差用户'
+  return '极差用户'
+}
+
+function getCreditLevelClass(score: number) {
+  if (score >= 80) return 'level-good'
+  if (score >= 60) return 'level-average'
+  if (score >= 40) return 'level-poor'
+  return 'level-bad'
 }
 
 async function loadUser() {
@@ -107,6 +123,33 @@ function loadRecords() {
     .then(res => { loginRecords.value = res.data })
     .catch(() => {})
     .finally(() => { loadingRecords.value = false })
+}
+
+async function loadCreditData() {
+  loadingCredit.value = true
+  try {
+    const [summaryRes, recordsRes] = await Promise.all([
+      getCreditSummary(),
+      getCreditRecords({ page: 1, page_size: 10 }),
+    ])
+    creditSummary.value = summaryRes.data
+    creditRecords.value = recordsRes.data.results
+    creditTotal.value = recordsRes.data.count
+  } catch {
+    /* ignore */
+  } finally {
+    loadingCredit.value = false
+  }
+}
+
+async function loadMoreCreditRecords() {
+  creditPage.value++
+  try {
+    const res = await getCreditRecords({ page: creditPage.value, page_size: 10 })
+    creditRecords.value.push(...res.data.results)
+  } catch {
+    creditPage.value--
+  }
 }
 
 // --- 编辑资料 ---
@@ -299,6 +342,7 @@ onMounted(() => {
   loadUser()
   loadRecords()
   loadAddresses()
+  loadCreditData()
 })
 </script>
 
@@ -422,10 +466,55 @@ onMounted(() => {
         <section v-show="activeMenu === 'credit'" class="panel">
           <div class="section-head"><div><p class="eyebrow">信用评价</p><h2>信用状态</h2></div></div>
           <div class="credit-grid">
-            <div><span>信用分</span><strong>{{ user.creditScore }}</strong></div>
-            <div><span>信用等级</span><strong>{{ getCreditLevel(user.creditScore) }}</strong></div>
+            <div><span>信用分</span><strong :class="getCreditLevelClass(user.creditScore)">{{ user.creditScore }}</strong></div>
+            <div><span>信用等级</span><strong :class="getCreditLevelClass(user.creditScore)">{{ getCreditLevel(user.creditScore) }}</strong></div>
+            <div><span>好评记录</span><strong>{{ creditSummary?.positive_count ?? '-' }} 次</strong></div>
+            <div><span>扣分记录</span><strong>{{ creditSummary?.negative_count ?? '-' }} 次</strong></div>
           </div>
-          <p class="muted-text">详细评价记录功能开发中。</p>
+
+          <!-- 交易限制提示 -->
+          <div v-if="creditSummary?.restrictions" class="credit-restrictions" :class="{ restricted: !creditSummary.restrictions.can_trade }">
+            <strong>{{ creditSummary.restrictions.level }}：</strong>
+            <template v-if="creditSummary.restrictions.restrictions.length">
+              <ul>
+                <li v-for="(r, i) in creditSummary.restrictions.restrictions" :key="i">{{ r }}</li>
+              </ul>
+            </template>
+            <template v-else>
+              <span>所有功能正常使用</span>
+            </template>
+          </div>
+
+          <!-- 信用等级说明 -->
+          <div class="credit-level-guide">
+            <h3>信用等级说明</h3>
+            <div class="level-list">
+              <div class="level-item level-good"><span>80-100 分</span><span>良好用户</span><span>无限制</span></div>
+              <div class="level-item level-average"><span>60-79 分</span><span>一般用户</span><span>部分限制</span></div>
+              <div class="level-item level-poor"><span>40-59 分</span><span>较差用户</span><span>严格限制</span></div>
+              <div class="level-item level-bad"><span>0-39 分</span><span>极差用户</span><span>禁止交易</span></div>
+            </div>
+          </div>
+
+          <!-- 信用记录列表 -->
+          <div class="section-head" style="margin-top: 24px;"><div><p class="eyebrow">变动记录</p><h2>信用变动历史</h2></div></div>
+          <div v-if="loadingCredit" class="muted-text">加载中...</div>
+          <div v-else-if="creditRecords.length === 0" class="muted-text">暂无信用变动记录</div>
+          <div v-else class="table-wrap">
+            <table>
+              <thead><tr><th>时间</th><th>变动</th><th>原因</th></tr></thead>
+              <tbody>
+                <tr v-for="r in creditRecords" :key="r.credit_record_id">
+                  <td>{{ new Date(r.created_at).toLocaleString('zh-CN') }}</td>
+                  <td :class="r.change_value > 0 ? 'credit-up' : 'credit-down'">{{ r.change_value > 0 ? '+' : '' }}{{ r.change_value }}</td>
+                  <td>{{ r.reason }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-if="creditRecords.length < creditTotal" style="text-align: center; margin-top: 12px;">
+            <button class="link-btn" type="button" @click="loadMoreCreditRecords">加载更多</button>
+          </div>
         </section>
 
         <!-- 消息通知 -->
@@ -589,6 +678,20 @@ h2 { font-size: 23px; }
 .profile-grid strong, .credit-grid strong { display: block; margin-top: 8px; }
 .credit-grid { margin-bottom: 16px; }
 .credit-grid strong { font-size: 22px; }
+.level-good { color: #1f7a4d; }
+.level-average { color: #b8860b; }
+.level-poor { color: #d97706; }
+.level-bad { color: #be123c; }
+.credit-up { color: #1f7a4d; font-weight: 700; }
+.credit-down { color: #be123c; font-weight: 700; }
+.credit-restrictions { padding: 14px; border-radius: 8px; background: #fef9c3; border: 1px solid #fde68a; margin-bottom: 16px; font-size: 14px; }
+.credit-restrictions.restricted { background: #fdecea; border-color: #f0b8b3; }
+.credit-restrictions ul { margin: 6px 0 0; padding-left: 20px; color: var(--muted); line-height: 1.8; }
+.credit-level-guide { margin-bottom: 16px; }
+.credit-level-guide h3 { font-size: 15px; margin-bottom: 10px; color: var(--ink); }
+.level-list { display: grid; gap: 6px; }
+.level-item { display: grid; grid-template-columns: 100px 80px 1fr; gap: 12px; padding: 10px 14px; border-radius: 6px; font-size: 13px; background: var(--soft); }
+.level-item span:first-child { font-weight: 700; }
 .bio-section { margin-top: 16px; padding: 14px; border-radius: 8px; background: var(--soft); }
 .bio-section span { display: block; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
 .bio-section p { color: var(--ink); line-height: 1.6; }
