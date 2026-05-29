@@ -52,7 +52,7 @@ async function loadAssets() {
       status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
       sortBy: sortBy.value,
     })
-    assets.value = res.data.list
+    assets.value = res.data.results
     summary.value = res.data.summary
   } catch (e) {
     console.error('加载资产失败', e)
@@ -401,8 +401,8 @@ function getValueChange(asset: AssetItem) {
             <div class="field"><label>入手价</label><span>{{ formatMoney(selectedAsset.acquirePrice) }}</span></div>
             <div class="field"><label>当前估值</label><span>{{ formatMoney(selectedAsset.currentValue) }}</span></div>
             <div class="field"><label>估值变化</label><span :class="{ up: getValueChange(selectedAsset) >= 0, down: getValueChange(selectedAsset) < 0 }">{{ getValueChange(selectedAsset) >= 0 ? '+' : '' }}{{ formatMoney(getValueChange(selectedAsset)) }}</span></div>
-            <div class="field"><label>创建时间</label><span>{{ selectedAsset.createdAt }}</span></div>
-            <div class="field"><label>更新时间</label><span>{{ selectedAsset.updatedAt }}</span></div>
+            <div class="field"><label>创建时间</label><span>{{ selectedAsset.created_at }}</span></div>
+            <div class="field"><label>更新时间</label><span>{{ selectedAsset.updated_at }}</span></div>
           </div>
           <p v-if="selectedAsset.description" class="detail-desc">{{ selectedAsset.description }}</p>
         </div>

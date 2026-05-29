@@ -1,0 +1,226 @@
+import logging
+from datetime import timedelta
+
+from django.utils import timezone
+from rest_framework import serializers
+
+from apps.common.id_generator import generate_team_id
+from .models import TeamParticipant, TeamProject
+
+logger = logging.getLogger("gugou")
+
+
+class TeamProjectCreateSerializer(serializers.Serializer):
+    product_id = serializers.CharField(max_length=25)
+    target_count = serializers.IntegerField(min_value=2, max_value=100)
+    team_price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    deadline_hours = serializers.IntegerField(min_value=1, max_value=72, default=24)
+
+    def validate(self, attrs):
+        from apps.products.models import Product
+
+        # 验证商品存在
+        try:
+            product = Product.objects.get(product_id=attrs["product_id"])
+        except Product.DoesNotExist:
+            raise serializers.ValidationError({"product_id": "商品不存在"})
+
+        # 验证团购价格不能高于商品参考价
+        if attrs["team_price"] >= product.reference_price:
+            raise serializers.ValidationError({"team_price": "团购价格必须低于商品参考价"})
+
+        attrs["product"] = product
+        return attrs
+
+    def create(self, validated_data):
+        user = self.context["request"].user
+        product = validated_data["product"]
+
+        # 生成拼团编号
+        team_id = generate_team_id()
+
+        # 计算截止时间
+        deadline = timezone.now() + timedelta(hours=validated_data["deadline_hours"])
+
+        # 创建拼团项目
+        team = TeamProject.objects.create(
+            team_id=team_id,
+            product=product,
+            creator=user,
+            target_count=validated_data["target_count"],
+            current_count=1,
+            team_price=validated_data["team_price"],
+            deadline=deadline,
+            status=TeamProject.Status.RECRUITING,
+        )
+
+        # 创建者自动参与
+        participant_id = f"P{generate_team_id()[1:]}"
+        TeamParticipant.objects.create(
+            participant_id=participant_id,
+            team=team,
+            user=user,
+            status=TeamParticipant.Status.JOINED,
+        )
+
+        logger.info("用户 %s 创建拼团 %s", user.user_id, team_id)
+        return team
+
+
+class TeamProjectJoinSerializer(serializers.Serializer):
+    def validate(self, attrs):
+        team = self.context["team"]
+        user = self.context["request"].user
+
+        # 验证拼团状态
+        if team.status != TeamProject.Status.RECRUITING:
+            raise serializers.ValidationError("该拼团已不可参与")
+
+        # 验证是否已满
+        if team.current_count >= team.target_count:
+            raise serializers.ValidationError("该拼团已满")
+
+        # 验证是否已过期
+        if team.deadline < timezone.now():
+            raise serializers.ValidationError("该拼团已过期")
+
+        # 验证是否已参与
+        if TeamParticipant.objects.filter(team=team, user=user).exists():
+            raise serializers.ValidationError("已经参与了该拼团")
+
+        return attrs
+
+    def create(self, validated_data):
+        team = self.context["team"]
+        user = self.context["request"].user
+
+        # 生成参与记录编号
+        participant_id = f"P{generate_team_id()[1:]}"
+
+        # 创建参与记录
+        participant = TeamParticipant.objects.create(
+            participant_id=participant_id,
+            team=team,
+            user=user,
+            status=TeamParticipant.Status.JOINED,
+        )
+
+        # 更新当前人数
+        team.current_count += 1
+
+        # 检查是否达到目标人数
+        if team.current_count >= team.target_count:
+            team.status = TeamProject.Status.SUCCESS
+            logger.info("拼团 %s 已成功", team.team_id)
+
+        team.save()
+
+        logger.info("用户 %s 参与拼团 %s", user.user_id, team.team_id)
+        return participant
+
+
+class TeamProjectCancelSerializer(serializers.Serializer):
+    def validate(self, attrs):
+        team = self.instance
+        if team.status != TeamProject.Status.RECRUITING:
+            raise serializers.ValidationError("只能取消招募中的拼团")
+        return attrs
+
+    def save(self):
+        from apps.credits.services import create_credit_record
+
+        team = self.instance
+        user = self.context["request"].user
+
+        # 更新拼团状态
+        team.status = TeamProject.Status.CANCELLED
+        team.save()
+
+        # 更新所有参与者的状态
+        participants = TeamParticipant.objects.filter(team=team, status=TeamParticipant.Status.JOINED)
+        for participant in participants:
+            participant.status = TeamParticipant.Status.CANCELLED
+            participant.save()
+
+        # 记录信用变动（取消拼团可能影响信用）
+        # TODO: 根据业务规则决定是否扣除信用
+
+        logger.info("拼团 %s 已取消", team.team_id)
+        return team
+
+
+class TeamProjectFailSerializer(serializers.Serializer):
+    def validate(self, attrs):
+        team = self.instance
+        if team.status != TeamProject.Status.RECRUITING:
+            raise serializers.ValidationError("当前状态不允许标记失败")
+        return attrs
+
+    def save(self):
+        team = self.instance
+
+        # 更新拼团状态
+        team.status = TeamProject.Status.FAILED
+        team.save()
+
+        # 更新所有参与者的状态
+        participants = TeamParticipant.objects.filter(team=team, status=TeamParticipant.Status.JOINED)
+        for participant in participants:
+            participant.status = TeamParticipant.Status.CANCELLED
+            participant.save()
+
+        logger.info("拼团 %s 已失败", team.team_id)
+        return team
+
+
+class TeamProjectListSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_price = serializers.DecimalField(source="product.reference_price", max_digits=10, decimal_places=2, read_only=True)
+    creator_id = serializers.CharField(source="creator.user_id", read_only=True)
+    creator_name = serializers.CharField(source="creator.nickname", read_only=True)
+    is_expired = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TeamProject
+        fields = [
+            "team_id", "product_id", "product_name", "product_price",
+            "creator_id", "creator_name", "target_count", "current_count",
+            "team_price", "deadline", "status", "is_expired", "created_at",
+        ]
+
+    def get_is_expired(self, obj):
+        return obj.deadline < timezone.now()
+
+
+class TeamProjectDetailSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_price = serializers.DecimalField(source="product.reference_price", max_digits=10, decimal_places=2, read_only=True)
+    creator_id = serializers.CharField(source="creator.user_id", read_only=True)
+    creator_name = serializers.CharField(source="creator.nickname", read_only=True)
+    participants = serializers.SerializerMethodField()
+    is_expired = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TeamProject
+        fields = [
+            "team_id", "product_id", "product_name", "product_price",
+            "creator_id", "creator_name", "target_count", "current_count",
+            "team_price", "deadline", "status", "is_expired", "created_at",
+            "updated_at", "participants",
+        ]
+
+    def get_participants(self, obj):
+        participants = obj.participants.filter(status=TeamParticipant.Status.JOINED)
+        return TeamParticipantSerializer(participants, many=True).data
+
+    def get_is_expired(self, obj):
+        return obj.deadline < timezone.now()
+
+
+class TeamParticipantSerializer(serializers.ModelSerializer):
+    user_id = serializers.CharField(source="user.user_id", read_only=True)
+    user_name = serializers.CharField(source="user.nickname", read_only=True)
+
+    class Meta:
+        model = TeamParticipant
+        fields = ["participant_id", "user_id", "user_name", "status", "joined_at"]

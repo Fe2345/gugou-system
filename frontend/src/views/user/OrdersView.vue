@@ -8,26 +8,30 @@ const activeTab = ref('all')
 
 const tabs = [
   { key: 'all', label: '全部' },
-  { key: 'pending', label: '待付款' },
-  { key: 'paid', label: '待发货' },
-  { key: 'shipped', label: '待收货' },
+  { key: 'pending_payment', label: '待付款' },
+  { key: 'paid', label: '已支付' },
   { key: 'completed', label: '已完成' },
+  { key: 'cancelled', label: '已取消' },
 ]
 
 const statusMap: Record<string, string> = {
-  pending: '待付款',
-  paid: '待发货',
-  shipped: '待收货',
+  created: '已创建',
+  pending_payment: '待付款',
+  paid: '已支付',
   completed: '已完成',
   cancelled: '已取消',
+  closed: '已关闭',
+  refunded: '已退款',
 }
 
 const statusClassMap: Record<string, string> = {
-  pending: 'status-pending',
+  created: 'status-pending',
+  pending_payment: 'status-pending',
   paid: 'status-paid',
-  shipped: 'status-shipped',
   completed: 'status-completed',
   cancelled: 'status-cancelled',
+  closed: 'status-cancelled',
+  refunded: 'status-cancelled',
 }
 
 const filteredOrders = ref<OrderItem[]>([])
@@ -49,28 +53,34 @@ onMounted(() => {
   // 模拟数据，后续接入 API
   orders.value = [
     {
-      id: '1',
-      goodsId: '1',
-      goodsName: '玛奇朵限定徽章',
-      goodsImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=100&q=80',
-      price: 128,
+      order_id: 'O202605201030010001',
+      buyer_id: 'U202604270001',
+      buyer_name: '测试用户',
+      seller_id: 'U202604270002',
+      seller_name: '卖家A',
+      product_id: 'G202604270001',
+      product_name: '玛奇朵限定徽章',
       quantity: 1,
-      status: 'pending',
-      buyerId: '1',
-      sellerId: '2',
-      createdAt: '2026-05-20T10:30:00Z',
+      amount: 128,
+      status: 'pending_payment',
+      paid_at: null,
+      completed_at: null,
+      created_at: '2026-05-20T10:30:00Z',
     },
     {
-      id: '2',
-      goodsId: '2',
-      goodsName: '深海明信片套装',
-      goodsImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=100&q=80',
-      price: 96,
+      order_id: 'O202605191420010002',
+      buyer_id: 'U202604270001',
+      buyer_name: '测试用户',
+      seller_id: 'U202604270003',
+      seller_name: '卖家B',
+      product_id: 'G202604270002',
+      product_name: '深海明信片套装',
       quantity: 2,
-      status: 'shipped',
-      buyerId: '1',
-      sellerId: '3',
-      createdAt: '2026-05-19T14:20:00Z',
+      amount: 192,
+      status: 'paid',
+      paid_at: '2026-05-19T15:00:00Z',
+      completed_at: null,
+      created_at: '2026-05-19T14:20:00Z',
     },
   ]
   filteredOrders.value = orders.value
@@ -112,28 +122,27 @@ function formatDate(dateStr: string) {
       </div>
 
       <div v-else class="order-list">
-        <article v-for="order in filteredOrders" :key="order.id" class="order-card">
+        <article v-for="order in filteredOrders" :key="order.order_id" class="order-card">
           <div class="order-header">
-            <span class="order-id">订单号：{{ order.id }}</span>
-            <span class="order-date">{{ formatDate(order.createdAt) }}</span>
+            <span class="order-id">订单号：{{ order.order_id }}</span>
+            <span class="order-date">{{ formatDate(order.created_at) }}</span>
             <span :class="['order-status', statusClassMap[order.status]]">
               {{ statusMap[order.status] }}
             </span>
           </div>
           <div class="order-body">
-            <img :src="order.goodsImage" :alt="order.goodsName" class="order-image">
             <div class="order-info">
-              <h3>{{ order.goodsName }}</h3>
+              <h3>{{ order.product_name }}</h3>
               <p>数量：{{ order.quantity }}</p>
             </div>
             <div class="order-price">
-              <strong>¥ {{ (order.price * order.quantity).toFixed(2) }}</strong>
+              <strong>¥ {{ order.amount.toFixed(2) }}</strong>
             </div>
           </div>
           <div class="order-footer">
-            <button v-if="order.status === 'pending'" class="primary" type="button">去付款</button>
-            <button v-if="order.status === 'shipped'" class="primary" type="button">确认收货</button>
-            <button v-if="order.status === 'pending'" class="secondary" type="button">取消订单</button>
+            <button v-if="order.status === 'pending_payment'" class="primary" type="button">去付款</button>
+            <button v-if="order.status === 'paid'" class="primary" type="button">确认完成</button>
+            <button v-if="order.status === 'pending_payment'" class="secondary" type="button">取消订单</button>
             <button class="secondary" type="button">查看详情</button>
           </div>
         </article>

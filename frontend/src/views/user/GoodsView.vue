@@ -50,7 +50,7 @@ async function loadProducts(keyword?: string) {
   loading.value = true
   try {
     const res = await getGoodsList({ keyword })
-    products.value = res.data.list
+    products.value = res.data.results
   } catch (e) {
     console.error('加载产品失败', e)
   } finally {
@@ -123,7 +123,7 @@ async function handleFilter() {
     if (filterForm.characterName.trim()) params.characterName = filterForm.characterName.trim()
     if (filterForm.category) params.category = filterForm.category
     const res = await getGoodsList(params)
-    products.value = res.data.list
+    products.value = res.data.results
   } catch (e) {
     console.error('筛选失败', e)
   } finally {
@@ -399,7 +399,7 @@ function getStatusClass(status: string) {
             <div class="field"><label>IP</label><span>{{ selectedProduct.ipName }}</span></div>
             <div class="field"><label>角色</label><span>{{ selectedProduct.characterName }}</span></div>
             <div class="field"><label>品类</label><span>{{ selectedProduct.category }}</span></div>
-            <div class="field"><label>创建时间</label><span>{{ selectedProduct.createdAt }}</span></div>
+            <div class="field"><label>创建时间</label><span>{{ selectedProduct.created_at }}</span></div>
           </div>
           <p class="detail-desc">{{ selectedProduct.description }}</p>
         </div>

@@ -73,7 +73,7 @@ export async function getAdminGoodsList(params?: {
     if (params?.category) {
       list = list.filter(g => g.category === params.category)
     }
-    return { code: 200, message: 'ok', data: { list, total: list.length, page: 1, pageSize: 20 } }
+    return { code: 200, message: 'ok', data: { results: list, count: list.length, page: 1, page_size: 20 } }
   }
   const { default: request } = await import('@/utils/request')
   return request.get('/admin/goods', { params })

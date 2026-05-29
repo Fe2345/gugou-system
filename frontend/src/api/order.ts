@@ -3,32 +3,37 @@ import type { OrderItem } from '@/types/order'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
 
 export function getOrderList(params?: {
+  role?: 'buyer' | 'seller'
   status?: string
   page?: number
-  pageSize?: number
+  page_size?: number
 }): Promise<ApiResponse<PaginatedResponse<OrderItem>>> {
-  return request.get('/orders', { params })
+  return request.get('/orders/', { params })
 }
 
 export function getOrderDetail(id: string): Promise<ApiResponse<OrderItem>> {
-  return request.get(`/orders/${id}`)
+  return request.get(`/orders/${id}/`)
 }
 
 export function createOrder(data: {
-  goodsId: string
-  quantity: number
-}): Promise<ApiResponse<{ orderId: string }>> {
-  return request.post('/orders', data)
+  listing_id: string
+  quantity?: number
+}): Promise<ApiResponse<OrderItem>> {
+  return request.post('/orders/create/', data)
 }
 
-export function cancelOrder(id: string): Promise<ApiResponse<void>> {
-  return request.put(`/orders/${id}/cancel`)
+export function cancelOrder(id: string, reason?: string): Promise<ApiResponse<void>> {
+  return request.post(`/orders/${id}/cancel/`, { reason })
 }
 
 export function confirmOrder(id: string): Promise<ApiResponse<void>> {
-  return request.put(`/orders/${id}/confirm`)
+  return request.post(`/orders/${id}/complete/`)
 }
 
-export function payOrder(id: string): Promise<ApiResponse<{ payUrl: string }>> {
-  return request.put(`/orders/${id}/pay`)
+export function createPayment(id: string, pay_method?: string): Promise<ApiResponse<{ payment_id: string }>> {
+  return request.post(`/orders/${id}/payment/`, { pay_method })
+}
+
+export function confirmPayment(orderId: string, paymentId: string): Promise<ApiResponse<void>> {
+  return request.post(`/orders/${orderId}/payment/${paymentId}/success/`)
 }
