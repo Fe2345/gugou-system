@@ -27,7 +27,7 @@ export async function login(params: LoginForm): Promise<ApiResponse<LoginResult>
     if (!found || found.password !== params.password) {
       throw { response: { data: { message: '账号或密码错误' } } }
     }
-    return { code: 200, message: 'ok', data: { token: 'mock-token-' + Date.now(), user: found.user } }
+    return { code: 200, message: 'ok', data: { access: 'mock-access-' + Date.now(), refresh: 'mock-refresh-' + Date.now(), user: found.user } }
   }
   const { default: request } = await import('@/utils/request')
   return request.post('/auth/login', params)
