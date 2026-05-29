@@ -44,7 +44,7 @@ async function handleLogin() {
   loading.value = true
   try {
     const res = await loginApi({ account, password: loginForm.password })
-    userStore.setToken(res.data.token)
+    userStore.setTokens(res.data.access, res.data.refresh)
     userStore.setUserInfo(res.data.user)
     loginForm.account = ''
     loginForm.password = ''

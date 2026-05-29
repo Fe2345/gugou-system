@@ -3,14 +3,22 @@ import { ref, computed } from 'vue'
 import type { UserInfo } from '@/types/user'
 
 export const useUserStore = defineStore('user', () => {
-  const token = ref<string>(localStorage.getItem('token') || '')
+  const access = ref<string>(localStorage.getItem('access_token') || '')
+  const refresh = ref<string>(localStorage.getItem('refresh_token') || '')
   const userInfo = ref<UserInfo | null>(null)
 
-  const isLoggedIn = computed(() => !!token.value)
+  const isLoggedIn = computed(() => !!access.value)
 
-  function setToken(newToken: string) {
-    token.value = newToken
-    localStorage.setItem('token', newToken)
+  function setTokens(accessToken: string, refreshToken: string) {
+    access.value = accessToken
+    refresh.value = refreshToken
+    localStorage.setItem('access_token', accessToken)
+    localStorage.setItem('refresh_token', refreshToken)
+  }
+
+  function setAccess(accessToken: string) {
+    access.value = accessToken
+    localStorage.setItem('access_token', accessToken)
   }
 
   function setUserInfo(info: UserInfo) {
@@ -18,10 +26,12 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function logout() {
-    token.value = ''
+    access.value = ''
+    refresh.value = ''
     userInfo.value = null
-    localStorage.removeItem('token')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
   }
 
-  return { token, userInfo, isLoggedIn, setToken, setUserInfo, logout }
+  return { access, refresh, userInfo, isLoggedIn, setTokens, setAccess, setUserInfo, logout }
 })
