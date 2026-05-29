@@ -9,7 +9,8 @@ export interface GroupItem {
   targetCount: number
   currentCount: number
   price: number
-  status: 'recruiting' | 'full' | 'completed' | 'cancelled'
+  status: 'recruiting' | 'success' | 'failed' | 'cancelled'
+  deadline: string
   createdAt: string
 }
 
@@ -29,6 +30,7 @@ export function createGroup(data: {
   goodsId: string
   targetCount: number
   price: number
+  deadline: string
 }): Promise<ApiResponse<void>> {
   return request.post('/groups', data)
 }

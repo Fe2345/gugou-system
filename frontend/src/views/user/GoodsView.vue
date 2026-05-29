@@ -11,6 +11,7 @@ const loading = ref(false)
 const products = ref<GoodsItem[]>([])
 const searchQuery = ref('')
 const categories = ref<{ value: string; label: string }[]>([])
+const defaultPageSize = 100
 
 // 弹窗状态
 const selectedProduct = ref<GoodsItem | null>(null)
@@ -49,7 +50,7 @@ const filterForm = reactive({
 async function loadProducts(keyword?: string) {
   loading.value = true
   try {
-    const res = await getGoodsList({ keyword })
+    const res = await getGoodsList({ keyword, pageSize: defaultPageSize })
     products.value = res.data.list
   } catch (e) {
     console.error('加载产品失败', e)
@@ -122,6 +123,7 @@ async function handleFilter() {
     if (filterForm.ipName.trim()) params.ipName = filterForm.ipName.trim()
     if (filterForm.characterName.trim()) params.characterName = filterForm.characterName.trim()
     if (filterForm.category) params.category = filterForm.category
+    params.pageSize = defaultPageSize
     const res = await getGoodsList(params)
     products.value = res.data.list
   } catch (e) {

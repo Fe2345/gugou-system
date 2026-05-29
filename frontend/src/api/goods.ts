@@ -73,7 +73,8 @@ export async function updateGoods(id: string, data: Partial<GoodsItem>): Promise
   if (USE_MOCK) {
     await delay()
     const idx = mockGoods.findIndex(g => g.id === id)
-    if (idx !== -1) Object.assign(mockGoods[idx], data)
+    const item = mockGoods[idx]
+    if (item) Object.assign(item, data)
     return { code: 200, message: 'ok', data: undefined }
   }
   const { default: request } = await import('@/utils/request')
