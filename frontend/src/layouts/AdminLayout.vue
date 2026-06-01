@@ -38,6 +38,7 @@ function isActive(path: string) {
           {{ item.label }}
         </button>
       </nav>
+      <button class="back-btn" type="button" @click="router.push('/')">返回前台</button>
     </div>
   </header>
   <main class="admin-page">
@@ -109,6 +110,25 @@ function isActive(path: string) {
 .nav button.active {
   color: var(--accent);
   background: #edf6f8;
+}
+
+.back-btn {
+  flex: 0 0 auto;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0 14px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font: inherit;
+}
+
+.back-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .admin-page {

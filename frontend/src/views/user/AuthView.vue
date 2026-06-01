@@ -140,6 +140,9 @@ async function handleForgot() {
             <button type="button" @click="handleTab('register')">立即注册</button>
             <button type="button" @click="handleTab('forgot')">忘记密码</button>
           </div>
+          <div class="admin-link">
+            <button type="button" @click="router.push('/admin/login')">管理员登录</button>
+          </div>
         </form>
       </section>
 
@@ -324,6 +327,17 @@ input:focus {
 }
 .form-links button:last-child { text-align: right; }
 .form-links.single button { text-align: center; }
+
+.admin-link { margin-top: 14px; text-align: center; }
+.admin-link button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  font: inherit;
+}
+.admin-link button:hover { color: var(--accent); }
 
 .message {
   margin-top: 18px;
