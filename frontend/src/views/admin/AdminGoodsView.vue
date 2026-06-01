@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
-import { getAdminGoodsList, approveGoods, rejectGoods, offlineGoods } from '@/api/admin'
-import { updateGoods } from '@/api/goods'
+import { getAdminGoodsList, approveGoods, rejectGoods, offlineGoods, editGoods } from '@/api/admin'
 import type { GoodsItem } from '@/types/goods'
 
 defineOptions({ name: 'AdminGoodsView' })
@@ -19,17 +18,15 @@ const filterTime = ref('')
 const editingGoods = ref<AdminGoodsItem | null>(null)
 const editForm = reactive({ name: '', referencePrice: '', category: '', description: '' })
 
-const metrics = computed(() => {
-  const active = goods.value.filter(g => g.status === 'active').length
-  const inactive = goods.value.filter(g => g.status === 'inactive').length
-  const frozen = goods.value.filter(g => g.status === 'frozen').length
-  return [
-    { label: '正常商品', value: String(active), note: '正常启用中' },
-    { label: '未启用商品', value: String(inactive), note: '暂时不可用' },
-    { label: '冻结商品', value: String(frozen), note: '因异常限制使用' },
-    { label: '全部商品', value: String(goods.value.length), note: '商品总数' },
-  ]
-})
+const goodsStats = ref({ active: 0, inactive: 0, frozen: 0, total: 0 })
+const totalCount = ref(0)
+
+const metrics = computed(() => [
+  { label: '正常商品', value: String(goodsStats.value.active), note: '正常启用中' },
+  { label: '未启用商品', value: String(goodsStats.value.inactive), note: '暂时不可用' },
+  { label: '冻结商品', value: String(goodsStats.value.frozen), note: '因异常限制使用' },
+  { label: '全部商品', value: String(goodsStats.value.total), note: '商品总数' },
+])
 
 const statusMap: Record<string, string> = { active: '正常启用', inactive: '未启用', frozen: '冻结', archived: '已归档' }
 
@@ -42,6 +39,10 @@ async function loadGoods() {
       category: filterCategory.value || undefined,
     })
     goods.value = res.data.results
+    totalCount.value = res.data.count
+    if (res.data.stats) {
+      goodsStats.value = res.data.stats
+    }
   } catch (e) {
     console.error('加载商品失败', e)
   } finally {
@@ -106,7 +107,7 @@ async function handleSaveEdit() {
   if (!editingGoods.value) return
   loading.value = true
   try {
-    await updateGoods(editingGoods.value.id, {
+    await editGoods(editingGoods.value.id, {
       name: editForm.name,
       referencePrice: Number(editForm.referencePrice),
       category: editForm.category,
@@ -153,7 +154,7 @@ async function handleSaveEdit() {
   <section class="table-panel">
     <div class="section-head">
       <div><p class="eyebrow">商品列表</p><h2>全部商品</h2></div>
-      <span>共 {{ goods.length }} 条数据</span>
+      <span>共 {{ totalCount }} 条数据</span>
     </div>
     <div v-if="!goods.length" class="empty-state">
       <strong>暂无商品数据</strong>

@@ -18,6 +18,14 @@ class TeamProjectCreateSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         from apps.products.models import Product
+        from apps.credits.services import check_team_permission
+
+        user = self.context["request"].user
+
+        # 检查信用分拼团权限
+        allowed, msg = check_team_permission(user)
+        if not allowed:
+            raise serializers.ValidationError({"credit": msg})
 
         # 验证商品存在
         try:
@@ -69,8 +77,15 @@ class TeamProjectCreateSerializer(serializers.Serializer):
 
 class TeamProjectJoinSerializer(serializers.Serializer):
     def validate(self, attrs):
+        from apps.credits.services import check_team_permission
+
         team = self.context["team"]
         user = self.context["request"].user
+
+        # 检查信用分拼团权限
+        allowed, msg = check_team_permission(user)
+        if not allowed:
+            raise serializers.ValidationError({"credit": msg})
 
         # 验证拼团状态
         if team.status != TeamProject.Status.RECRUITING:
@@ -113,6 +128,16 @@ class TeamProjectJoinSerializer(serializers.Serializer):
             team.status = TeamProject.Status.SUCCESS
             logger.info("拼团 %s 已成功", team.team_id)
 
+            # 拼团成功，所有参与者获得信用分
+            from apps.credits.services import create_credit_record, CREDIT_TEAM_SUCCESS
+            participants = TeamParticipant.objects.filter(team=team, status=TeamParticipant.Status.JOINED)
+            for p in participants:
+                create_credit_record(
+                    user=p.user,
+                    change_value=CREDIT_TEAM_SUCCESS,
+                    reason=f"拼团成功 {team.team_id}",
+                )
+
         team.save()
 
         logger.info("用户 %s 参与拼团 %s", user.user_id, team.team_id)
@@ -127,7 +152,7 @@ class TeamProjectCancelSerializer(serializers.Serializer):
         return attrs
 
     def save(self):
-        from apps.credits.services import create_credit_record
+        from apps.credits.services import create_credit_record, CREDIT_TEAM_EXIT_AFTER_SUCCESS
 
         team = self.instance
         user = self.context["request"].user
@@ -142,8 +167,12 @@ class TeamProjectCancelSerializer(serializers.Serializer):
             participant.status = TeamParticipant.Status.CANCELLED
             participant.save()
 
-        # 记录信用变动（取消拼团可能影响信用）
-        # TODO: 根据业务规则决定是否扣除信用
+        # 创建者取消拼团，扣除信用分
+        create_credit_record(
+            user=user,
+            change_value=CREDIT_TEAM_EXIT_AFTER_SUCCESS,
+            reason=f"取消拼团 {team.team_id}",
+        )
 
         logger.info("拼团 %s 已取消", team.team_id)
         return team

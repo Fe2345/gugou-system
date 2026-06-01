@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
+import { useUserStore } from '@/stores/user'
 import { createSwap } from '@/api/swap'
 import { getAssetsList } from '@/api/assets'
 import type { AssetItem } from '@/types/assets'
 
 const router = useRouter()
+const userStore = useUserStore()
+const creditScore = computed(() => userStore.userInfo?.creditScore ?? 100)
+const canExchange = computed(() => creditScore.value >= 60)
 const assetsList = ref<AssetItem[]>([])
 const submitting = ref(false)
 
@@ -69,6 +73,11 @@ onMounted(() => {
       <button class="secondary" type="button" @click="router.push('/swap')">返回换物</button>
     </section>
 
+    <div v-if="!canExchange" class="credit-warning">
+      信用分不足（当前 {{ creditScore }} 分），需要 60 分以上才能发起换物。
+      <button class="link-btn" type="button" @click="router.push('/profile')">查看信用详情</button>
+    </div>
+
     <section class="form-panel">
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
@@ -89,7 +98,7 @@ onMounted(() => {
         </div>
         <div class="form-actions">
           <button class="secondary" type="button" @click="router.push('/swap')">取消</button>
-          <button class="primary" type="submit" :disabled="submitting">{{ submitting ? '发布中...' : '确认发布' }}</button>
+          <button class="primary" type="submit" :disabled="submitting || !canExchange">{{ submitting ? '发布中...' : '确认发布' }}</button>
         </div>
       </form>
     </section>
@@ -117,4 +126,7 @@ textarea { height: auto; padding: 12px 14px; resize: vertical; }
 .primary:hover { background: var(--accent-dark); }
 .primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .secondary { border: 1px solid var(--line); color: var(--accent); background: #fff; }
+.credit-warning { padding: 14px 18px; border-radius: 8px; background: #fdecea; border: 1px solid #f0b8b3; color: #be123c; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.link-btn { border: 0; background: transparent; color: var(--accent); font-weight: 800; cursor: pointer; font: inherit; }
+.link-btn:hover { text-decoration: underline; }
 </style>

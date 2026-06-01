@@ -21,6 +21,12 @@ class ListingCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        # 检查信用分发布权限
+        from apps.credits.services import check_listing_permission
+        allowed, msg = check_listing_permission(request.user)
+        if not allowed:
+            return error(message=msg, code=403)
+
         serializer = ListingCreateSerializer(data=request.data, context={"request": request})
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors), code=400)

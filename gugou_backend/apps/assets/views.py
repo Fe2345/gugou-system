@@ -11,7 +11,9 @@ class AssetListView(APIView):
 
     def get(self, request):
         """获取资产列表，支持 keyword/status/category/sortBy 筛选"""
-        queryset = UserAsset.objects.select_related("product").all().order_by("-created_at")
+        queryset = UserAsset.objects.select_related("product").order_by("-created_at")
+        if request.user and request.user.is_authenticated:
+            queryset = queryset.filter(owner=request.user)
 
         keyword = request.query_params.get("keyword", "").strip()
         if keyword:

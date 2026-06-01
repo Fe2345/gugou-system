@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
+import { useUserStore } from '@/stores/user'
 import { getMarketDetail, type MarketItem } from '@/api/market'
 import { createOrder } from '@/api/order'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
+const creditScore = computed(() => userStore.userInfo?.creditScore ?? 100)
+const canTrade = computed(() => creditScore.value >= 40)
 const listing = ref<MarketItem | null>(null)
 const loading = ref(false)
 const submitting = ref(false)
@@ -66,6 +70,10 @@ onMounted(() => {
       <button class="secondary" type="button" @click="router.back()">返回</button>
     </section>
 
+    <div v-if="!canTrade" class="credit-warning">
+      信用分过低（当前 {{ creditScore }} 分），禁止交易。请提升信用分或联系管理员。
+    </div>
+
     <div v-if="loading" class="empty-state"><strong>加载中...</strong></div>
     <div v-else-if="!listing" class="empty-state">
       <strong>挂单信息不存在</strong>
@@ -98,7 +106,7 @@ onMounted(() => {
             <span>合计金额</span>
             <strong class="price">¥{{ (listing.price * quantity).toFixed(2) }}</strong>
           </div>
-          <button class="primary full" type="button" :disabled="submitting" @click="handleSubmit">
+          <button class="primary full" type="button" :disabled="submitting || !canTrade" @click="handleSubmit">
             {{ submitting ? '提交中...' : '确认下单' }}
           </button>
         </section>
@@ -136,6 +144,7 @@ input { width: 100%; height: 44px; border: 1px solid var(--line); border-radius:
 .primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .secondary { border: 1px solid var(--line); color: var(--accent); background: #fff; }
 .full { width: 100%; }
+.credit-warning { padding: 14px 18px; border-radius: 8px; background: #fdecea; border: 1px solid #f0b8b3; color: #be123c; font-weight: 600; margin-bottom: 16px; }
 .empty-state { min-height: 200px; display: grid; place-items: center; text-align: center; border: 1px dashed #bfd0d5; border-radius: 10px; color: var(--muted); background: var(--soft); }
 .empty-state strong { display: block; margin-bottom: 8px; color: var(--ink); font-size: 18px; }
 .empty-state .primary { margin-top: 12px; }

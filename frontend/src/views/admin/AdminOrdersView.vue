@@ -7,6 +7,8 @@ defineOptions({ name: 'AdminOrdersView' })
 const orders = ref<OrderItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
+const searchQuery = ref('')
+const filterStatus = ref('')
 
 const statusMap: Record<string, string> = {
   created: '已创建',
@@ -31,7 +33,12 @@ const statusClassMap: Record<string, string> = {
 async function loadOrders() {
   loading.value = true
   try {
-    const res = await getOrderList({ page: 1, page_size: 50 })
+    const res = await getOrderList({
+      page: 1,
+      page_size: 50,
+      keyword: searchQuery.value || undefined,
+      status: filterStatus.value || undefined,
+    })
     if (res.code === 200) {
       orders.value = res.data.results
       totalCount.value = res.data.count
@@ -42,6 +49,9 @@ async function loadOrders() {
     loading.value = false
   }
 }
+
+function handleSearch() { loadOrders() }
+function handleFilter() { loadOrders() }
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '-'
@@ -78,9 +88,16 @@ onMounted(() => {
   </section>
 
   <section class="toolbar">
-    <div class="search-box"><input type="search" placeholder="输入订单编号或买家昵称"></div>
-    <select><option>全部状态</option><option>待支付</option><option>已支付</option><option>已完成</option><option>已取消</option></select>
-    <button class="primary" type="button" @click="loadOrders">刷新订单</button>
+    <div class="search-box"><input v-model="searchQuery" type="search" placeholder="输入订单编号、买家昵称或商品名称" @keyup.enter="handleSearch"></div>
+    <select v-model="filterStatus" @change="handleFilter">
+      <option value="">全部状态</option>
+      <option value="pending_payment">待付款</option>
+      <option value="paid">已支付</option>
+      <option value="completed">已完成</option>
+      <option value="cancelled">已取消</option>
+      <option value="refunded">已退款</option>
+    </select>
+    <button class="primary" type="button" :disabled="loading" @click="loadOrders">{{ loading ? '加载中...' : '刷新订单' }}</button>
   </section>
 
   <section class="content-row">

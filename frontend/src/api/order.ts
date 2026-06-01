@@ -5,6 +5,7 @@ import type { ApiResponse, PaginatedResponse } from '@/types/api'
 export function getOrderList(params?: {
   role?: 'buyer' | 'seller'
   status?: string
+  keyword?: string
   page?: number
   page_size?: number
 }): Promise<ApiResponse<PaginatedResponse<OrderItem>>> {

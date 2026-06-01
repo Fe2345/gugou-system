@@ -15,6 +15,14 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         from apps.assets.models import UserAsset
+        from apps.credits.services import check_exchange_permission
+
+        user = self.context["request"].user
+
+        # 检查信用分换物权限
+        allowed, msg = check_exchange_permission(user)
+        if not allowed:
+            raise serializers.ValidationError({"credit": msg})
 
         # 验证资产存在且属于当前用户
         try:
@@ -22,7 +30,6 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
         except UserAsset.DoesNotExist:
             raise serializers.ValidationError({"offered_asset_id": "资产不存在"})
 
-        user = self.context["request"].user
         if asset.owner != user:
             raise serializers.ValidationError({"offered_asset_id": "只能用自己的资产进行换物"})
 
@@ -73,9 +80,15 @@ class ExchangeMatchCreateSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         from apps.assets.models import UserAsset
+        from apps.credits.services import check_trading_permission
 
         exchange = self.context["exchange"]
         user = self.context["request"].user
+
+        # 检查信用分交易权限
+        allowed, msg = check_trading_permission(user)
+        if not allowed:
+            raise serializers.ValidationError({"credit": msg})
 
         # 验证不能匹配自己的换物请求
         if exchange.owner == user:
@@ -225,14 +238,15 @@ class ExchangeCompleteSerializer(serializers.Serializer):
         )
 
         # 双方获得信用
+        from apps.credits.services import CREDIT_EXCHANGE_COMPLETE
         create_credit_record(
             user=exchange.owner,
-            change_value=1,
+            change_value=CREDIT_EXCHANGE_COMPLETE,
             reason=f"完成换物 {exchange.exchange_id}",
         )
         create_credit_record(
             user=match.applicant,
-            change_value=1,
+            change_value=CREDIT_EXCHANGE_COMPLETE,
             reason=f"完成换物 {exchange.exchange_id}",
         )
 
@@ -248,8 +262,11 @@ class ExchangeCancelSerializer(serializers.Serializer):
         return attrs
 
     def save(self):
+        from apps.credits.services import create_credit_record, CREDIT_EXCHANGE_CANCEL_AFTER_MATCH
+
         exchange = self.instance
         user = self.context["request"].user
+        was_matched = exchange.status == ExchangeRequest.Status.MATCHED
 
         # 更新换物请求状态
         exchange.status = ExchangeRequest.Status.CANCELLED
@@ -272,11 +289,19 @@ class ExchangeCancelSerializer(serializers.Serializer):
         ExchangeStatusLog.objects.create(
             log_id=f"LOG{exchange.exchange_id}_CANCELLED",
             exchange=exchange,
-            from_status=exchange.status,
+            from_status=exchange.status if not was_matched else ExchangeRequest.Status.MATCHED,
             to_status=ExchangeRequest.Status.CANCELLED,
             operator=user,
             note="取消换物请求",
         )
+
+        # 匹配后取消，扣除取消方信用分
+        if was_matched:
+            create_credit_record(
+                user=user,
+                change_value=CREDIT_EXCHANGE_CANCEL_AFTER_MATCH,
+                reason=f"匹配后取消换物 {exchange.exchange_id}",
+            )
 
         logger.info("换物请求 %s 已取消", exchange.exchange_id)
         return exchange
