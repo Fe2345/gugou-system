@@ -8,6 +8,7 @@ export const useUserStore = defineStore('user', () => {
   const userInfo = ref<UserInfo | null>(null)
 
   const isLoggedIn = computed(() => !!access.value)
+  const isAdmin = computed(() => userInfo.value?.role === 'admin')
 
   function setTokens(accessToken: string, refreshToken: string) {
     access.value = accessToken
@@ -33,5 +34,5 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('refresh_token')
   }
 
-  return { access, refresh, userInfo, isLoggedIn, setTokens, setAccess, setUserInfo, logout }
+  return { access, refresh, userInfo, isLoggedIn, isAdmin, setTokens, setAccess, setUserInfo, logout }
 })

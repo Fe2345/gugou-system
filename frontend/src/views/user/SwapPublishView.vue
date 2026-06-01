@@ -79,6 +79,7 @@ onMounted(() => {
     </div>
 
     <section class="form-panel">
+      <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label>换出资产 <span class="required">*</span></label>
           <select v-model="form.offered_asset_id" required>

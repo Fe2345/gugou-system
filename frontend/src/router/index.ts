@@ -166,11 +166,39 @@ const router = createRouter({
 const publicPaths = ['/', '/login', '/admin/login']
 
 router.beforeEach((to, from, next) => {
-  // 管理后台路由单独判断
-  if (to.path.startsWith('/admin') && to.path !== '/admin/login') {
-    // 管理后台暂时放行，后续需要单独的管理员认证
+  // 管理员登录页：已登录且是管理员则直接进入后台
+  if (to.path === '/admin/login') {
+    const userStore = useUserStore()
+    if (userStore.isLoggedIn && userStore.isAdmin) {
+      next('/admin')
+      return
+    }
     next()
     return
+  }
+
+  // 管理后台路由：需要登录且角色为 admin
+  if (to.path.startsWith('/admin')) {
+    const userStore = useUserStore()
+    if (!userStore.isLoggedIn) {
+      next('/admin/login')
+      return
+    }
+    if (!userStore.isAdmin) {
+      next('/')
+      return
+    }
+    next()
+    return
+  }
+
+  // 管理员不允许访问用户端页面
+  {
+    const userStore = useUserStore()
+    if (userStore.isLoggedIn && userStore.isAdmin) {
+      next('/admin')
+      return
+    }
   }
 
   // 公开页面直接放行

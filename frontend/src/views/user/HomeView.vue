@@ -3,17 +3,44 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getGoodsList } from '@/api/goods'
+import { getAssetsList } from '@/api/assets'
+import { getOrderList } from '@/api/order'
 
 const router = useRouter()
 const searchQuery = ref('')
 const loading = ref(false)
 
-// 首页统计数据（后续接入 API）
 const stats = ref({
-  totalAssets: 36,
-  totalValue: 4280,
-  pendingOrders: 2,
-  pendingDelivery: 5,
+  totalAssets: 0,
+  totalValue: 0,
+  pendingOrders: 0,
+  pendingDelivery: 0,
+})
+
+async function loadStats() {
+  try {
+    const [assetsRes, pendingRes, paidRes] = await Promise.all([
+      getAssetsList(),
+      getOrderList({ role: 'buyer', status: 'pending_payment', page: 1, page_size: 1 }),
+      getOrderList({ role: 'buyer', status: 'paid', page: 1, page_size: 1 }),
+    ])
+    if (assetsRes.code === 200) {
+      stats.value.totalAssets = assetsRes.data.summary.totalCount
+      stats.value.totalValue = assetsRes.data.summary.totalValue
+    }
+    if (pendingRes.code === 200) {
+      stats.value.pendingOrders = pendingRes.data.count
+    }
+    if (paidRes.code === 200) {
+      stats.value.pendingDelivery = paidRes.data.count
+    }
+  } catch (e) {
+    console.error('加载统计数据失败', e)
+  }
+}
+
+onMounted(() => {
+  loadStats()
 })
 
 // 热门数据（后续接入 API）

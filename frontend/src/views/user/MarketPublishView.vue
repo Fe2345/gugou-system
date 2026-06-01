@@ -88,6 +88,7 @@ onMounted(() => {
     </div>
 
     <section class="form-panel">
+      <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label>选择商品 <span class="required">*</span></label>
           <select v-model="form.product_id" required>

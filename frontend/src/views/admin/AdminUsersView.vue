@@ -7,9 +7,31 @@ defineOptions({ name: 'AdminUsersView' })
 
 const loading = ref(false)
 const users = ref<AdminUser[]>([])
+const totalCount = ref(0)
 const searchQuery = ref('')
 const filterStatus = ref('')
 const filterCredit = ref('')
+const currentPage = ref(1)
+const pageSize = ref(20)
+
+const STATUS_MAP: Record<string, string> = {
+  normal: '正常',
+  frozen: '冻结',
+  disabled: '停用',
+  deleted: '已注销',
+}
+
+function statusLabel(status: string): string {
+  return STATUS_MAP[status] || status
+}
+
+function statusClass(status: string): string {
+  if (status === 'normal') return 'hold'
+  if (status === 'frozen') return 'frozen'
+  if (status === 'disabled') return 'disabled'
+  if (status === 'deleted') return 'deleted'
+  return ''
+}
 
 const selectedUser = ref<AdminUser | null>(null)
 const showDetailModal = ref(false)
@@ -22,7 +44,8 @@ async function loadUsers() {
       status: filterStatus.value || undefined,
       creditLevel: filterCredit.value || undefined,
     })
-    users.value = res.data
+    users.value = res.data.results
+    totalCount.value = res.data.count
   } catch (e) {
     console.error('加载用户失败', e)
   } finally {
@@ -38,7 +61,7 @@ function handleFilter() { loadUsers() }
 async function handleToggleStatus(user: AdminUser) {
   loading.value = true
   try {
-    if (user.status === 'active') {
+    if (user.status === 'normal' || user.status === 'disabled') {
       await freezeUser(user.id)
     } else {
       await unfreezeUser(user.id)
@@ -85,7 +108,7 @@ function closeDetailModal() {
   <section class="table-panel">
     <div class="section-head">
       <div><p class="eyebrow">用户列表</p><h2>全部用户</h2></div>
-      <span>共 {{ users.length }} 条数据</span>
+      <span>共 {{ totalCount }} 条数据</span>
     </div>
     <div v-if="!users.length" class="empty-state">
       <strong>暂无用户数据</strong>
@@ -103,9 +126,9 @@ function closeDetailModal() {
             <td>¥{{ u.assets.toLocaleString() }}</td>
             <td>{{ u.credit }}</td>
             <td>{{ u.registered }}</td>
-            <td><span class="status" :class="u.status === 'active' ? 'hold' : 'frozen'">{{ u.status === 'active' ? '正常' : '冻结' }}</span></td>
+            <td><span class="status" :class="statusClass(u.status)">{{ statusLabel(u.status) }}</span></td>
             <td class="actions">
-              <button class="primary sm" type="button" @click="handleToggleStatus(u)" :disabled="loading">{{ u.status === 'active' ? '冻结' : '解冻' }}</button>
+              <button v-if="u.status !== 'deleted'" class="primary sm" type="button" @click="handleToggleStatus(u)" :disabled="loading">{{ u.status === 'normal' || u.status === 'disabled' ? '冻结' : '解冻' }}</button>
               <button class="secondary sm" type="button" @click="viewDetail(u)">查看详情</button>
             </td>
           </tr>
@@ -129,13 +152,13 @@ function closeDetailModal() {
           <div class="field"><label>资产总额</label><span>¥{{ selectedUser.assets.toLocaleString() }}</span></div>
           <div class="field"><label>信用分</label><span>{{ selectedUser.credit }}</span></div>
           <div class="field"><label>注册时间</label><span>{{ selectedUser.registered }}</span></div>
-          <div class="field"><label>状态</label><span :class="selectedUser.status === 'active' ? 'text-green' : 'text-red'">{{ selectedUser.status === 'active' ? '正常' : '冻结' }}</span></div>
+          <div class="field"><label>状态</label><span :class="{ 'text-green': selectedUser.status === 'normal', 'text-red': selectedUser.status === 'frozen', 'text-muted': selectedUser.status === 'disabled' || selectedUser.status === 'deleted' }">{{ statusLabel(selectedUser.status) }}</span></div>
         </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="secondary" @click="closeDetailModal">关闭</button>
-        <button type="button" class="primary" @click="handleToggleStatus(selectedUser); closeDetailModal()">
-          {{ selectedUser.status === 'active' ? '冻结用户' : '解冻用户' }}
+        <button v-if="selectedUser.status !== 'deleted'" type="button" class="primary" @click="handleToggleStatus(selectedUser); closeDetailModal()">
+          {{ selectedUser.status === 'normal' || selectedUser.status === 'disabled' ? '冻结用户' : '解冻用户' }}
         </button>
       </div>
     </div>
@@ -179,6 +202,8 @@ tr:last-child td { border-bottom: 0; }
 .status { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .status.hold { background: #dcfce7; color: #15803d; }
 .status.frozen { background: #fee2e2; color: #be123c; }
+.status.disabled { background: #f3f4f6; color: #6b7280; }
+.status.deleted { background: #fef3c7; color: #92400e; }
 .actions { display: flex; gap: 6px; }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: grid; place-items: center; z-index: 1000; padding: 20px; }
@@ -193,6 +218,7 @@ tr:last-child td { border-bottom: 0; }
 .field span { font-weight: 600; font-size: 15px; }
 .text-green { color: #15803d; }
 .text-red { color: #be123c; }
+.text-muted { color: #6b7280; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid var(--line); }
 
 @media (max-width: 980px) { .toolbar { flex-direction: column; align-items: stretch; } .search-box { min-width: auto; } }
