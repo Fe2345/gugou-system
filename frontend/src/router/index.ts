@@ -192,6 +192,15 @@ router.beforeEach((to, from, next) => {
     return
   }
 
+  // 管理员不允许访问用户端页面
+  {
+    const userStore = useUserStore()
+    if (userStore.isLoggedIn && userStore.isAdmin) {
+      next('/admin')
+      return
+    }
+  }
+
   // 公开页面直接放行
   if (publicPaths.includes(to.path)) {
     next()

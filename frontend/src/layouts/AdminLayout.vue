@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import { logout as logoutApi } from '@/api/user'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
+
+async function handleLogout() {
+  try { await logoutApi() } catch { /* ignore */ }
+  userStore.logout()
+  router.push('/admin/login')
+}
 
 const navItems = [
   { label: '后台首页', to: '/admin' },
@@ -38,7 +47,7 @@ function isActive(path: string) {
           {{ item.label }}
         </button>
       </nav>
-      <button class="back-btn" type="button" @click="router.push('/')">返回前台</button>
+      <button class="back-btn" type="button" @click="handleLogout">退出登录</button>
     </div>
   </header>
   <main class="admin-page">
