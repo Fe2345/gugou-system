@@ -49,7 +49,9 @@ async function handleLogin() {
     loginForm.account = ''
     loginForm.password = ''
     showMessage('登录成功')
-    setTimeout(() => router.push('/'), 1000)
+    setTimeout(() => {
+      router.push(res.data.user.role === 'admin' ? '/admin' : '/')
+    }, 1000)
   } catch (e: any) {
     showMessage(e?.response?.data?.message || '登录失败，请检查账号密码', 'error')
   } finally {
