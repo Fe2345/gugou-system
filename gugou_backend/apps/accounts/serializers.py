@@ -106,6 +106,19 @@ class UserSerializer(serializers.ModelSerializer):
         return profile.contact if profile else ""
 
 
+class AdminUserSerializer(serializers.Serializer):
+    id = serializers.CharField(source="user_id")
+    name = serializers.SerializerMethodField()
+    phone = serializers.CharField()
+    assets = serializers.IntegerField(source="total_assets", default=0)
+    credit = serializers.IntegerField(source="credit_score")
+    registered = serializers.CharField(source="created_at")
+    status = serializers.CharField()
+
+    def get_name(self, obj):
+        return obj.nickname or obj.phone
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)
     new_password = serializers.CharField(min_length=6, write_only=True)

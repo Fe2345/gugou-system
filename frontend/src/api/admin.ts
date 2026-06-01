@@ -15,7 +15,7 @@ export interface AdminUser {
   assets: number
   credit: number
   registered: string
-  status: 'active' | 'frozen'
+  status: 'normal' | 'frozen' | 'disabled' | 'deleted'
 }
 
 // ─── 管理员价格记录类型 ───
@@ -30,19 +30,19 @@ export interface AdminPriceRecord {
 
 // ─── Mock 数据 ───
 const mockUsers: AdminUser[] = [
-  { id: 'BJUT000001', name: '张三', phone: '13812345678', assets: 12500, credit: 95, registered: '2026-01-12', status: 'active' },
+  { id: 'BJUT000001', name: '张三', phone: '13812345678', assets: 12500, credit: 95, registered: '2026-01-12', status: 'normal' },
   { id: 'BJUT000002', name: '李四', phone: '13987654321', assets: 8600, credit: 88, registered: '2026-02-03', status: 'frozen' },
-  { id: 'BJUT000003', name: '王五', phone: '13711223344', assets: 15200, credit: 99, registered: '2026-03-15', status: 'active' },
-  { id: 'BJUT000004', name: '赵六', phone: '13655667788', assets: 6300, credit: 72, registered: '2026-04-01', status: 'active' },
+  { id: 'BJUT000003', name: '王五', phone: '13711223344', assets: 15200, credit: 99, registered: '2026-03-15', status: 'normal' },
+  { id: 'BJUT000004', name: '赵六', phone: '13655667788', assets: 6300, credit: 72, registered: '2026-04-01', status: 'normal' },
   { id: 'BJUT000005', name: '孙七', phone: '13599887766', assets: 21800, credit: 91, registered: '2025-12-20', status: 'frozen' },
 ]
 
 const mockAdminGoods: (GoodsItem & { seller: string; submittedAt: string; stock: number })[] = [
-  { id: 'G1001', name: '蓝色幻想系列 限定徽章套组', referencePrice: 128, mainImage: '', ipName: '蓝色幻想', characterName: '群像', category: '徽章/吧唧', description: '限定徽章套组', status: 'active', createdAt: '2026-05-06', seller: 'BJUT000126', submittedAt: '10:28', stock: 12 },
-  { id: 'G1002', name: '樱花季角色亚克力立牌', referencePrice: 68, mainImage: '', ipName: '樱花季', characterName: '主角', category: '亚克力立牌', description: '亚克力立牌', status: 'active', createdAt: '2026-05-06', seller: 'BJUT000219', submittedAt: '09:52', stock: 8 },
+  { id: 'G1001', name: '蓝色幻想系列 限定徽章套组', referencePrice: 128, mainImage: '', ipName: '蓝色幻想', characterName: '群像', category: '徽章/吧唧', description: '限定徽章套组', status: 'normal', createdAt: '2026-05-06', seller: 'BJUT000126', submittedAt: '10:28', stock: 12 },
+  { id: 'G1002', name: '樱花季角色亚克力立牌', referencePrice: 68, mainImage: '', ipName: '樱花季', characterName: '主角', category: '亚克力立牌', description: '亚克力立牌', status: 'normal', createdAt: '2026-05-06', seller: 'BJUT000219', submittedAt: '09:52', stock: 8 },
   { id: 'G1003', name: '限定拍立得收藏卡 随机款', referencePrice: 45, mainImage: '', ipName: '限定系列', characterName: '随机', category: '拍立得/色纸', description: '拍立得收藏卡', status: 'inactive', createdAt: '2026-05-05', seller: 'BJUT000308', submittedAt: '昨天', stock: 20 },
-  { id: 'G1004', name: '角色挂件 生日纪念款', referencePrice: 36, mainImage: '', ipName: '生日系列', characterName: '角色', category: '挂件', description: '生日纪念挂件', status: 'active', createdAt: '2026-05-05', seller: 'BJUT000176', submittedAt: '昨天', stock: 15 },
-  { id: 'G1005', name: '原神 甘雨 限定亚克力砖', referencePrice: 198, mainImage: '', ipName: '原神', characterName: '甘雨', category: '亚克力砖', description: '甘雨限定亚克力砖', status: 'active', createdAt: '2026-05-06', seller: 'BJUT000333', submittedAt: '30 分钟前', stock: 5 },
+  { id: 'G1004', name: '角色挂件 生日纪念款', referencePrice: 36, mainImage: '', ipName: '生日系列', characterName: '角色', category: '挂件', description: '生日纪念挂件', status: 'normal', createdAt: '2026-05-05', seller: 'BJUT000176', submittedAt: '昨天', stock: 15 },
+  { id: 'G1005', name: '原神 甘雨 限定亚克力砖', referencePrice: 198, mainImage: '', ipName: '原神', characterName: '甘雨', category: '亚克力砖', description: '甘雨限定亚克力砖', status: 'normal', createdAt: '2026-05-06', seller: 'BJUT000333', submittedAt: '30 分钟前', stock: 5 },
 ]
 
 const mockPriceRecords: AdminPriceRecord[] = [
@@ -129,7 +129,7 @@ export async function getAdminUsersList(params?: {
   keyword?: string
   status?: string
   creditLevel?: string
-}): Promise<ApiResponse<AdminUser[]>> {
+}): Promise<ApiResponse<PaginatedResponse<AdminUser>>> {
   if (USE_MOCK) {
     await delay()
     let list = [...mockUsers]
@@ -138,7 +138,7 @@ export async function getAdminUsersList(params?: {
       list = list.filter(u => u.name.toLowerCase().includes(kw) || u.id.toLowerCase().includes(kw) || u.phone.includes(kw))
     }
     if (params?.status === '正常') {
-      list = list.filter(u => u.status === 'active')
+      list = list.filter(u => u.status === 'normal')
     } else if (params?.status === '冻结') {
       list = list.filter(u => u.status === 'frozen')
     }
@@ -149,7 +149,7 @@ export async function getAdminUsersList(params?: {
     } else if (params?.creditLevel === '低') {
       list = list.filter(u => u.credit < 70)
     }
-    return { code: 200, message: 'ok', data: list }
+    return { code: 200, message: 'ok', data: { results: list, count: list.length, page: 1, page_size: list.length } }
   }
   const { default: request } = await import('@/utils/request')
   return request.get('/admin/users', { params })
@@ -170,7 +170,7 @@ export async function unfreezeUser(id: string): Promise<ApiResponse<void>> {
   if (USE_MOCK) {
     await delay()
     const user = mockUsers.find(u => u.id === id)
-    if (user) user.status = 'active'
+    if (user) user.status = 'normal'
     return { code: 200, message: 'ok', data: undefined }
   }
   const { default: request } = await import('@/utils/request')
