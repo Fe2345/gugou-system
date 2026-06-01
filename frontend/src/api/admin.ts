@@ -112,6 +112,17 @@ export async function offlineGoods(id: string): Promise<ApiResponse<void>> {
   return request.put(`/admin/goods/${id}/offline`)
 }
 
+export async function editGoods(id: string, data: { name?: string; referencePrice?: number; category?: string; description?: string }): Promise<ApiResponse<void>> {
+  if (USE_MOCK) {
+    await delay()
+    const item = mockAdminGoods.find(g => g.id === id)
+    if (item) Object.assign(item, data)
+    return { code: 200, message: 'ok', data: undefined }
+  }
+  const { default: request } = await import('@/utils/request')
+  return request.put(`/admin/goods/${id}/edit`, data)
+}
+
 // ─── 管理员用户 API ───
 
 export async function getAdminUsersList(params?: {
