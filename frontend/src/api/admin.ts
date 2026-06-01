@@ -21,11 +21,18 @@ export interface AdminUser {
 // ─── 管理员价格记录类型 ───
 export interface AdminPriceRecord {
   id: string
+  productId?: string
   name: string
   price: number
   period: string
   change: number
   time: string
+}
+
+export interface AdminPriceHistoryPoint {
+  date: string
+  time: string
+  price: number
 }
 
 // ─── Mock 数据 ───
@@ -37,7 +44,7 @@ const mockUsers: AdminUser[] = [
   { id: 'BJUT000005', name: '孙七', phone: '13599887766', assets: 21800, credit: 91, registered: '2025-12-20', status: 'frozen' },
 ]
 
-const mockAdminGoods: (GoodsItem & { seller: string; submittedAt: string; stock: number })[] = [
+const mockAdminGoods: any[] = [
   { id: 'G1001', name: '蓝色幻想系列 限定徽章套组', referencePrice: 128, mainImage: '', ipName: '蓝色幻想', characterName: '群像', category: '徽章/吧唧', description: '限定徽章套组', status: 'normal', createdAt: '2026-05-06', seller: 'BJUT000126', submittedAt: '10:28', stock: 12 },
   { id: 'G1002', name: '樱花季角色亚克力立牌', referencePrice: 68, mainImage: '', ipName: '樱花季', characterName: '主角', category: '亚克力立牌', description: '亚克力立牌', status: 'normal', createdAt: '2026-05-06', seller: 'BJUT000219', submittedAt: '09:52', stock: 8 },
   { id: 'G1003', name: '限定拍立得收藏卡 随机款', referencePrice: 45, mainImage: '', ipName: '限定系列', characterName: '随机', category: '拍立得/色纸', description: '拍立得收藏卡', status: 'inactive', createdAt: '2026-05-05', seller: 'BJUT000308', submittedAt: '昨天', stock: 20 },
@@ -59,7 +66,9 @@ export async function getAdminGoodsList(params?: {
   keyword?: string
   status?: string
   category?: string
-}): Promise<ApiResponse<PaginatedResponse<GoodsItem & { seller: string; submittedAt: string; stock: number }>>> {
+  page?: number
+  page_size?: number
+}): Promise<ApiResponse<PaginatedResponse<GoodsItem & { seller: string; submittedAt: string; stock: number }> & { stats?: { active: number; inactive: number; frozen: number; total: number } }>> {
   if (USE_MOCK) {
     await delay()
     let list = [...mockAdminGoods]
@@ -77,6 +86,31 @@ export async function getAdminGoodsList(params?: {
   }
   const { default: request } = await import('@/utils/request')
   return request.get('/admin/goods', { params })
+}
+
+export async function createAdminGoods(data: Partial<GoodsItem>): Promise<ApiResponse<GoodsItem & { seller: string; submittedAt: string; stock: number }>> {
+  if (USE_MOCK) {
+    await delay()
+    const item = {
+      id: 'G' + Date.now(),
+      name: data.name || '',
+      referencePrice: data.referencePrice || 0,
+      mainImage: data.mainImage || '',
+      ipName: data.ipName || '',
+      characterName: data.characterName || '',
+      category: data.category || 'other',
+      description: data.description || '',
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      seller: 'ADMIN',
+      submittedAt: new Date().toLocaleString(),
+      stock: 0,
+    } as GoodsItem & { seller: string; submittedAt: string; stock: number }
+    mockAdminGoods.unshift(item)
+    return { code: 200, message: 'ok', data: item }
+  }
+  const { default: request } = await import('@/utils/request')
+  return request.post('/admin/goods', data)
 }
 
 export async function approveGoods(id: string): Promise<ApiResponse<void>> {
@@ -112,7 +146,7 @@ export async function offlineGoods(id: string): Promise<ApiResponse<void>> {
   return request.put(`/admin/goods/${id}/offline`)
 }
 
-export async function editGoods(id: string, data: { name?: string; referencePrice?: number; category?: string; description?: string }): Promise<ApiResponse<void>> {
+export async function editGoods(id: string, data: Partial<GoodsItem>): Promise<ApiResponse<void>> {
   if (USE_MOCK) {
     await delay()
     const item = mockAdminGoods.find(g => g.id === id)
@@ -183,6 +217,9 @@ export async function getAdminPriceRecords(params?: {
   keyword?: string
   period?: string
   change?: string
+  productId?: string
+  startDate?: string
+  endDate?: string
 }): Promise<ApiResponse<AdminPriceRecord[]>> {
   if (USE_MOCK) {
     await delay()
@@ -206,11 +243,13 @@ export async function getAdminPriceRecords(params?: {
 }
 
 export async function addPriceRecord(data: {
+  productId?: string
   name: string
   price: number
   period: string
   change: number
   note?: string
+  recordedAt?: string
 }): Promise<ApiResponse<void>> {
   if (USE_MOCK) {
     await delay()
@@ -226,4 +265,21 @@ export async function addPriceRecord(data: {
   }
   const { default: request } = await import('@/utils/request')
   return request.post('/admin/prices', data)
+}
+
+export async function getAdminPriceHistory(params: {
+  productId: string
+  range?: string
+  startDate?: string
+  endDate?: string
+}): Promise<ApiResponse<{ productId: string; points: AdminPriceHistoryPoint[] }>> {
+  if (USE_MOCK) {
+    await delay()
+    const list = mockPriceRecords
+      .filter(r => !params.productId || r.name.includes(params.productId) || r.id === params.productId)
+      .map(r => ({ date: r.time.slice(0, 10), time: r.time, price: r.price }))
+    return { code: 200, message: 'ok', data: { productId: params.productId, points: list } }
+  }
+  const { default: request } = await import('@/utils/request')
+  return request.get('/admin/prices/history', { params })
 }

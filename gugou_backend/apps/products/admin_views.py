@@ -10,7 +10,7 @@ from apps.common.response import error, paginated, success
 from apps.operations.models import AdminOperationLog
 
 from .models import Product
-from .serializers import AdminGoodsSerializer, ProductUpdateSerializer
+from .serializers import AdminGoodsSerializer, ProductCreateSerializer, ProductUpdateSerializer
 
 
 def _log_operation(request, action, target_id, detail=""):
@@ -77,6 +77,16 @@ class AdminGoodsListView(APIView):
         }
 
         return success(data=data)
+
+    def post(self, request):
+        serializer = ProductCreateSerializer(data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            from apps.common.response import flatten_errors
+            return error(message=flatten_errors(serializer.errors))
+
+        product = serializer.save()
+        _log_operation(request, "create", product.product_id, f"管理员新增商品 {product.name}")
+        return success(data=AdminGoodsSerializer(product).data, message="创建成功")
 
 
 class AdminGoodsApproveView(APIView):
