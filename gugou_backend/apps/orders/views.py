@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
@@ -57,12 +58,23 @@ class OrderListView(APIView):
         page_size = int(request.query_params.get("page_size", 10))
         role = request.query_params.get("role", "buyer")  # buyer 或 seller
         status_filter = request.query_params.get("status")
+        keyword = request.query_params.get("keyword", "").strip()
 
-        # 根据角色筛选
-        if role == "seller":
+        # 管理员可查看全部订单
+        if request.user.role == "admin":
+            queryset = Order.objects.all()
+        elif role == "seller":
             queryset = Order.objects.filter(seller=request.user)
         else:
             queryset = Order.objects.filter(buyer=request.user)
+
+        # 关键词搜索
+        if keyword:
+            queryset = queryset.filter(
+                Q(order_id__icontains=keyword)
+                | Q(buyer__nickname__icontains=keyword)
+                | Q(product__name__icontains=keyword)
+            )
 
         # 按状态筛选
         if status_filter:
