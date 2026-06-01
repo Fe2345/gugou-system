@@ -1,5 +1,8 @@
+import request from '@/utils/request'
 import type { GoodsItem } from '@/types/goods'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
+import type { SwapItem, SwapDetailItem } from '@/api/swap'
+import type { GroupItem, GroupDetailItem, GroupParticipantItem } from '@/api/group'
 
 const USE_MOCK = false
 
@@ -215,4 +218,70 @@ export async function addPriceRecord(data: {
   }
   const { default: request } = await import('@/utils/request')
   return request.post('/admin/prices', data)
+}
+
+// ─── 管理员换物 API ───
+
+export function getAdminExchangeList(params?: {
+  keyword?: string
+  status?: string
+  start_date?: string
+  end_date?: string
+  page?: number
+  page_size?: number
+}): Promise<ApiResponse<PaginatedResponse<SwapItem>>> {
+  return request.get('/exchanges/admin/list/', { params })
+}
+
+export function getAdminExchangeDetail(id: string): Promise<ApiResponse<SwapDetailItem>> {
+  return request.get(`/exchanges/admin/${id}/`)
+}
+
+export function adminExpireExchange(id: string): Promise<ApiResponse<void>> {
+  return request.post(`/exchanges/admin/${id}/expire/`)
+}
+
+export function adminCancelExchange(id: string, reason?: string): Promise<ApiResponse<void>> {
+  return request.post(`/exchanges/admin/${id}/cancel/`, { reason })
+}
+
+export function adminCompleteExchange(id: string): Promise<ApiResponse<void>> {
+  return request.post(`/exchanges/admin/${id}/complete/`)
+}
+
+export function adminHandleAbnormalExchange(id: string, reason: string): Promise<ApiResponse<void>> {
+  return request.post(`/exchanges/admin/${id}/handle-abnormal/`, { reason })
+}
+
+// ─── 管理员拼团 API ───
+
+export function getAdminTeamList(params?: {
+  keyword?: string
+  status?: string
+  start_date?: string
+  end_date?: string
+  page?: number
+  page_size?: number
+}): Promise<ApiResponse<PaginatedResponse<GroupItem>>> {
+  return request.get('/teams/admin/list/', { params })
+}
+
+export function getAdminTeamDetail(id: string): Promise<ApiResponse<GroupDetailItem>> {
+  return request.get(`/teams/admin/${id}/`)
+}
+
+export function getAdminTeamParticipants(id: string): Promise<ApiResponse<GroupParticipantItem[]>> {
+  return request.get(`/teams/admin/${id}/participants/`)
+}
+
+export function adminCancelTeam(id: string, reason?: string): Promise<ApiResponse<void>> {
+  return request.post(`/teams/admin/${id}/cancel/`, { reason })
+}
+
+export function adminFailTeam(id: string): Promise<ApiResponse<void>> {
+  return request.post(`/teams/admin/${id}/fail/`)
+}
+
+export function adminSuccessTeam(id: string): Promise<ApiResponse<void>> {
+  return request.post(`/teams/admin/${id}/success/`)
 }
