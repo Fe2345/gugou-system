@@ -20,7 +20,7 @@ export async function getGoodsList(params?: {
   category?: string
   page?: number
   pageSize?: number
-}): Promise<ApiResponse<PaginatedResponse<GoodsItem>>> {
+}): Promise<ApiResponse<{ list: GoodsItem[]; total: number; page: number; pageSize: number }>> {
   if (USE_MOCK) {
     await delay()
     let list = [...mockGoods]

@@ -1,2 +1,8 @@
-# Credits 模块路由（待 C 补充接口）
-urlpatterns = []
+from django.urls import path
+
+from .views import CreditRecordListView, CreditSummaryView
+
+urlpatterns = [
+    path("", CreditRecordListView.as_view(), name="credit-list"),
+    path("summary/", CreditSummaryView.as_view(), name="credit-summary"),
+]

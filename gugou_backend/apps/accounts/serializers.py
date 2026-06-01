@@ -2,7 +2,7 @@ import logging
 
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.common.id_generator import generate_user_id
 from .models import User, UserProfile
@@ -51,9 +51,10 @@ class LoginSerializer(serializers.Serializer):
             logger.warning("登录被拒: %s status=%s", user.user_id, user.status)
             raise serializers.ValidationError("账户已被冻结或停用，请联系管理员")
 
-        token, _ = Token.objects.get_or_create(user=user)
+        refresh = RefreshToken.for_user(user)
         logger.info("用户登录: %s", user.user_id)
-        attrs["token"] = token.key
+        attrs["access"] = str(refresh.access_token)
+        attrs["refresh"] = str(refresh)
         attrs["user"] = user
         return attrs
 

@@ -23,6 +23,7 @@ export interface RegisterForm {
 }
 
 export interface LoginResult {
-  token: string
+  access: string
+  refresh: string
   user: UserInfo
 }

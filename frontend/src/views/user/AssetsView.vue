@@ -52,8 +52,10 @@ async function loadAssets() {
       status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
       sortBy: sortBy.value,
     })
-    assets.value = res.data.list
-    summary.value = res.data.summary
+    if (res.code === 200) {
+      assets.value = res.data.list
+      summary.value = res.data.summary
+    }
   } catch (e) {
     console.error('加载资产失败', e)
   } finally {
@@ -94,11 +96,15 @@ async function handleAdd() {
   if (!addForm.productName || !addForm.acquirePrice) return
   loading.value = true
   try {
-    await addAsset(addForm)
-    showAddModal.value = false
-    await loadAssets()
-  } catch (e) {
-    console.error('添加资产失败', e)
+    const res = await addAsset(addForm)
+    if (res.code === 200) {
+      showAddModal.value = false
+      await loadAssets()
+    } else {
+      alert(res.message || '添加失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '添加资产失败')
   } finally {
     loading.value = false
   }
@@ -138,7 +144,7 @@ async function handleSaveEdit() {
   if (!selectedAsset.value) return
   loading.value = true
   try {
-    await updateAsset(selectedAsset.value.id, {
+    const res = await updateAsset(selectedAsset.value.id, {
       productName: editForm.productName,
       ipName: editForm.ipName,
       characterName: editForm.characterName,
@@ -148,10 +154,14 @@ async function handleSaveEdit() {
       currentValue: editForm.currentValue,
       description: editForm.description,
     })
-    showEditModal.value = false
-    await loadAssets()
-  } catch (e) {
-    console.error('编辑失败', e)
+    if (res.code === 200) {
+      showEditModal.value = false
+      await loadAssets()
+    } else {
+      alert(res.message || '保存失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '编辑失败')
   } finally {
     loading.value = false
   }
@@ -172,12 +182,16 @@ async function handleDelete() {
   if (!assetToDelete.value) return
   loading.value = true
   try {
-    await deleteAsset(assetToDelete.value.id)
-    showDeleteConfirm.value = false
-    assetToDelete.value = null
-    await loadAssets()
-  } catch (e) {
-    console.error('删除失败', e)
+    const res = await deleteAsset(assetToDelete.value.id)
+    if (res.code === 200) {
+      showDeleteConfirm.value = false
+      assetToDelete.value = null
+      await loadAssets()
+    } else {
+      alert(res.message || '删除失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '删除失败')
   } finally {
     loading.value = false
   }
@@ -199,14 +213,18 @@ async function handleOperation() {
   if (!selectedAsset.value) return
   loading.value = true
   try {
-    await operateAsset({
+    const res = await operateAsset({
       type: operationType.value,
       assetId: selectedAsset.value.id,
     })
-    showOperationModal.value = false
-    await loadAssets()
-  } catch (e) {
-    console.error('操作失败', e)
+    if (res.code === 200) {
+      showOperationModal.value = false
+      await loadAssets()
+    } else {
+      alert(res.message || '操作失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '操作失败')
   } finally {
     loading.value = false
   }
@@ -401,8 +419,8 @@ function getValueChange(asset: AssetItem) {
             <div class="field"><label>入手价</label><span>{{ formatMoney(selectedAsset.acquirePrice) }}</span></div>
             <div class="field"><label>当前估值</label><span>{{ formatMoney(selectedAsset.currentValue) }}</span></div>
             <div class="field"><label>估值变化</label><span :class="{ up: getValueChange(selectedAsset) >= 0, down: getValueChange(selectedAsset) < 0 }">{{ getValueChange(selectedAsset) >= 0 ? '+' : '' }}{{ formatMoney(getValueChange(selectedAsset)) }}</span></div>
-            <div class="field"><label>创建时间</label><span>{{ selectedAsset.createdAt }}</span></div>
-            <div class="field"><label>更新时间</label><span>{{ selectedAsset.updatedAt }}</span></div>
+            <div class="field"><label>创建时间</label><span>{{ selectedAsset.created_at }}</span></div>
+            <div class="field"><label>更新时间</label><span>{{ selectedAsset.updated_at }}</span></div>
           </div>
           <p v-if="selectedAsset.description" class="detail-desc">{{ selectedAsset.description }}</p>
         </div>
@@ -476,7 +494,7 @@ function getValueChange(asset: AssetItem) {
         <button class="modal-close" @click="cancelDelete">&times;</button>
       </div>
       <div class="modal-body">
-        <p>确定要删除资产"{{ assetToDelete?.name }}"吗？</p>
+        <p>确定要删除资产"{{ assetToDelete?.productName }}"吗？</p>
         <p class="warning">此操作不可恢复。</p>
       </div>
       <div class="modal-actions">
@@ -496,8 +514,8 @@ function getValueChange(asset: AssetItem) {
         <button class="modal-close" @click="closeOperationModal">&times;</button>
       </div>
       <div class="modal-body">
-        <p v-if="operationType === 'list'">确定要将"{{ selectedAsset.name }}"上架出售吗？上架后其他用户可以看到并购买。</p>
-        <p v-else>确定要将"{{ selectedAsset.name }}"下架吗？下架后将恢复为持有状态。</p>
+        <p v-if="operationType === 'list'">确定要将"{{ selectedAsset.productName }}"上架出售吗？上架后其他用户可以看到并购买。</p>
+        <p v-else>确定要将"{{ selectedAsset.productName }}"下架吗？下架后将恢复为持有状态。</p>
       </div>
       <div class="modal-actions">
         <button type="button" class="secondary" @click="closeOperationModal">取消</button>

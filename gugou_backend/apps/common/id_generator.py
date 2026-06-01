@@ -84,3 +84,9 @@ def generate_price_record_id() -> str:
     """PR + 年月日时分秒 + 4位流水号"""
     seq = next_seq(f"price:{_now()}")
     return f"PR{_now()}{_seq(seq)}"
+
+
+def generate_credit_record_id() -> str:
+    """CR + 年月日 + 4位流水号"""
+    seq = next_seq(f"credit:{_today()}")
+    return f"CR{_today()}{_seq(seq)}"
