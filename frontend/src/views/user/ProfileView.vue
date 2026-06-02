@@ -475,11 +475,10 @@ onMounted(() => {
               </tbody>
             </table>
           </div>
-        </section>
-
           <div class="section-head" style="margin-top: 24px;"><div><p class="eyebrow" style="color:#be123c;">危险操作</p><h2>注销账号</h2></div></div>
           <p style="color: var(--muted); font-size: 14px; margin-bottom: 12px;">注销后所有 token 将立即失效，无法恢复。</p>
           <button class="danger-btn" type="button" @click="handleDeleteAccount">注销账号</button>
+        </section>
 
         <!-- 信用评价 -->
         <section v-show="activeMenu === 'credit'" class="panel">

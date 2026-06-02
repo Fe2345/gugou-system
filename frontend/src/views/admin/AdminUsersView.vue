@@ -136,8 +136,8 @@ function closeDetailModal() {
             <td>{{ u.registered }}</td>
             <td><span class="status" :class="statusClass(u.status)">{{ statusLabel(u.status) }}</span></td>
             <td class="actions">
-              <button v-if="u.status === 'normal' || u.status === 'disabled'" class="warn sm" type="button" @click="handleDisable(u)" :disabled="loading">停用</button>
-              <button v-if="u.status === 'frozen'" class="primary sm" type="button" @click="handleEnable(u)" :disabled="loading">启用</button>
+              <button v-if="u.status === 'normal'" class="warn sm" type="button" @click="handleDisable(u)" :disabled="loading">停用</button>
+              <button v-if="u.status === 'disabled' || u.status === 'frozen'" class="primary sm" type="button" @click="handleEnable(u)" :disabled="loading">启用</button>
               <button class="secondary sm" type="button" @click="viewDetail(u)">查看详情</button>
             </td>
           </tr>
@@ -166,8 +166,8 @@ function closeDetailModal() {
       </div>
       <div class="modal-actions">
         <button type="button" class="secondary" @click="closeDetailModal">关闭</button>
-        <button v-if="selectedUser.status === 'normal' || selectedUser.status === 'disabled'" type="button" class="primary" @click="handleDisable(selectedUser); closeDetailModal()">停用用户</button>
-        <button v-if="selectedUser.status === 'frozen'" type="button" class="primary" @click="handleEnable(selectedUser); closeDetailModal()">启用用户</button>
+        <button v-if="selectedUser.status === 'normal'" type="button" class="primary" @click="handleDisable(selectedUser); closeDetailModal()">停用用户</button>
+        <button v-if="selectedUser.status === 'disabled' || selectedUser.status === 'frozen'" type="button" class="primary" @click="handleEnable(selectedUser); closeDetailModal()">启用用户</button>
       </div>
     </div>
   </div>
