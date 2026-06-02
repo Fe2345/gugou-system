@@ -417,7 +417,7 @@ class Command(BaseCommand):
                 order=order, payer=buyer, amount=order.amount,
                 pay_method="simulated", status="success",
             )
-            for from_s, to_s, note in [("", "created", "订单创建"), ("created", "paid", "支付完成"), ("paid", "completed", "交易完成")]:
+            for from_s, to_s, note in [("", "created", "订单创建"), ("created", "pending_payment", "等待支付"), ("pending_payment", "paid", "支付完成"), ("paid", "completed", "交易完成")]:
                 OrderStatusLog.objects.create(
                     log_id=self._generate_order_log_id(), order=order,
                     from_status=from_s, to_status=to_s,
@@ -454,7 +454,7 @@ class Command(BaseCommand):
                 order=order, payer=buyer, amount=order.amount,
                 pay_method="simulated", status="success",
             )
-            for from_s, to_s, note in [("", "created", "订单创建"), ("created", "paid", "支付完成")]:
+            for from_s, to_s, note in [("", "created", "订单创建"), ("created", "pending_payment", "等待支付"), ("pending_payment", "paid", "支付完成")]:
                 OrderStatusLog.objects.create(
                     log_id=self._generate_order_log_id(), order=order,
                     from_status=from_s, to_status=to_s, operator=buyer, note=note,
@@ -480,11 +480,11 @@ class Command(BaseCommand):
                 product=listing.product,
                 quantity=1,
                 amount=listing.price,
-                status="created",
+                status="pending_payment",
             )
             OrderStatusLog.objects.create(
                 log_id=self._generate_order_log_id(), order=Order.objects.get(order_id=order_id),
-                from_status="", to_status="created", operator=buyer, note="订单创建，等待支付",
+                from_status="", to_status="pending_payment", operator=buyer, note="订单创建，等待支付",
             )
             created += 1
             self.stdout.write(f"  [Order] {buyer.nickname}购买{listing.seller.nickname}的{listing.product.name} -> 待支付")
@@ -508,7 +508,7 @@ class Command(BaseCommand):
                 status="cancelled",
             )
             reasons = ["买家取消订单", "卖家取消订单", "超时未支付自动取消"]
-            for from_s, to_s, note in [("", "created", "订单创建"), ("created", "cancelled", reasons[i % 3])]:
+            for from_s, to_s, note in [("", "created", "订单创建"), ("created", "pending_payment", "等待支付"), ("pending_payment", "cancelled", reasons[i % 3])]:
                 OrderStatusLog.objects.create(
                     log_id=self._generate_order_log_id(), order=order,
                     from_status=from_s, to_status=to_s, operator=buyer, note=note,
@@ -836,11 +836,17 @@ class Command(BaseCommand):
                 records = [(random.choice(positive_templates)[0], random.choice(positive_templates)[1], None) for _ in range(num_records)]
 
             # 创建信用记录
+            # 注意: BaseModel.created_at 是 auto_now_add=True,
+            # create() 时传入的值会被 Django 静默忽略,
+            # 因此先创建再用 update() 写入历史时间。
             for change, reason, order in records:
+                record_id = self._generate_credit_record_id()
                 CreditRecord.objects.create(
-                    credit_record_id=self._generate_credit_record_id(),
+                    credit_record_id=record_id,
                     user=user, change_value=change, reason=reason,
                     related_order=order,
+                )
+                CreditRecord.objects.filter(credit_record_id=record_id).update(
                     created_at=now - timedelta(days=random.randint(1, 60)),
                 )
                 created += 1
