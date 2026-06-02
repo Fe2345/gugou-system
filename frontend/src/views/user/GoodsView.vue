@@ -2,15 +2,21 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
-import { getGoodsCategories, getGoodsList } from '@/api/goods'
+import { addGoods, getGoodsCategories, getGoodsList, getMyGoodsList, updateGoods } from '@/api/goods'
+import { useUserStore } from '@/stores/user'
 import type { GoodsItem } from '@/types/goods'
 
 const route = useRoute()
+const userStore = useUserStore()
 const loading = ref(false)
+const saving = ref(false)
 const products = ref<GoodsItem[]>([])
+const myProducts = ref<GoodsItem[]>([])
 const searchQuery = ref('')
 const categories = ref<{ value: string; label: string }[]>([])
 const selectedProduct = ref<GoodsItem | null>(null)
+const editingProduct = ref<GoodsItem | null>(null)
+const showForm = ref(false)
 const totalCount = ref(0)
 const defaultPageSize = 100
 
@@ -20,6 +26,16 @@ const filterForm = reactive({
   category: '',
   minPrice: '',
   maxPrice: '',
+})
+
+const goodsForm = reactive({
+  name: '',
+  ipName: '',
+  characterName: '',
+  category: 'other',
+  referencePrice: '',
+  mainImage: '',
+  description: '',
 })
 
 async function loadProducts(keyword?: string) {
@@ -50,12 +66,22 @@ async function loadProducts(keyword?: string) {
   }
 }
 
+async function loadMyProducts() {
+  if (!userStore.isLoggedIn || userStore.isAdmin) {
+    myProducts.value = []
+    return
+  }
+  const res = await getMyGoodsList()
+  myProducts.value = res.data.list
+}
+
 onMounted(async () => {
   const keyword = route.query.keyword as string
   if (keyword) searchQuery.value = keyword
-  await loadProducts(searchQuery.value)
   const catRes = await getGoodsCategories()
   categories.value = catRes.data
+  goodsForm.category = categories.value[0]?.value || 'other'
+  await Promise.all([loadProducts(searchQuery.value), loadMyProducts()])
 })
 
 function handleSearch() {
@@ -75,6 +101,65 @@ function resetFilter() {
   loadProducts(searchQuery.value)
 }
 
+function resetGoodsForm() {
+  goodsForm.name = ''
+  goodsForm.ipName = ''
+  goodsForm.characterName = ''
+  goodsForm.category = categories.value[0]?.value || 'other'
+  goodsForm.referencePrice = ''
+  goodsForm.mainImage = ''
+  goodsForm.description = ''
+}
+
+function openCreateForm() {
+  editingProduct.value = null
+  resetGoodsForm()
+  showForm.value = true
+}
+
+function openEditForm(product: GoodsItem) {
+  if (product.status !== 'inactive') return
+  editingProduct.value = product
+  goodsForm.name = product.name
+  goodsForm.ipName = product.ipName
+  goodsForm.characterName = product.characterName
+  goodsForm.category = product.category
+  goodsForm.referencePrice = String(product.referencePrice)
+  goodsForm.mainImage = product.mainImage
+  goodsForm.description = product.description
+  showForm.value = true
+}
+
+function closeForm() {
+  showForm.value = false
+  editingProduct.value = null
+}
+
+async function saveGoods() {
+  if (!goodsForm.name.trim()) return
+  saving.value = true
+  try {
+    const payload = {
+      name: goodsForm.name.trim(),
+      ipName: goodsForm.ipName.trim(),
+      characterName: goodsForm.characterName.trim(),
+      category: goodsForm.category || 'other',
+      referencePrice: Number(goodsForm.referencePrice) || 0,
+      mainImage: goodsForm.mainImage.trim(),
+      description: goodsForm.description.trim(),
+    }
+    if (editingProduct.value) {
+      await updateGoods(editingProduct.value.id, payload)
+    } else {
+      await addGoods(payload)
+    }
+    closeForm()
+    await Promise.all([loadProducts(searchQuery.value), loadMyProducts()])
+  } finally {
+    saving.value = false
+  }
+}
+
 function viewDetail(product: GoodsItem) {
   selectedProduct.value = product
 }
@@ -85,10 +170,10 @@ function closeDetail() {
 
 function getStatusText(status: string) {
   const map: Record<string, string> = {
-    active: '正常',
-    inactive: '未启用',
-    frozen: '冻结',
-    archived: '归档',
+    active: '已上架',
+    inactive: '待审核',
+    frozen: '已驳回',
+    archived: '已归档',
   }
   return map[status] || status
 }
@@ -99,14 +184,43 @@ function getStatusText(status: string) {
   <main class="page">
     <section class="hero">
       <div>
-        <p class="eyebrow">商品查询</p>
-        <h1>商品库</h1>
-        <p>按商品名称、IP、角色和品类查询商品资料。普通用户只能查看商品信息，新增和维护由管理员统一处理。</p>
+        <p class="eyebrow">商品库</p>
+        <h1>商品查询与提交</h1>
+        <p>用户可以提交商品并在待审核期间修改信息；审核通过上架后商品信息锁定，由管理员负责审核。</p>
       </div>
       <form class="search-box" @submit.prevent="handleSearch">
         <input v-model="searchQuery" type="search" placeholder="搜索商品名称、IP 或角色" />
         <button type="submit" :disabled="loading">{{ loading ? '查询中' : '搜索' }}</button>
       </form>
+    </section>
+
+    <section v-if="userStore.isLoggedIn && !userStore.isAdmin" class="submit-panel">
+      <div>
+        <p class="eyebrow">我的提交</p>
+        <h2>上传商品</h2>
+      </div>
+      <button class="primary" type="button" @click="openCreateForm">添加商品</button>
+    </section>
+
+    <section v-if="myProducts.length" class="my-panel">
+      <div class="section-head list-head">
+        <div>
+          <p class="eyebrow">我的商品</p>
+          <h2>审核进度</h2>
+        </div>
+      </div>
+      <div class="mine-list">
+        <article v-for="p in myProducts" :key="p.id" class="mine-item">
+          <img :src="p.mainImage" :alt="p.name" />
+          <div>
+            <strong>{{ p.name }}</strong>
+            <p>{{ p.ipName }} / {{ p.characterName }} / {{ p.category }}</p>
+          </div>
+          <span class="status-badge" :class="p.status">{{ getStatusText(p.status) }}</span>
+          <button v-if="p.status === 'inactive'" class="secondary" type="button" @click="openEditForm(p)">修改</button>
+          <button v-else class="secondary" type="button" disabled>不可修改</button>
+        </article>
+      </div>
     </section>
 
     <section class="layout">
@@ -146,14 +260,14 @@ function getStatusText(status: string) {
       <section class="list-panel">
         <div class="section-head list-head">
           <div>
-            <p class="eyebrow">商品列表</p>
+            <p class="eyebrow">已上架商品</p>
             <h2>可查询商品</h2>
           </div>
           <span>显示 {{ products.length }} / {{ totalCount }} 个商品</span>
         </div>
 
         <div v-if="!products.length" class="empty-state">
-          <strong>暂无商品数据</strong>
+          <strong>暂无已上架商品</strong>
           <p>可以调整搜索词或筛选条件后再试。</p>
         </div>
         <div v-else class="product-grid">
@@ -165,7 +279,7 @@ function getStatusText(status: string) {
                 <span class="status-badge" :class="p.status">{{ getStatusText(p.status) }}</span>
               </div>
               <h3>{{ p.name }}</h3>
-              <p class="product-meta">{{ p.ipName }} · {{ p.characterName }} · {{ p.category }}</p>
+              <p class="product-meta">{{ p.ipName }} / {{ p.characterName }} / {{ p.category }}</p>
               <p>{{ p.description }}</p>
             </div>
             <div class="product-actions">
@@ -176,6 +290,33 @@ function getStatusText(status: string) {
       </section>
     </section>
   </main>
+
+  <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>{{ editingProduct ? '修改待审核商品' : '添加商品' }}</h2>
+        <button class="modal-close" type="button" @click="closeForm">&times;</button>
+      </div>
+      <form class="modal-form" @submit.prevent="saveGoods">
+        <label><span>商品名称</span><input v-model="goodsForm.name" type="text" required /></label>
+        <label><span>参考价</span><input v-model="goodsForm.referencePrice" type="number" min="0" step="0.01" /></label>
+        <label><span>IP</span><input v-model="goodsForm.ipName" type="text" /></label>
+        <label><span>角色</span><input v-model="goodsForm.characterName" type="text" /></label>
+        <label>
+          <span>品类</span>
+          <select v-model="goodsForm.category">
+            <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+          </select>
+        </label>
+        <label><span>图片地址</span><input v-model="goodsForm.mainImage" type="text" placeholder="/images/products/example.png" /></label>
+        <label class="full"><span>描述</span><textarea v-model="goodsForm.description" rows="3"></textarea></label>
+        <div class="modal-actions">
+          <button type="button" class="secondary" @click="closeForm">取消</button>
+          <button type="submit" class="primary" :disabled="saving">{{ saving ? '保存中' : '提交审核' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <div v-if="selectedProduct" class="modal-overlay" @click.self="closeDetail">
     <div class="modal">
@@ -225,12 +366,21 @@ h1 { font-size: 42px; line-height: 1.16; }
 .hero p:last-child { max-width: 660px; margin-top: 14px; color: rgba(255,255,255,0.84); line-height: 1.8; }
 .search-box { display: grid; grid-template-columns: minmax(0, 1fr) 92px; gap: 10px; padding: 12px; border: 1px solid rgba(255,255,255,0.28); border-radius: 10px; background: rgba(255,255,255,0.14); }
 input, select { width: 100%; height: 46px; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; color: var(--ink); background: #fff; outline: none; font: inherit; box-sizing: border-box; }
-input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(15,100,120,0.12); }
+textarea { font: inherit; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(15,100,120,0.12); outline: none; }
 .search-box input { border: 0; }
 .primary, .secondary, .search-box button { min-height: 46px; border-radius: 8px; font-weight: 800; cursor: pointer; font: inherit; }
 .primary, .search-box button { border: 0; color: #fff; background: var(--accent); }
 .secondary { border: 1px solid var(--line); color: var(--ink); background: var(--panel); }
+.secondary:disabled { opacity: 0.55; cursor: not-allowed; }
 .primary:hover, .search-box button:hover { background: var(--accent-dark); }
+.submit-panel, .my-panel { margin-top: 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); }
+.submit-panel { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 20px 22px; }
+.my-panel { padding: 22px; }
+.mine-list { display: grid; gap: 10px; }
+.mine-item { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.mine-item img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--soft); }
+.mine-item p { color: var(--muted); font-size: 13px; margin-top: 4px; }
 .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; margin-top: 20px; }
 .filter-panel, .list-panel { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); }
 .filter-panel { align-self: start; display: grid; gap: 16px; padding: 22px; }
@@ -265,6 +415,10 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .modal { background: var(--panel); border-radius: 16px; width: min(760px, 100%); max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 28px; border-bottom: 1px solid var(--line); }
 .modal-close { width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--soft); color: var(--muted); font-size: 24px; cursor: pointer; display: grid; place-items: center; }
+.modal-form { padding: 24px 28px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.modal-form input, .modal-form textarea, .modal-form select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; box-sizing: border-box; background: #fff; }
+.modal-form textarea { resize: vertical; min-height: 80px; }
+.modal-form .full, .modal-actions { grid-column: 1 / -1; }
 .detail-content { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 24px; padding: 28px; }
 .detail-image { border-radius: 12px; overflow: hidden; background: var(--soft); }
 .detail-image img { width: 100%; height: 280px; object-fit: contain; }
@@ -277,15 +431,17 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .detail-fields span { color: var(--muted); font-size: 13px; }
 .detail-fields strong { font-size: 16px; }
 .detail-desc { color: var(--muted); line-height: 1.7; }
-.modal-actions { display: flex; justify-content: flex-end; padding: 20px 28px; border-top: 1px solid var(--line); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 12px; padding-top: 8px; }
+.detail-content + .modal-actions { padding: 20px 28px; border-top: 1px solid var(--line); }
 
 @media (max-width: 980px) {
   .hero, .layout, .detail-content { grid-template-columns: 1fr; }
+  .mine-item { grid-template-columns: 56px minmax(0, 1fr); }
 }
 @media (max-width: 620px) {
   .page { width: min(100% - 20px, 1180px); }
   .hero, .list-panel { padding: 20px; }
   h1 { font-size: 30px; }
-  .search-box, .price-row, .filter-actions, .product-grid, .detail-fields { grid-template-columns: 1fr; }
+  .search-box, .price-row, .filter-actions, .product-grid, .detail-fields, .modal-form { grid-template-columns: 1fr; }
 }
 </style>

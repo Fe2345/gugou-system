@@ -30,6 +30,7 @@ class ProductCreateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, default="", allow_blank=True)
 
     def create(self, validated_data):
+        request = self.context.get("request")
         product = Product(
             product_id=generate_product_id(),
             name=validated_data["name"],
@@ -39,8 +40,8 @@ class ProductCreateSerializer(serializers.Serializer):
             reference_price=validated_data.get("referencePrice", 0),
             main_image=validated_data.get("mainImage", ""),
             description=validated_data.get("description", ""),
+            status=Product.Status.INACTIVE,
         )
-        request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:
             product.created_by = request.user
         product.save()
