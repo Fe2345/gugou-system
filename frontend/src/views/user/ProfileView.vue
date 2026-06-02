@@ -3,7 +3,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
-import { getUserInfo, updateUserInfo, changePassword, changePhone, getLoginRecords } from '@/api/user'
+import { deleteAccount, getUserInfo, updateUserInfo, changePassword, changePhone, getLoginRecords } from '@/api/user'
 import { getAddresses, addAddress, updateAddress, deleteAddress, getDivisions } from '@/api/address'
 import { getCreditRecords, getCreditSummary } from '@/api/credit'
 import type { AddressItem, AddressForm, DivisionItem } from '@/api/address'
@@ -222,6 +222,21 @@ async function handleChangePhone() {
   } catch (e: any) {
     showMessage(e?.response?.data?.message || '修改失败', 'error')
   } finally { saving.value = false }
+}
+
+// --- 注销账号 ---
+async function handleDeleteAccount() {
+  if (!confirm('确定要注销账号吗？注销后所有 token 将立即失效，无法恢复。')) return
+  try {
+    await deleteAccount()
+    showMessage('账号已注销')
+    setTimeout(() => {
+      userStore.logout()
+      router.push('/login')
+    }, 1000)
+  } catch (e: any) {
+    showMessage(e?.response?.data?.message || '注销失败', 'error')
+  }
 }
 
 // --- 地址管理函数 ---
@@ -461,6 +476,10 @@ onMounted(() => {
             </table>
           </div>
         </section>
+
+          <div class="section-head" style="margin-top: 24px;"><div><p class="eyebrow" style="color:#be123c;">危险操作</p><h2>注销账号</h2></div></div>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 12px;">注销后所有 token 将立即失效，无法恢复。</p>
+          <button class="danger-btn" type="button" @click="handleDeleteAccount">注销账号</button>
 
         <!-- 信用评价 -->
         <section v-show="activeMenu === 'credit'" class="panel">
@@ -744,6 +763,8 @@ th { color: var(--muted); background: var(--soft); }
 .link-btn { border: 0; background: transparent; color: var(--accent); font-weight: 800; cursor: pointer; font: inherit; font-size: 14px; }
 .link-btn:hover { text-decoration: underline; }
 .link-btn.danger { color: #be123c; }
+.danger-btn { height: 42px; padding: 0 20px; border: 1px solid #be123c; border-radius: 8px; background: #fff; color: #be123c; font-weight: 700; cursor: pointer; font: inherit; }
+.danger-btn:hover { background: #fee2e2; }
 
 @media (max-width: 1120px) {
   .user-hero, .profile-layout { grid-template-columns: 1fr; }

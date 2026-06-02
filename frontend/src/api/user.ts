@@ -41,3 +41,7 @@ export async function getLoginRecords(): Promise<ApiResponse<LoginRecordItem[]>>
 export async function changePhone(phone: string): Promise<ApiResponse<UserInfo>> {
   return request.put('/user/change-phone', { phone })
 }
+
+export async function deleteAccount(): Promise<ApiResponse<void>> {
+  return request.post('/user/delete-account')
+}

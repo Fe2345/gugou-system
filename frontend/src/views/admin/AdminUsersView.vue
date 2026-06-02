@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getAdminUsersList, freezeUser, unfreezeUser } from '@/api/admin'
+import { disableUser, enableUser, getAdminUsersList } from '@/api/admin'
 import type { AdminUser } from '@/api/admin'
 
 defineOptions({ name: 'AdminUsersView' })
@@ -58,17 +58,25 @@ onMounted(() => { loadUsers() })
 function handleSearch() { loadUsers() }
 function handleFilter() { loadUsers() }
 
-async function handleToggleStatus(user: AdminUser) {
+async function handleDisable(user: AdminUser) {
   loading.value = true
   try {
-    if (user.status === 'normal' || user.status === 'disabled') {
-      await freezeUser(user.id)
-    } else {
-      await unfreezeUser(user.id)
-    }
+    await disableUser(user.id)
     await loadUsers()
   } catch (e) {
-    console.error('状态切换失败', e)
+    console.error('停用失败', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleEnable(user: AdminUser) {
+  loading.value = true
+  try {
+    await enableUser(user.id)
+    await loadUsers()
+  } catch (e) {
+    console.error('启用失败', e)
   } finally {
     loading.value = false
   }
@@ -90,14 +98,14 @@ function closeDetailModal() {
     <div>
       <p class="eyebrow">用户管理</p>
       <h1>用户列表</h1>
-      <p>搜索、冻结/解冻、查看用户详情及资产信息</p>
+      <p>搜索、停用/启用、查看用户详情及资产信息</p>
     </div>
   </section>
 
   <section class="toolbar">
     <div class="search-box"><input v-model="searchQuery" type="search" placeholder="搜索用户ID / 姓名 / 手机号" @keyup.enter="handleSearch"></div>
     <select v-model="filterStatus" @change="handleFilter">
-      <option value="">全部状态</option><option value="正常">正常</option><option value="冻结">冻结</option>
+      <option value="">全部状态</option><option value="正常">正常</option><option value="冻结">冻结</option><option value="停用">停用</option>
     </select>
     <select v-model="filterCredit" @change="handleFilter">
       <option value="">信用等级</option><option value="高">高 (≥90)</option><option value="中">中 (70-89)</option><option value="低">低 (&lt;70)</option>
@@ -128,7 +136,8 @@ function closeDetailModal() {
             <td>{{ u.registered }}</td>
             <td><span class="status" :class="statusClass(u.status)">{{ statusLabel(u.status) }}</span></td>
             <td class="actions">
-              <button v-if="u.status !== 'deleted'" class="primary sm" type="button" @click="handleToggleStatus(u)" :disabled="loading">{{ u.status === 'normal' || u.status === 'disabled' ? '冻结' : '解冻' }}</button>
+              <button v-if="u.status === 'normal' || u.status === 'disabled'" class="warn sm" type="button" @click="handleDisable(u)" :disabled="loading">停用</button>
+              <button v-if="u.status === 'frozen'" class="primary sm" type="button" @click="handleEnable(u)" :disabled="loading">启用</button>
               <button class="secondary sm" type="button" @click="viewDetail(u)">查看详情</button>
             </td>
           </tr>
@@ -157,9 +166,8 @@ function closeDetailModal() {
       </div>
       <div class="modal-actions">
         <button type="button" class="secondary" @click="closeDetailModal">关闭</button>
-        <button v-if="selectedUser.status !== 'deleted'" type="button" class="primary" @click="handleToggleStatus(selectedUser); closeDetailModal()">
-          {{ selectedUser.status === 'normal' || selectedUser.status === 'disabled' ? '冻结用户' : '解冻用户' }}
-        </button>
+        <button v-if="selectedUser.status === 'normal' || selectedUser.status === 'disabled'" type="button" class="primary" @click="handleDisable(selectedUser); closeDetailModal()">停用用户</button>
+        <button v-if="selectedUser.status === 'frozen'" type="button" class="primary" @click="handleEnable(selectedUser); closeDetailModal()">启用用户</button>
       </div>
     </div>
   </div>
@@ -220,6 +228,8 @@ tr:last-child td { border-bottom: 0; }
 .text-red { color: #be123c; }
 .text-muted { color: #6b7280; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid var(--line); }
+
+.warn.sm { height: 32px; padding: 0 12px; font-size: 13px; border: 0; border-radius: 8px; background: #fef3c7; color: #b45309; font-weight: 700; cursor: pointer; font: inherit; }
 
 @media (max-width: 980px) { .toolbar { flex-direction: column; align-items: stretch; } .search-box { min-width: auto; } }
 </style>

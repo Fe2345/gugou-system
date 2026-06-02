@@ -72,12 +72,12 @@ export async function getAdminUsersList(params?: {
   return request.get('/admin/users', { params })
 }
 
-export async function freezeUser(id: string): Promise<ApiResponse<void>> {
-  return request.put(`/admin/users/${id}/freeze`)
+export async function disableUser(id: string): Promise<ApiResponse<void>> {
+  return request.put(`/admin/users/${id}/disable`)
 }
 
-export async function unfreezeUser(id: string): Promise<ApiResponse<void>> {
-  return request.put(`/admin/users/${id}/unfreeze`)
+export async function enableUser(id: string): Promise<ApiResponse<void>> {
+  return request.put(`/admin/users/${id}/enable`)
 }
 
 // ─── 管理员价格 API ───
