@@ -20,6 +20,7 @@ export async function getGoodsList(params?: {
   category?: string
   page?: number
   pageSize?: number
+  mine?: boolean
 }): Promise<ApiResponse<{ list: GoodsItem[]; total: number; page: number; pageSize: number }>> {
   if (USE_MOCK) {
     await delay()
@@ -60,7 +61,7 @@ export async function addGoods(data: Partial<GoodsItem>): Promise<ApiResponse<vo
       characterName: data.characterName || '',
       category: data.category || '',
       description: data.description || '',
-      status: 'active',
+      status: 'inactive',
       createdAt: new Date().toISOString(),
     })
     return { code: 200, message: 'ok', data: undefined }
@@ -69,11 +70,17 @@ export async function addGoods(data: Partial<GoodsItem>): Promise<ApiResponse<vo
   return request.post('/products', data)
 }
 
+export async function getMyGoodsList(): Promise<ApiResponse<{ list: GoodsItem[]; total: number; page: number; pageSize: number }>> {
+  const { default: request } = await import('@/utils/request')
+  return request.get('/products', { params: { mine: true, pageSize: 100 } })
+}
+
 export async function updateGoods(id: string, data: Partial<GoodsItem>): Promise<ApiResponse<void>> {
   if (USE_MOCK) {
     await delay()
     const idx = mockGoods.findIndex(g => g.id === id)
-    if (idx !== -1) Object.assign(mockGoods[idx], data)
+    const item = mockGoods[idx]
+    if (item) Object.assign(item, data)
     return { code: 200, message: 'ok', data: undefined }
   }
   const { default: request } = await import('@/utils/request')

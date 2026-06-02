@@ -2,31 +2,84 @@
 
 import json
 import random
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from django.utils import timezone
 
 from django.core.management.base import BaseCommand
 
-from apps.common.id_generator import generate_user_id, generate_product_id, generate_asset_id, generate_price_record_id
+from apps.common.id_generator import generate_user_id
 from apps.accounts.models import User
-from apps.products.models import Product
+from apps.products.models import Product, ProductImage
 from apps.assets.models import UserAsset
 from apps.pricing.models import PriceRecord
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
+SEQ_FILE = BASE_DIR / ".seq_cache"
+
+
+class LocalSequence:
+    """Seed data generates many IDs, so avoid waiting on Redis per row."""
+
+    def __init__(self):
+        self.data = {}
+        if SEQ_FILE.exists():
+            with open(SEQ_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    if "=" not in line:
+                        continue
+                    key, value = line.strip().split("=", 1)
+                    try:
+                        self.data[key] = int(value)
+                    except ValueError:
+                        pass
+
+    def next(self, key):
+        value = self.data.get(key, 0) + 1
+        self.data[key] = value
+        return value
+
+    def save(self):
+        with open(SEQ_FILE, "w", encoding="utf-8") as f:
+            for key, value in self.data.items():
+                f.write(f"{key}={value}\n")
+
+
+def _today():
+    return datetime.now().strftime("%Y%m%d")
+
+
+def _now():
+    return datetime.now().strftime("%Y%m%d%H%M%S")
+
+
+def _seq(num):
+    return str(num).zfill(4)
 
 
 class Command(BaseCommand):
     help = "填充商品、资产、价格测试数据"
 
     def handle(self, *args, **options):
+        self.local_sequence = LocalSequence()
         self._seed_user()
         self._seed_products()
         self._seed_assets()
         self._seed_prices()
+        self.local_sequence.save()
+
+    def _generate_product_id(self):
+        return f"G{_today()}{_seq(self.local_sequence.next(f'pid:{_today()}'))}"
+
+    def _generate_asset_id(self):
+        now = _now()
+        return f"AS{now}{_seq(self.local_sequence.next(f'asset:{now}'))}"
+
+    def _generate_price_record_id(self):
+        now = _now()
+        return f"PR{now}{_seq(self.local_sequence.next(f'price:{now}'))}"
 
     def _seed_user(self):
         if User.objects.filter(phone="13800000000").exists():
@@ -48,22 +101,47 @@ class Command(BaseCommand):
             products = json.load(f)
 
         created = 0
+        updated = 0
         for item in products:
-            pid = generate_product_id()
-            Product.objects.create(
-                product_id=pid,
-                name=item["name"],
-                ip_name=item["ip_name"],
-                character_name=item["character_name"],
-                category=item["category"],
-                reference_price=item["reference_price"],
-                description=item["description"],
-                status="active",
-            )
-            created += 1
-            self.stdout.write(f"  [Product] {pid} - {item['name']}")
+            lookup = {
+                "name": item["name"],
+                "ip_name": item["ip_name"],
+                "character_name": item["character_name"],
+                "category": item["category"],
+            }
+            main_image = item.get("main_image") or item.get("mainImage", "")
+            product = Product.objects.filter(**lookup).first()
+            if product is None:
+                product = Product(product_id=self._generate_product_id(), **lookup)
+                created += 1
+                action = "Created"
+            else:
+                updated += 1
+                action = "Updated"
 
-        self.stdout.write(self.style.SUCCESS(f"Created {created} products"))
+            product.reference_price = item["reference_price"]
+            product.main_image = main_image
+            product.description = item["description"]
+            product.status = "active"
+            product.save()
+
+            images = item.get("images", [])
+            if images:
+                ProductImage.objects.filter(product=product).delete()
+                ProductImage.objects.bulk_create(
+                    [
+                        ProductImage(
+                            product=product,
+                            image_url=image["url"] if isinstance(image, dict) else image,
+                            sort_order=index,
+                        )
+                        for index, image in enumerate(images)
+                    ]
+                )
+
+            self.stdout.write(f"  [Product] {action} {product.product_id} - {item['name']}")
+
+        self.stdout.write(self.style.SUCCESS(f"Created {created} products, updated {updated} products"))
 
     def _seed_assets(self):
         json_path = BASE_DIR / "seed_assets.json"
@@ -95,7 +173,18 @@ class Command(BaseCommand):
             acquire_price = item["acquire_price"]
             current_value = product.reference_price if product.reference_price > 0 else acquire_price
 
-            aid = generate_asset_id()
+            description = item.get("description", "")
+            asset = UserAsset.objects.filter(owner=user, product=product, description=description).first()
+            if asset:
+                asset.quantity = item["quantity"]
+                asset.acquire_price = acquire_price
+                asset.current_value = current_value
+                asset.status = "holding"
+                asset.save(update_fields=["quantity", "acquire_price", "current_value", "status", "updated_at"])
+                self.stdout.write(f"  [Asset] Updated {asset.asset_id} - {product.name} x{item['quantity']}")
+                continue
+
+            aid = self._generate_asset_id()
             UserAsset.objects.create(
                 asset_id=aid,
                 owner=user,
@@ -103,11 +192,11 @@ class Command(BaseCommand):
                 quantity=item["quantity"],
                 acquire_price=acquire_price,
                 current_value=current_value,
-                description=item.get("description", ""),
+                description=description,
                 status="holding",
             )
             created += 1
-            self.stdout.write(f"  [Asset] {aid} - {product.name} x{item['quantity']}")
+            self.stdout.write(f"  [Asset] Created {aid} - {product.name} x{item['quantity']}")
 
         self.stdout.write(self.style.SUCCESS(f"Created {created} assets"))
 
@@ -122,6 +211,10 @@ class Command(BaseCommand):
         created = 0
 
         for product in products:
+            if PriceRecord.objects.filter(product=product, source="manual").exists():
+                self.stdout.write(f"  [Price] {product.name} already has manual records, skip")
+                continue
+
             base = float(product.reference_price)
             # 生成30天的价格走势：从略低于参考价开始，波动上升到参考价附近
             for day in range(30, 0, -1):
@@ -133,7 +226,7 @@ class Command(BaseCommand):
 
                 recorded_at = now - timedelta(days=day, hours=random.randint(8, 20))
                 PriceRecord.objects.create(
-                    price_record_id=generate_price_record_id(),
+                    price_record_id=self._generate_price_record_id(),
                     product=product,
                     price=price,
                     source="manual",

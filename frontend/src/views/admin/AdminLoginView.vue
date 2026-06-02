@@ -94,7 +94,7 @@ async function handleLogin() {
 
       <div class="links">
         <a href="#">申请权限</a>
-        <a href="#">丢失秘钥?</a>
+        <button type="button" @click="router.push('/login')">用户登录</button>
       </div>
     </div>
   </div>
@@ -270,14 +270,18 @@ button[type="submit"]:hover {
   width: 100%;
 }
 
-.links a {
+.links a, .links button {
   color: #94a3b8;
   text-decoration: none;
   font-size: 13px;
   transition: color 0.3s;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
 }
 
-.links a:hover {
+.links a:hover, .links button:hover {
   color: #00f2fe;
 }
 

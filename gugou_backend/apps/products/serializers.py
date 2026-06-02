@@ -30,6 +30,7 @@ class ProductCreateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, default="", allow_blank=True)
 
     def create(self, validated_data):
+        request = self.context.get("request")
         product = Product(
             product_id=generate_product_id(),
             name=validated_data["name"],
@@ -39,8 +40,8 @@ class ProductCreateSerializer(serializers.Serializer):
             reference_price=validated_data.get("referencePrice", 0),
             main_image=validated_data.get("mainImage", ""),
             description=validated_data.get("description", ""),
+            status=Product.Status.INACTIVE,
         )
-        request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:
             product.created_by = request.user
         product.save()
@@ -74,3 +75,28 @@ class ProductUpdateSerializer(serializers.Serializer):
                 setattr(instance, snake, validated_data[camel])
         instance.save()
         return instance
+
+
+class AdminGoodsSerializer(serializers.ModelSerializer):
+    """管理员商品列表序列化器"""
+    id = serializers.CharField(source="product_id", read_only=True)
+    ipName = serializers.CharField(source="ip_name", read_only=True)
+    characterName = serializers.CharField(source="character_name", read_only=True)
+    referencePrice = serializers.DecimalField(source="reference_price", max_digits=10, decimal_places=2, read_only=True)
+    mainImage = serializers.CharField(source="main_image", read_only=True)
+    createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+    submittedAt = serializers.DateTimeField(source="created_at", read_only=True)
+    stock = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta:
+        model = Product
+        fields = [
+            "id", "name", "ipName", "characterName", "category",
+            "referencePrice", "mainImage", "description", "status",
+            "createdAt", "submittedAt", "stock",
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["seller"] = instance.created_by.user_id if instance.created_by else ""
+        return data

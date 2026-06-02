@@ -49,7 +49,9 @@ async function handleLogin() {
     loginForm.account = ''
     loginForm.password = ''
     showMessage('登录成功')
-    setTimeout(() => router.push('/'), 1000)
+    setTimeout(() => {
+      router.push(res.data.user.role === 'admin' ? '/admin' : '/')
+    }, 1000)
   } catch (e: any) {
     showMessage(e?.response?.data?.message || '登录失败，请检查账号密码', 'error')
   } finally {
@@ -139,6 +141,9 @@ async function handleForgot() {
           <div class="form-links">
             <button type="button" @click="handleTab('register')">立即注册</button>
             <button type="button" @click="handleTab('forgot')">忘记密码</button>
+          </div>
+          <div class="admin-link">
+            <button type="button" @click="router.push('/admin/login')">管理员登录</button>
           </div>
         </form>
       </section>
@@ -324,6 +329,17 @@ input:focus {
 }
 .form-links button:last-child { text-align: right; }
 .form-links.single button { text-align: center; }
+
+.admin-link { margin-top: 14px; text-align: center; }
+.admin-link button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  font: inherit;
+}
+.admin-link button:hover { color: var(--accent); }
 
 .message {
   margin-top: 18px;
