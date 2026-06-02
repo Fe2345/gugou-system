@@ -1,0 +1,662 @@
+[
+  {
+    "name": "沙奈朵手办",
+    "ip_name": "精灵宝可梦",
+    "character_name": "沙奈朵",
+    "category": "figure",
+    "reference_price": 688,
+    "main_image": "",
+    "images": [],
+    "description": "精灵宝可梦沙奈朵手办，限量发售"
+  },
+  {
+    "name": "春日限定徽章",
+    "ip_name": "初音未来",
+    "character_name": "初音",
+    "category": "badge",
+    "reference_price": 58,
+    "main_image": "",
+    "images": [],
+    "description": "春日祭限定徽章，樱花主题"
+  },
+  {
+    "name": "阿尼亚表情包立牌",
+    "ip_name": "间谍过家家",
+    "character_name": "阿尼亚",
+    "category": "acrylic",
+    "reference_price": 75,
+    "main_image": "",
+    "images": [],
+    "description": "阿尼亚经典表情亚克力立牌"
+  },
+  {
+    "name": "蕾姆泳装手办",
+    "ip_name": "Re:从零开始的异世界生活",
+    "character_name": "蕾姆",
+    "category": "figure",
+    "reference_price": 298,
+    "main_image": "",
+    "images": [],
+    "description": "蕾姆泳装Ver. 1/7比例手办"
+  },
+  {
+    "name": "炭治郎日轮刀模型",
+    "ip_name": "鬼灭之刃",
+    "character_name": "炭治郎",
+    "category": "figure",
+    "reference_price": 450,
+    "main_image": "",
+    "images": [],
+    "description": "炭治郎日轮刀 1:1复刻模型"
+  },
+  {
+    "name": "皮卡丘毛绒玩偶",
+    "ip_name": "精灵宝可梦",
+    "character_name": "皮卡丘",
+    "category": "doll",
+    "reference_price": 129,
+    "main_image": "",
+    "images": [],
+    "description": "皮卡丘大号毛绒玩偶 30cm"
+  },
+  {
+    "name": "明日香限定卡片",
+    "ip_name": "新世纪福音战士",
+    "character_name": "明日香",
+    "category": "card",
+    "reference_price": 45,
+    "main_image": "",
+    "images": [],
+    "description": "EVA明日香限定收藏卡片"
+  },
+  {
+    "name": "路飞五档海报",
+    "ip_name": "海贼王",
+    "character_name": "路飞",
+    "category": "poster",
+    "reference_price": 35,
+    "main_image": "",
+    "images": [],
+    "description": "路飞五档尼卡形态 A2海报"
+  },
+  {
+    "name": "亚丝娜亚克力挂件",
+    "ip_name": "刀剑神域",
+    "character_name": "亚丝娜",
+    "category": "acrylic",
+    "reference_price": 42,
+    "main_image": "",
+    "images": [],
+    "description": "亚丝娜战斗服Ver.亚克力挂件"
+  },
+  {
+    "name": "祢豆子竹筒玩偶",
+    "ip_name": "鬼灭之刃",
+    "character_name": "祢豆子",
+    "category": "doll",
+    "reference_price": 89,
+    "main_image": "",
+    "images": [],
+    "description": "祢豆子竹筒装迷你玩偶 20cm"
+  },
+  {
+    "name": "雷电影主题徽章套装",
+    "ip_name": "原神",
+    "character_name": "雷电影",
+    "category": "badge",
+    "reference_price": 118,
+    "main_image": "",
+    "images": [],
+    "description": "雷电影主题金属徽章"
+  },
+  {
+    "name": "枫原万叶流沙亚克力",
+    "ip_name": "原神",
+    "character_name": "枫原万叶",
+    "category": "acrylic",
+    "reference_price": 86,
+    "main_image": "",
+    "images": [],
+    "description": "枫叶主题双层流沙亚克力摆件，适合桌面展示"
+  },
+  {
+    "name": "纳西妲立牌",
+    "ip_name": "原神",
+    "character_name": "纳西妲",
+    "category": "acrylic",
+    "reference_price": 92,
+    "main_image": "",
+    "images": [],
+    "description": "纳西妲亚克力立牌，透明底座款"
+  },
+  {
+    "name": "钟离烫金色纸",
+    "ip_name": "原神",
+    "character_name": "钟离",
+    "category": "poster",
+    "reference_price": 138,
+    "main_image": "",
+    "images": [],
+    "description": "钟离主题限定烫金色纸，岩纹压印工艺"
+  },
+  {
+    "name": "芙宁娜纪念卡册",
+    "ip_name": "原神",
+    "character_name": "芙宁娜",
+    "category": "card",
+    "reference_price": 76,
+    "main_image": "",
+    "images": [],
+    "description": "芙宁娜角色纪念卡册，内含角色卡与场景卡"
+  },
+  {
+    "name": "星野爱徽章",
+    "ip_name": "我推的孩子",
+    "character_name": "星野爱",
+    "category": "badge",
+    "reference_price": 68,
+    "main_image": "",
+    "images": [],
+    "description": "星野爱徽章"
+  },
+  {
+    "name": "有马加奈角色立牌",
+    "ip_name": "我推的孩子",
+    "character_name": "有马加奈",
+    "category": "acrylic",
+    "reference_price": 72,
+    "main_image": "",
+    "images": [],
+    "description": "角色亚克力立牌，有马加奈造型，适合桌面展示"
+  },
+  {
+    "name": "黑川茜收藏卡",
+    "ip_name": "我推的孩子",
+    "character_name": "黑川茜",
+    "category": "card",
+    "reference_price": 39,
+    "main_image": "",
+    "images": [],
+    "description": "黑川茜写真风收藏卡，单包装随机闪卡"
+  },
+  {
+    "name": "五条悟无量空处手办",
+    "ip_name": "咒术回战",
+    "character_name": "五条悟",
+    "category": "figure",
+    "reference_price": 398,
+    "main_image": "",
+    "images": [],
+    "description": "五条悟无量空处姿态手办，特效件可拆卸"
+  },
+  {
+    "name": "虎杖悠仁战斗徽章",
+    "ip_name": "咒术回战",
+    "character_name": "虎杖悠仁",
+    "category": "badge",
+    "reference_price": 52,
+    "main_image": "",
+    "images": [],
+    "description": "虎杖悠仁战斗姿态徽章，哑光金属底"
+  },
+  {
+    "name": "伏黑惠海报",
+    "ip_name": "咒术回战",
+    "character_name": "伏黑惠",
+    "category": "poster",
+    "reference_price": 46,
+    "main_image": "",
+    "images": [],
+    "description": "伏黑惠式神主题 A2 海报，厚磅纸印刷"
+  },
+  {
+    "name": "钉崎野蔷薇亚克力挂件",
+    "ip_name": "咒术回战",
+    "character_name": "钉崎野蔷薇",
+    "category": "acrylic",
+    "reference_price": 48,
+    "main_image": "",
+    "images": [],
+    "description": "钉崎野蔷薇武器主题亚克力挂件，双面印刷"
+  },
+  {
+    "name": "灶门炭治郎水之呼吸手办",
+    "ip_name": "鬼灭之刃",
+    "character_name": "灶门炭治郎",
+    "category": "figure",
+    "reference_price": 328,
+    "main_image": "",
+    "images": [],
+    "description": "水之呼吸特效底座手办，动态斩击姿态"
+  },
+  {
+    "name": "我妻善逸雷之呼吸徽章",
+    "ip_name": "鬼灭之刃",
+    "character_name": "我妻善逸",
+    "category": "badge",
+    "reference_price": 49,
+    "main_image": "",
+    "images": [],
+    "description": "雷之呼吸主题闪电边框徽章"
+  },
+  {
+    "name": "嘴平伊之助毛绒挂件",
+    "ip_name": "鬼灭之刃",
+    "character_name": "嘴平伊之助",
+    "category": "doll",
+    "reference_price": 79,
+    "main_image": "",
+    "images": [],
+    "description": "伊之助头套造型毛绒挂件，附金属扣"
+  },
+  {
+    "name": "蝴蝶忍色纸",
+    "ip_name": "鬼灭之刃",
+    "character_name": "蝴蝶忍",
+    "category": "poster",
+    "reference_price": 88,
+    "main_image": "",
+    "images": [],
+    "description": "蝴蝶忍主题色纸，紫色珠光纸材"
+  },
+  {
+    "name": "路飞尼卡手办",
+    "ip_name": "海贼王",
+    "character_name": "路飞",
+    "category": "figure",
+    "reference_price": 520,
+    "main_image": "",
+    "images": [],
+    "description": "路飞五档尼卡形态手办，云雾特效底座"
+  },
+  {
+    "name": "索隆三刀流亚克力",
+    "ip_name": "海贼王",
+    "character_name": "索隆",
+    "category": "acrylic",
+    "reference_price": 84,
+    "main_image": "",
+    "images": [],
+    "description": "索隆三刀流动作亚克力立牌，绿色刀光底座"
+  },
+  {
+    "name": "娜美航海图卡套",
+    "ip_name": "海贼王",
+    "character_name": "娜美",
+    "category": "card",
+    "reference_price": 55,
+    "main_image": "",
+    "images": [],
+    "description": "娜美航海图主题卡套，含透明保护袋"
+  },
+  {
+    "name": "乔巴冬岛毛绒玩偶",
+    "ip_name": "海贼王",
+    "character_name": "乔巴",
+    "category": "doll",
+    "reference_price": 119,
+    "main_image": "",
+    "images": [],
+    "description": "乔巴冬岛造型毛绒玩偶，坐姿款 25cm"
+  },
+  {
+    "name": "鸣人九尾查克拉手办",
+    "ip_name": "火影忍者",
+    "character_name": "漩涡鸣人",
+    "category": "figure",
+    "reference_price": 368,
+    "main_image": "",
+    "images": [],
+    "description": "鸣人九尾查克拉模式手办，透明火焰特效"
+  },
+  {
+    "name": "佐助须佐能乎徽章",
+    "ip_name": "火影忍者",
+    "character_name": "宇智波佐助",
+    "category": "badge",
+    "reference_price": 64,
+    "main_image": "",
+    "images": [],
+    "description": "须佐能乎主题镭射徽章，紫色闪膜"
+  },
+  {
+    "name": "卡卡西写轮眼海报",
+    "ip_name": "火影忍者",
+    "character_name": "旗木卡卡西",
+    "category": "poster",
+    "reference_price": 42,
+    "main_image": "",
+    "images": [],
+    "description": "卡卡西写轮眼主题 A2 海报，暗纹背景"
+  },
+  {
+    "name": "宇智波鼬乌鸦亚克力",
+    "ip_name": "火影忍者",
+    "character_name": "宇智波鼬",
+    "category": "acrylic",
+    "reference_price": 98,
+    "main_image": "",
+    "images": [],
+    "description": "鼬与乌鸦剪影双层亚克力摆件"
+  },
+  {
+    "name": "初音未来雪未来手办",
+    "ip_name": "初音未来",
+    "character_name": "初音未来",
+    "category": "figure",
+    "reference_price": 428,
+    "main_image": "",
+    "images": [],
+    "description": "雪未来主题手办，雪花底座与围巾配件"
+  },
+  {
+    "name": "镜音铃甜点徽章",
+    "ip_name": "VOCALOID",
+    "character_name": "镜音铃",
+    "category": "badge",
+    "reference_price": 45,
+    "main_image": "",
+    "images": [],
+    "description": "甜点主题圆形徽章，亮面覆膜"
+  },
+  {
+    "name": "镜音连演唱会亚克力",
+    "ip_name": "VOCALOID",
+    "character_name": "镜音连",
+    "category": "acrylic",
+    "reference_price": 66,
+    "main_image": "",
+    "images": [],
+    "description": "演唱会舞台造型亚克力立牌"
+  },
+  {
+    "name": "巡音流歌玫瑰色纸",
+    "ip_name": "VOCALOID",
+    "character_name": "巡音流歌",
+    "category": "poster",
+    "reference_price": 78,
+    "main_image": "",
+    "images": [],
+    "description": "玫瑰主题收藏色纸，粉金配色"
+  },
+  {
+    "name": "绫波丽白色驾驶服手办",
+    "ip_name": "新世纪福音战士",
+    "character_name": "绫波丽",
+    "category": "figure",
+    "reference_price": 360,
+    "main_image": "",
+    "images": [],
+    "description": "绫波丽白色驾驶服手办，透明底座款"
+  },
+  {
+    "name": "明日香红色驾驶服手办",
+    "ip_name": "新世纪福音战士",
+    "character_name": "明日香",
+    "category": "figure",
+    "reference_price": 372,
+    "main_image": "",
+    "images": [],
+    "description": "明日香红色驾驶服手办，战斗姿态款"
+  },
+  {
+    "name": "初号机金属徽章",
+    "ip_name": "新世纪福音战士",
+    "character_name": "初号机",
+    "category": "badge",
+    "reference_price": 72,
+    "main_image": "",
+    "images": [],
+    "description": "初号机头部金属徽章，紫绿色珐琅"
+  },
+  {
+    "name": "EVA 机体设定海报",
+    "ip_name": "新世纪福音战士",
+    "character_name": "初号机",
+    "category": "poster",
+    "reference_price": 95,
+    "main_image": "",
+    "images": [],
+    "description": "EVA 机体设定图 A1 海报，工程图风格"
+  },
+  {
+    "name": "阿尼亚校服毛绒玩偶",
+    "ip_name": "间谍过家家",
+    "character_name": "阿尼亚",
+    "category": "doll",
+    "reference_price": 108,
+    "main_image": "",
+    "images": [],
+    "description": "阿尼亚校服造型毛绒玩偶，坐姿 22cm"
+  },
+  {
+    "name": "约尔玫瑰亚克力",
+    "ip_name": "间谍过家家",
+    "character_name": "约尔",
+    "category": "acrylic",
+    "reference_price": 82,
+    "main_image": "",
+    "images": [],
+    "description": "约尔玫瑰主题亚克力立牌，黑红配色"
+  },
+  {
+    "name": "劳埃德任务卡片",
+    "ip_name": "间谍过家家",
+    "character_name": "劳埃德",
+    "category": "card",
+    "reference_price": 36,
+    "main_image": "",
+    "images": [],
+    "description": "劳埃德任务档案风收藏卡片"
+  },
+  {
+    "name": "波奇塔毛绒挂件",
+    "ip_name": "电锯人",
+    "character_name": "波奇塔",
+    "category": "doll",
+    "reference_price": 69,
+    "main_image": "",
+    "images": [],
+    "description": "波奇塔迷你毛绒挂件，链条可拆卸"
+  },
+  {
+    "name": "电次电锯形态手办",
+    "ip_name": "电锯人",
+    "character_name": "电次",
+    "category": "figure",
+    "reference_price": 410,
+    "main_image": "",
+    "images": [],
+    "description": "电次电锯形态动态手办，血迹特效涂装"
+  },
+  {
+    "name": "帕瓦恶魔角徽章",
+    "ip_name": "电锯人",
+    "character_name": "帕瓦",
+    "category": "badge",
+    "reference_price": 54,
+    "main_image": "",
+    "images": [],
+    "description": "帕瓦恶魔角造型徽章，红色闪膜"
+  },
+  {
+    "name": "早川秋狐之恶魔海报",
+    "ip_name": "电锯人",
+    "character_name": "早川秋",
+    "category": "poster",
+    "reference_price": 58,
+    "main_image": "",
+    "images": [],
+    "description": "狐之恶魔主题海报，暗色电影海报风"
+  },
+  {
+    "name": "喜多川海梦水族馆立牌",
+    "ip_name": "更衣人偶坠入爱河",
+    "character_name": "喜多川海梦",
+    "category": "acrylic",
+    "reference_price": 88,
+    "main_image": "",
+    "images": [],
+    "description": "水族馆约会主题亚克力立牌，蓝色透明底座"
+  },
+  {
+    "name": "海梦换装收藏卡",
+    "ip_name": "更衣人偶坠入爱河",
+    "character_name": "喜多川海梦",
+    "category": "card",
+    "reference_price": 49,
+    "main_image": "",
+    "images": [],
+    "description": "海梦换装主题收藏卡，一套六张"
+  },
+  {
+    "name": "时崎狂三哥特手办",
+    "ip_name": "约会大作战",
+    "character_name": "时崎狂三",
+    "category": "figure",
+    "reference_price": 488,
+    "main_image": "",
+    "images": [],
+    "description": "狂三哥特礼服手办，钟表底座与枪械配件"
+  },
+  {
+    "name": "夜刀神十香灵装徽章",
+    "ip_name": "约会大作战",
+    "character_name": "夜刀神十香",
+    "category": "badge",
+    "reference_price": 59,
+    "main_image": "",
+    "images": [],
+    "description": "十香灵装主题徽章，紫色渐变底"
+  },
+  {
+    "name": "雪之下雪乃校园色纸",
+    "ip_name": "我的青春恋爱物语果然有问题",
+    "character_name": "雪之下雪乃",
+    "category": "poster",
+    "reference_price": 82,
+    "main_image": "",
+    "images": [],
+    "description": "雪乃校园主题收藏色纸，社团教室背景"
+  },
+  {
+    "name": "由比滨结衣亚克力挂件",
+    "ip_name": "我的青春恋爱物语果然有问题",
+    "character_name": "由比滨结衣",
+    "category": "acrylic",
+    "reference_price": 52,
+    "main_image": "",
+    "images": [],
+    "description": "结衣校服造型亚克力挂件，糖果色底板"
+  },
+  {
+    "name": "牧濑红莉栖实验室手办",
+    "ip_name": "命运石之门",
+    "character_name": "牧濑红莉栖",
+    "category": "figure",
+    "reference_price": 399,
+    "main_image": "",
+    "images": [],
+    "description": "红莉栖实验室白大褂手办，附书本配件"
+  },
+  {
+    "name": "冈部伦太郎凤凰院徽章",
+    "ip_name": "命运石之门",
+    "character_name": "冈部伦太郎",
+    "category": "badge",
+    "reference_price": 44,
+    "main_image": "",
+    "images": [],
+    "description": "凤凰院凶真主题徽章，实验室标识设计"
+  },
+  {
+    "name": "Saber誓约胜利之剑手办",
+    "ip_name": "Fate/stay night",
+    "character_name": "Saber",
+    "category": "figure",
+    "reference_price": 568,
+    "main_image": "",
+    "images": [],
+    "description": "Saber 持剑战斗姿态手办，透明剑光特效"
+  },
+  {
+    "name": "远坂凛宝石魔术徽章",
+    "ip_name": "Fate/stay night",
+    "character_name": "远坂凛",
+    "category": "badge",
+    "reference_price": 62,
+    "main_image": "",
+    "images": [],
+    "description": "远坂凛宝石魔术主题徽章，红宝石烫印"
+  },
+  {
+    "name": "间桐樱樱花亚克力",
+    "ip_name": "Fate/stay night",
+    "character_name": "间桐樱",
+    "category": "acrylic",
+    "reference_price": 74,
+    "main_image": "",
+    "images": [],
+    "description": "樱花主题亚克力立牌，淡紫透明底座"
+  },
+  {
+    "name": "爱蜜莉雅雪花手办",
+    "ip_name": "Re:从零开始的异世界生活",
+    "character_name": "爱蜜莉雅",
+    "category": "figure",
+    "reference_price": 336,
+    "main_image": "",
+    "images": [],
+    "description": "爱蜜莉雅雪花主题手办，银白色礼服款"
+  },
+  {
+    "name": "拉姆女仆徽章",
+    "ip_name": "Re:从零开始的异世界生活",
+    "character_name": "拉姆",
+    "category": "badge",
+    "reference_price": 48,
+    "main_image": "",
+    "images": [],
+    "description": "拉姆女仆装主题徽章，粉色边框"
+  },
+  {
+    "name": "蕾姆拉姆双人色纸",
+    "ip_name": "Re:从零开始的异世界生活",
+    "character_name": "蕾姆/拉姆",
+    "category": "poster",
+    "reference_price": 108,
+    "main_image": "",
+    "images": [],
+    "description": "蕾姆与拉姆双人收藏色纸，限定双签风设计"
+  },
+  {
+    "name": "空条承太郎白金之星手办",
+    "ip_name": "JOJO的奇妙冒险",
+    "character_name": "空条承太郎",
+    "category": "figure",
+    "reference_price": 498,
+    "main_image": "",
+    "images": [],
+    "description": "承太郎与白金之星组合手办，双角色底座"
+  },
+  {
+    "name": "乔鲁诺黄金体验徽章",
+    "ip_name": "JOJO的奇妙冒险",
+    "character_name": "乔鲁诺",
+    "category": "badge",
+    "reference_price": 66,
+    "main_image": "",
+    "images": [],
+    "description": "乔鲁诺黄金体验主题徽章，金色镜面工艺"
+  },
+  {
+    "name": "吉良吉影杀手皇后海报",
+    "ip_name": "JOJO的奇妙冒险",
+    "character_name": "吉良吉影",
+    "category": "poster",
+    "reference_price": 73,
+    "main_image": "",
+    "images": [],
+    "description": "杀手皇后主题海报，紫粉视觉风格"
+  }
+]
