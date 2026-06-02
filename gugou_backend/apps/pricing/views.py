@@ -101,7 +101,7 @@ class PriceHotView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        product_ids = (
+        product_ids = list(
             PriceRecord.objects.values_list("product_id", flat=True)
             .distinct()[:8]
         )
