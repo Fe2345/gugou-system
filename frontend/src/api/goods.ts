@@ -16,7 +16,7 @@ export async function getGoodsDetail(id: string): Promise<ApiResponse<GoodsItem>
   return request.get(`/products/${id}`)
 }
 
-export async function addGoods(data: Partial<GoodsItem>): Promise<ApiResponse<void>> {
+export async function addGoods(data: FormData): Promise<ApiResponse<void>> {
   return request.post('/products', data)
 }
 
@@ -24,7 +24,7 @@ export async function getMyGoodsList(): Promise<ApiResponse<{ list: GoodsItem[];
   return request.get('/products', { params: { mine: true, pageSize: 100 } })
 }
 
-export async function updateGoods(id: string, data: Partial<GoodsItem>): Promise<ApiResponse<void>> {
+export async function updateGoods(id: string, data: FormData): Promise<ApiResponse<void>> {
   return request.put(`/products/${id}`, data)
 }
 

@@ -10,7 +10,7 @@ class ProductSerializer(serializers.ModelSerializer):
     ipName = serializers.CharField(source="ip_name", read_only=True)
     characterName = serializers.CharField(source="character_name", read_only=True)
     referencePrice = serializers.DecimalField(source="reference_price", max_digits=10, decimal_places=2, read_only=True)
-    mainImage = serializers.CharField(source="main_image", read_only=True)
+    mainImage = serializers.ImageField(source="main_image", read_only=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
 
     class Meta:
@@ -26,7 +26,7 @@ class ProductCreateSerializer(serializers.Serializer):
     characterName = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     category = serializers.CharField(max_length=20)
     referencePrice = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
-    mainImage = serializers.CharField(required=False, default="", allow_blank=True)
+    mainImage = serializers.ImageField(required=False)
     description = serializers.CharField(required=False, default="", allow_blank=True)
 
     def create(self, validated_data):
@@ -55,11 +55,13 @@ class ProductUpdateSerializer(serializers.Serializer):
     characterName = serializers.CharField(max_length=50, required=False, allow_blank=True)
     category = serializers.CharField(max_length=20, required=False)
     referencePrice = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
-    mainImage = serializers.CharField(required=False, allow_blank=True)
+    mainImage = serializers.ImageField(required=False, allow_null=True)
     description = serializers.CharField(required=False, allow_blank=True)
     status = serializers.ChoiceField(choices=Product.Status.choices, required=False)
 
     def update(self, instance, validated_data):
+        if "mainImage" in validated_data and validated_data["mainImage"] is None:
+            validated_data.pop("mainImage")
         field_map = {
             "name": "name",
             "ipName": "ip_name",
@@ -83,7 +85,7 @@ class AdminGoodsSerializer(serializers.ModelSerializer):
     ipName = serializers.CharField(source="ip_name", read_only=True)
     characterName = serializers.CharField(source="character_name", read_only=True)
     referencePrice = serializers.DecimalField(source="reference_price", max_digits=10, decimal_places=2, read_only=True)
-    mainImage = serializers.CharField(source="main_image", read_only=True)
+    mainImage = serializers.ImageField(source="main_image", read_only=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
     submittedAt = serializers.DateTimeField(source="created_at", read_only=True)
     stock = serializers.IntegerField(read_only=True, default=0)
