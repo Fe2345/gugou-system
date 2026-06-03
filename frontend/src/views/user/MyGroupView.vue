@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
-import { getMyGroups, cancelGroup, type GroupItem } from '@/api/group'
+import { useUserStore } from '@/stores/user'
+import { getMyGroups, cancelGroup, leaveGroup, type GroupItem } from '@/api/group'
 
 const router = useRouter()
+const userStore = useUserStore()
 const groups = ref<GroupItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
+
+const currentUserId = computed(() => userStore.userInfo?.id || '')
 
 const statusMap: Record<string, { text: string; cls: string }> = {
   recruiting: { text: '招募中', cls: 'status-active' },
@@ -32,7 +36,7 @@ async function loadGroups() {
 }
 
 async function handleCancel(item: GroupItem) {
-  if (!confirm('确认取消此拼团？')) return
+  if (!confirm('确认取消此拼团？取消后所有参与者将退出。')) return
   try {
     const res = await cancelGroup(item.team_id)
     if (res.code === 200) {
@@ -43,6 +47,21 @@ async function handleCancel(item: GroupItem) {
     }
   } catch (e: any) {
     alert(e?.response?.data?.message || '取消失败')
+  }
+}
+
+async function handleLeave(item: GroupItem) {
+  if (!confirm('确认退出此拼团？')) return
+  try {
+    const res = await leaveGroup(item.team_id)
+    if (res.code === 200) {
+      alert('已退出拼团')
+      loadGroups()
+    } else {
+      alert(res.message || '退出失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '退出失败')
   }
 }
 
@@ -124,7 +143,10 @@ onMounted(() => {
         </div>
         <div class="card-actions">
           <button class="secondary" type="button" @click="router.push(`/group/${item.team_id}`)">查看详情</button>
-          <button v-if="item.status === 'recruiting'" class="danger" type="button" @click="handleCancel(item)">取消拼团</button>
+          <!-- 团长显示取消拼团 -->
+          <button v-if="item.creator_id === currentUserId && item.status === 'recruiting'" class="danger" type="button" @click="handleCancel(item)">取消拼团</button>
+          <!-- 团员显示退出拼团 -->
+          <button v-if="item.creator_id !== currentUserId && item.status === 'recruiting'" class="danger" type="button" @click="handleLeave(item)">退出拼团</button>
         </div>
       </article>
     </section>
