@@ -26,7 +26,7 @@ class Product(BaseModel):
     character_name = models.CharField("角色名称", max_length=50, blank=True, default="")
     category = models.CharField("品类", max_length=20, choices=Category.choices)
     reference_price = models.DecimalField("参考价格", max_digits=10, decimal_places=2, default=0)
-    main_image = models.URLField("主图", blank=True, default="")
+    main_image = models.ImageField("主图", upload_to="products/%Y/%m/", blank=True, default="")
     description = models.TextField("商品描述", blank=True, default="")
     status = models.CharField("商品状态", max_length=10, choices=Status.choices, default=Status.ACTIVE)
     created_by = models.ForeignKey(

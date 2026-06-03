@@ -47,9 +47,9 @@ class LoginSerializer(serializers.Serializer):
             logger.warning("登录失败: account=%s", account)
             raise serializers.ValidationError("账号或密码错误")
 
-        if user.status in (User.Status.FROZEN, User.Status.DISABLED, User.Status.DELETED):
+        if user.status in (User.Status.DISABLED, User.Status.DELETED):
             logger.warning("登录被拒: %s status=%s", user.user_id, user.status)
-            raise serializers.ValidationError("账户已被冻结或停用，请联系管理员")
+            raise serializers.ValidationError("账户已被停用或注销，请联系管理员")
 
         refresh = RefreshToken.for_user(user)
         logger.info("用户登录: %s", user.user_id)

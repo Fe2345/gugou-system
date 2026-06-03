@@ -117,7 +117,7 @@ else:
 # --- DRF ---
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "apps.accounts.authentication.CustomJWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
@@ -146,7 +146,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-# --- Media Files (用户上传的文件) ---
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
