@@ -9,3 +9,7 @@ export async function queryPrice(params: PriceQuery): Promise<ApiResponse<PriceI
 export async function getHotPrices(): Promise<ApiResponse<PriceItem[]>> {
   return request.get('/pricing/hot')
 }
+
+export async function getMyAssetPrices(range: string): Promise<ApiResponse<(PriceItem & { quantity: number; acquirePrice: number | null })[]>> {
+  return request.get('/pricing/my-assets', { params: { range } })
+}

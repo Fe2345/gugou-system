@@ -194,7 +194,7 @@ class TeamProjectLeaveSerializer(serializers.Serializer):
             raise serializers.ValidationError("您尚未参与此拼团")
 
         # 团长不能用此接口退出，需要用取消接口
-        if user == team.creator:
+        if user.user_id == team.creator_id:
             raise serializers.ValidationError("团长不能退出拼团，请使用取消拼团功能")
 
         attrs["participant"] = participant
@@ -243,8 +243,8 @@ class TeamProjectFailSerializer(serializers.Serializer):
 class TeamProjectListSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
     product_price = serializers.DecimalField(source="product.reference_price", max_digits=10, decimal_places=2, read_only=True)
-    creator_id = serializers.CharField(source="creator.user_id", read_only=True)
-    creator_name = serializers.CharField(source="creator.nickname", read_only=True)
+    creator_id = serializers.CharField(read_only=True)
+    creator_name = serializers.SerializerMethodField()
     is_expired = serializers.SerializerMethodField()
 
     class Meta:
@@ -255,6 +255,12 @@ class TeamProjectListSerializer(serializers.ModelSerializer):
             "team_price", "deadline", "status", "is_expired", "created_at",
         ]
 
+    def get_creator_name(self, obj):
+        try:
+            return obj.creator.nickname
+        except Exception:
+            return "未知用户"
+
     def get_is_expired(self, obj):
         return obj.deadline < timezone.now()
 
@@ -262,8 +268,8 @@ class TeamProjectListSerializer(serializers.ModelSerializer):
 class TeamProjectDetailSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
     product_price = serializers.DecimalField(source="product.reference_price", max_digits=10, decimal_places=2, read_only=True)
-    creator_id = serializers.CharField(source="creator.user_id", read_only=True)
-    creator_name = serializers.CharField(source="creator.nickname", read_only=True)
+    creator_id = serializers.CharField(read_only=True)
+    creator_name = serializers.SerializerMethodField()
     participants = serializers.SerializerMethodField()
     is_expired = serializers.SerializerMethodField()
 
@@ -275,6 +281,12 @@ class TeamProjectDetailSerializer(serializers.ModelSerializer):
             "team_price", "deadline", "status", "is_expired", "created_at",
             "updated_at", "participants",
         ]
+
+    def get_creator_name(self, obj):
+        try:
+            return obj.creator.nickname
+        except Exception:
+            return "未知用户"
 
     def get_participants(self, obj):
         participants = obj.participants.filter(status=TeamParticipant.Status.JOINED)
