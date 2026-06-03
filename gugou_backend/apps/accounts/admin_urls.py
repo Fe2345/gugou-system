@@ -1,9 +1,9 @@
 from django.urls import path
 
-from .admin_views import AdminUserFreezeView, AdminUserListView, AdminUserUnfreezeView
+from .admin_views import AdminUserDisableView, AdminUserEnableView, AdminUserListView
 
 urlpatterns = [
     path("", AdminUserListView.as_view(), name="admin-users-list"),
-    path("<str:user_id>/freeze/", AdminUserFreezeView.as_view(), name="admin-users-freeze"),
-    path("<str:user_id>/unfreeze/", AdminUserUnfreezeView.as_view(), name="admin-users-unfreeze"),
+    path("<str:user_id>/disable/", AdminUserDisableView.as_view(), name="admin-users-disable"),
+    path("<str:user_id>/enable/", AdminUserEnableView.as_view(), name="admin-users-enable"),
 ]

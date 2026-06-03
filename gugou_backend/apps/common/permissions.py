@@ -2,10 +2,15 @@ from rest_framework.permissions import BasePermission
 
 
 class IsAuthenticated(BasePermission):
-    """仅允许已登录用户访问。未登录返回 401。"""
+    """仅允许已登录且未被停用/注销的用户访问。"""
 
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated)
+        if not (request.user and request.user.is_authenticated):
+            return False
+        status = getattr(request.user, "status", None)
+        if status in ("disabled", "deleted"):
+            return False
+        return True
 
 
 class IsAdmin(BasePermission):

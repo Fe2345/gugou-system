@@ -17,7 +17,6 @@ env/
 
 # Django
 staticfiles/
-media/
 *.log
 .seq_cache
 

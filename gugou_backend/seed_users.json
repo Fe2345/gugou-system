@@ -1,0 +1,142 @@
+[
+  {
+    "phone": "13800000001",
+    "nickname": "小明",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 100
+  },
+  {
+    "phone": "13800000002",
+    "nickname": "樱花酱",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 95
+  },
+  {
+    "phone": "13800000003",
+    "nickname": "二次元达人",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 88
+  },
+  {
+    "phone": "13800000004",
+    "nickname": "谷子收藏家",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 120
+  },
+  {
+    "phone": "13800000005",
+    "nickname": "阿尼亚哇酷",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 100
+  },
+  {
+    "phone": "13800000006",
+    "nickname": "皮卡皮卡",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 75
+  },
+  {
+    "phone": "13800000007",
+    "nickname": "路飞船长",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 110
+  },
+  {
+    "phone": "13800000008",
+    "nickname": "初音ミク",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 100
+  },
+  {
+    "phone": "13800000009",
+    "nickname": "五条悟粉",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 92
+  },
+  {
+    "phone": "13800000010",
+    "nickname": "蕾姆推",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 85
+  },
+  {
+    "phone": "13800000011",
+    "nickname": "明日香党",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 100
+  },
+  {
+    "phone": "13800000012",
+    "nickname": "炭治郎师兄",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 105
+  },
+  {
+    "phone": "13800000013",
+    "nickname": "亚丝娜老婆",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 98
+  },
+  {
+    "phone": "13800000014",
+    "nickname": "原神启动",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 70
+  },
+  {
+    "phone": "13800000015",
+    "nickname": "谷圈新人",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 100
+  },
+  {
+    "phone": "13800000016",
+    "nickname": "限定狂魔",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 130
+  },
+  {
+    "phone": "13800000017",
+    "nickname": "手办墙主人",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 115
+  },
+  {
+    "phone": "13800000018",
+    "nickname": "入坑萌新",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 100
+  },
+  {
+    "phone": "13800000019",
+    "nickname": "咸鱼卖家",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 60
+  },
+  {
+    "phone": "13800000020",
+    "nickname": "谷子大户",
+    "password": "123456",
+    "role": "user",
+    "credit_score": 150
+  }
+]

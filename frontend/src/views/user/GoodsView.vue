@@ -34,9 +34,10 @@ const goodsForm = reactive({
   characterName: '',
   category: 'other',
   referencePrice: '',
-  mainImage: '',
   description: '',
 })
+const mainImageFile = ref<File | null>(null)
+const mainImagePreview = ref('')
 
 async function loadProducts(keyword?: string) {
   loading.value = true
@@ -107,8 +108,20 @@ function resetGoodsForm() {
   goodsForm.characterName = ''
   goodsForm.category = categories.value[0]?.value || 'other'
   goodsForm.referencePrice = ''
-  goodsForm.mainImage = ''
   goodsForm.description = ''
+  mainImageFile.value = null
+  mainImagePreview.value = ''
+}
+
+function handleImageChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (input.files?.length) {
+    mainImageFile.value = input.files[0]
+    mainImagePreview.value = URL.createObjectURL(input.files[0])
+  } else {
+    mainImageFile.value = null
+    mainImagePreview.value = ''
+  }
 }
 
 function openCreateForm() {
@@ -125,8 +138,9 @@ function openEditForm(product: GoodsItem) {
   goodsForm.characterName = product.characterName
   goodsForm.category = product.category
   goodsForm.referencePrice = String(product.referencePrice)
-  goodsForm.mainImage = product.mainImage
   goodsForm.description = product.description
+  mainImageFile.value = null
+  mainImagePreview.value = product.mainImage || ''
   showForm.value = true
 }
 
@@ -139,19 +153,20 @@ async function saveGoods() {
   if (!goodsForm.name.trim()) return
   saving.value = true
   try {
-    const payload = {
-      name: goodsForm.name.trim(),
-      ipName: goodsForm.ipName.trim(),
-      characterName: goodsForm.characterName.trim(),
-      category: goodsForm.category || 'other',
-      referencePrice: Number(goodsForm.referencePrice) || 0,
-      mainImage: goodsForm.mainImage.trim(),
-      description: goodsForm.description.trim(),
+    const formData = new FormData()
+    formData.append('name', goodsForm.name.trim())
+    formData.append('ipName', goodsForm.ipName.trim())
+    formData.append('characterName', goodsForm.characterName.trim())
+    formData.append('category', goodsForm.category || 'other')
+    formData.append('referencePrice', String(Number(goodsForm.referencePrice) || 0))
+    formData.append('description', goodsForm.description.trim())
+    if (mainImageFile.value) {
+      formData.append('mainImage', mainImageFile.value)
     }
     if (editingProduct.value) {
-      await updateGoods(editingProduct.value.id, payload)
+      await updateGoods(editingProduct.value.id, formData)
     } else {
-      await addGoods(payload)
+      await addGoods(formData)
     }
     closeForm()
     await Promise.all([loadProducts(searchQuery.value), loadMyProducts()])
@@ -308,7 +323,13 @@ function getStatusText(status: string) {
             <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
           </select>
         </label>
-        <label><span>图片地址</span><input v-model="goodsForm.mainImage" type="text" placeholder="/images/products/example.png" /></label>
+        <label>
+          <span>商品图片</span>
+          <input type="file" accept="image/*" @change="handleImageChange" />
+        </label>
+        <div v-if="mainImagePreview" class="image-preview">
+          <img :src="mainImagePreview" alt="预览" />
+        </div>
         <label class="full"><span>描述</span><textarea v-model="goodsForm.description" rows="3"></textarea></label>
         <div class="modal-actions">
           <button type="button" class="secondary" @click="closeForm">取消</button>
@@ -416,7 +437,10 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 28px; border-bottom: 1px solid var(--line); }
 .modal-close { width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--soft); color: var(--muted); font-size: 24px; cursor: pointer; display: grid; place-items: center; }
 .modal-form { padding: 24px 28px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.modal-form input[type="file"] { padding: 8px; }
 .modal-form input, .modal-form textarea, .modal-form select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; box-sizing: border-box; background: #fff; }
+.image-preview { grid-column: 1 / -1; }
+.image-preview img { max-width: 200px; max-height: 200px; border-radius: 8px; object-fit: contain; border: 1px solid var(--line); }
 .modal-form textarea { resize: vertical; min-height: 80px; }
 .modal-form .full, .modal-actions { grid-column: 1 / -1; }
 .detail-content { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 24px; padding: 28px; }

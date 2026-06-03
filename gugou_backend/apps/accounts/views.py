@@ -1,10 +1,10 @@
 import logging
 
+from django.conf import settings
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
-
-from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
@@ -139,6 +139,22 @@ class ChangePhoneView(APIView):
         logger.info("手机号变更: %s", request.user.user_id)
         data = UserSerializer(request.user).data
         return success(data=data, message="手机号修改成功")
+
+
+class DeleteAccountView(APIView):
+    """注销账户：将用户标记为 deleted 并吊销所有 token"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if user.status == "deleted":
+            return error(message="账户已注销", code=400)
+
+        user.status = "deleted"
+        user.token_revoked_at = timezone.now()
+        user.save(update_fields=["status", "token_revoked_at", "updated_at"])
+        logger.info("用户注销: %s", user.user_id)
+        return success(message="账户已注销")
 
 
 class LoginRecordsView(APIView):
