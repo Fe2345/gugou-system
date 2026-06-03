@@ -9,4 +9,10 @@ export interface PaginatedResponse<T> {
   count: number
   page: number
   page_size: number
+  stats?: {
+    total: number
+    active: number
+    sold: number
+    cancelled: number
+  }
 }

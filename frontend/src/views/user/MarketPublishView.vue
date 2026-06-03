@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
-import { publishToMarket } from '@/api/market'
+import { publishToMarket, uploadMarketImage } from '@/api/market'
 import { getGoodsList } from '@/api/goods'
 import { getAssetsList } from '@/api/assets'
 import type { GoodsItem } from '@/types/goods'
@@ -16,6 +16,9 @@ const canPublish = computed(() => creditScore.value >= 60)
 const goodsList = ref<GoodsItem[]>([])
 const assetsList = ref<AssetItem[]>([])
 const submitting = ref(false)
+const uploading = ref(false)
+const imageList = ref<{ image_url: string; sort_order: number }[]>([])
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
 const form = ref({
   product_id: '',
@@ -38,6 +41,64 @@ async function loadOptions() {
   }
 }
 
+function triggerFileInput() {
+  fileInputRef.value?.click()
+}
+
+async function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  if (!files || files.length === 0) return
+
+  // 限制最多5张图片
+  if (imageList.value.length >= 5) {
+    alert('最多只能上传5张图片')
+    return
+  }
+
+  const file = files[0]
+
+  // 验证文件类型
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    alert('仅支持 JPG、PNG、GIF、WebP 格式的图片')
+    return
+  }
+
+  // 验证文件大小 (限制5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('图片大小不能超过 5MB')
+    return
+  }
+
+  uploading.value = true
+  try {
+    const res = await uploadMarketImage(file)
+    if (res.code === 200) {
+      imageList.value.push({
+        image_url: res.data.image_url,
+        sort_order: imageList.value.length,
+      })
+    } else {
+      alert(res.message || '图片上传失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '图片上传失败')
+  } finally {
+    uploading.value = false
+    // 清空input值，允许重新选择同一文件
+    target.value = ''
+  }
+}
+
+function removeImage(index: number) {
+  imageList.value.splice(index, 1)
+  // 重新排序
+  imageList.value.forEach((img, i) => {
+    img.sort_order = i
+  })
+}
+
 async function handleSubmit() {
   if (!form.value.product_id || !form.value.asset_id || !form.value.price) {
     alert('请填写必填项')
@@ -51,6 +112,7 @@ async function handleSubmit() {
       price: Number(form.value.price),
       quantity: Number(form.value.quantity) || 1,
       description: form.value.description,
+      images: imageList.value.length > 0 ? imageList.value : undefined,
     })
     if (res.code === 200) {
       alert('发布成功')
@@ -117,6 +179,27 @@ onMounted(() => {
           <label>商品描述</label>
           <textarea v-model="form.description" rows="4" placeholder="描述商品状态、瑕疵等信息"></textarea>
         </div>
+        <div class="form-group">
+          <label>商品图片 <span class="optional">(最多5张)</span></label>
+          <div class="image-upload-area">
+            <div v-for="(img, index) in imageList" :key="index" class="image-preview">
+              <img :src="img.image_url" :alt="`商品图片 ${index + 1}`">
+              <button type="button" class="remove-btn" @click="removeImage(index)">×</button>
+            </div>
+            <div v-if="imageList.length < 5" class="upload-trigger" @click="triggerFileInput" :class="{ disabled: uploading }">
+              <span v-if="uploading">上传中...</span>
+              <span v-else>+ 添加图片</span>
+            </div>
+          </div>
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            style="display: none"
+            @change="handleFileChange"
+          >
+          <p class="upload-hint">支持 JPG、PNG、GIF、WebP 格式，单张图片不超过 5MB</p>
+        </div>
         <div class="form-actions">
           <button class="secondary" type="button" @click="router.push('/market')">取消</button>
           <button class="primary" type="submit" :disabled="submitting || !canPublish">{{ submitting ? '发布中...' : '确认发布' }}</button>
@@ -150,4 +233,14 @@ textarea { height: auto; padding: 12px 14px; resize: vertical; }
 .credit-warning { padding: 14px 18px; border-radius: 8px; background: #fdecea; border: 1px solid #f0b8b3; color: #be123c; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
 .link-btn { border: 0; background: transparent; color: var(--accent); font-weight: 800; cursor: pointer; font: inherit; }
 .link-btn:hover { text-decoration: underline; }
+.optional { color: var(--muted); font-weight: normal; font-size: 12px; }
+.image-upload-area { display: flex; flex-wrap: wrap; gap: 12px; }
+.image-preview { position: relative; width: 120px; height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.image-preview img { width: 100%; height: 100%; object-fit: cover; }
+.remove-btn { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.remove-btn:hover { background: rgba(0,0,0,0.8); }
+.upload-trigger { width: 120px; height: 120px; border: 2px dashed var(--line); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 14px; transition: all 0.2s; }
+.upload-trigger:hover:not(.disabled) { border-color: var(--accent); color: var(--accent); }
+.upload-trigger.disabled { opacity: 0.6; cursor: not-allowed; }
+.upload-hint { margin-top: 8px; color: var(--muted); font-size: 12px; }
 </style>

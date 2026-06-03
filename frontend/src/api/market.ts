@@ -41,6 +41,16 @@ export function publishToMarket(data: {
   return request.post('/market/create/', data)
 }
 
+export function uploadMarketImage(file: File): Promise<ApiResponse<{ image_url: string }>> {
+  const formData = new FormData()
+  formData.append('image', file)
+  return request.post('/market/upload/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+}
+
 export function cancelListing(id: string): Promise<ApiResponse<void>> {
   return request.post(`/market/${id}/cancel/`)
 }

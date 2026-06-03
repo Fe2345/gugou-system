@@ -31,9 +31,12 @@ export default defineConfig(({ mode }) => {
             const queryIndex = path.indexOf('?')
             const pathname = queryIndex >= 0 ? path.slice(0, queryIndex) : path
             const query = queryIndex >= 0 ? path.slice(queryIndex) : ''
-
             return pathname.endsWith('/') ? path : `${pathname}/${query}`
           },
+        },
+        '/media': {
+          target: env.VITE_BACKEND_URL || 'http://127.0.0.1:8001',
+          changeOrigin: true,
         },
       },
     },

@@ -146,6 +146,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# --- Media Files (用户上传的文件) ---
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- SimpleJWT ---

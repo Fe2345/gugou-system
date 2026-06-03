@@ -21,7 +21,9 @@ class Listing(BaseModel):
     )
     asset = models.ForeignKey(
         "assets.UserAsset",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="listings",
         verbose_name="出售资产",
     )
