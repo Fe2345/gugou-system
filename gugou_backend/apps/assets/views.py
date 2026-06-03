@@ -102,6 +102,32 @@ class AssetDetailView(APIView):
         asset = self.get_object(asset_id)
         if not asset:
             return error(message="资产不存在", code=404)
+
+        # 检查是否有活跃的换物请求引用此资产
+        from apps.exchanges.models import ExchangeRequest, ExchangeMatch
+        active_exchanges = ExchangeRequest.objects.filter(
+            offered_asset=asset,
+            status__in=["active", "matched"]
+        ).exists()
+        if active_exchanges:
+            return error(message="该资产正在换物中，无法删除", code=400)
+
+        active_matches = ExchangeMatch.objects.filter(
+            applicant_asset=asset,
+            status__in=["pending", "accepted"]
+        ).exists()
+        if active_matches:
+            return error(message="该资产正在换物匹配中，无法删除", code=400)
+
+        # 检查是否有活跃的挂单
+        from apps.market.models import Listing
+        active_listings = Listing.objects.filter(
+            asset=asset,
+            status="active"
+        ).exists()
+        if active_listings:
+            return error(message="该资产正在市场挂单中，无法删除", code=400)
+
         asset.delete()
         return success(message="删除成功")
 

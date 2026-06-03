@@ -7,10 +7,9 @@ from .models import Listing, ListingImage
 logger = logging.getLogger("gugou")
 
 
-class ListingImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ListingImage
-        fields = ["image_url", "sort_order"]
+class ListingImageSerializer(serializers.Serializer):
+    image_url = serializers.CharField(max_length=500)
+    sort_order = serializers.IntegerField(required=False, default=0)
 
 
 class ListingCreateSerializer(serializers.Serializer):

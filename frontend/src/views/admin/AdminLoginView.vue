@@ -1,41 +1,45 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { login as loginApi } from '@/api/user'
 import { useUserStore } from '@/stores/user'
+import { login as loginApi } from '@/api/user'
 
 defineOptions({ name: 'AdminLoginView' })
 
 const router = useRouter()
 const userStore = useUserStore()
-const adminId = ref('')
+const adminPhone = ref('')
 const adminPassword = ref('')
-const loading = ref(false)
+const showError = ref(false)
 const errorMsg = ref('')
+const loading = ref(false)
 
 async function handleLogin() {
-  errorMsg.value = ''
-  if (!adminId.value.trim()) {
-    errorMsg.value = '请输入管理员工号'
-    return
-  }
-  if (!adminPassword.value) {
-    errorMsg.value = '请输入访问秘钥'
-    return
-  }
-
+  showError.value = false
   loading.value = true
   try {
-    const res = await loginApi({ account: adminId.value.trim(), password: adminPassword.value })
-    if (res.data.user.role !== 'admin') {
-      errorMsg.value = '此账号无管理员权限'
-      return
+    const res = await loginApi({ account: adminPhone.value, password: adminPassword.value })
+    if (res.code === 200 && res.data) {
+      // 检查是否是管理员角色
+      if (res.data.user.role !== 'admin') {
+        errorMsg.value = '该账号不是管理员账号'
+        showError.value = true
+        setTimeout(() => { showError.value = false }, 3000)
+        return
+      }
+      // 存储 token 和用户信息
+      userStore.setTokens(res.data.access, res.data.refresh)
+      userStore.setUserInfo(res.data.user)
+      router.push('/admin')
+    } else {
+      errorMsg.value = res.message || '登录失败'
+      showError.value = true
+      setTimeout(() => { showError.value = false }, 3000)
     }
-    userStore.setTokens(res.data.access, res.data.refresh)
-    userStore.setUserInfo(res.data.user)
-    router.push('/admin')
   } catch (e: any) {
-    errorMsg.value = e?.response?.data?.message || '登录失败，请检查凭据'
+    errorMsg.value = e?.response?.data?.message || '登录失败，请检查账号密码'
+    showError.value = true
+    setTimeout(() => { showError.value = false }, 3000)
   } finally {
     loading.value = false
   }
@@ -76,16 +80,16 @@ async function handleLogin() {
         <div class="login-subtitle">GUGOU Goods Asset</div>
       </div>
 
-      <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
+      <div v-if="showError" class="error-msg">{{ errorMsg }}</div>
 
       <form @submit.prevent="handleLogin">
         <div class="input-group">
-          <input v-model="adminId" type="text" placeholder="管理员工号 / UID" :disabled="loading" />
+          <input v-model="adminPhone" type="text" placeholder="管理员手机号" required />
         </div>
         <div class="input-group">
-          <input v-model="adminPassword" type="password" placeholder="访问秘钥" :disabled="loading" />
+          <input v-model="adminPassword" type="password" placeholder="登录密码" required />
         </div>
-        <button type="submit" :disabled="loading">{{ loading ? '验证中...' : '进入系统' }}</button>
+        <button type="submit" :disabled="loading">{{ loading ? '登录中...' : '进入系统' }}</button>
       </form>
 
       <div class="links">

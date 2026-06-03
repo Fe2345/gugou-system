@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getMarketList, getMyListings, type MarketItem } from '@/api/market'
@@ -9,7 +9,12 @@ const listings = ref<MarketItem[]>([])
 const myListings = ref<MarketItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
-const myCount = ref(0)
+const myStats = ref({
+  total: 0,
+  active: 0,
+  sold: 0,
+  cancelled: 0,
+})
 
 const statusMap: Record<string, string> = {
   active: '在售',
@@ -19,10 +24,80 @@ const statusMap: Record<string, string> = {
   removed: '已下架',
 }
 
+// 筛选条件
+const filters = reactive({
+  ip_name: '',
+  character_name: '',
+  category: '',
+  price_range: '',
+  min_price: undefined as number | undefined,
+  max_price: undefined as number | undefined,
+  sort: 'default',
+})
+
+// 品类映射
+const categoryMap: Record<string, string> = {
+  '手办': 'figure',
+  '徽章': 'badge',
+  '海报': 'poster',
+  '亚克力': 'acrylic',
+  '玩偶': 'doll',
+  '卡片': 'card',
+  '其他': 'other',
+}
+
+// 价格区间映射
+const priceRangeMap: Record<string, { min?: number; max?: number }> = {
+  '0 至 50': { min: 0, max: 50 },
+  '50 至 100': { min: 50, max: 100 },
+  '100 至 300': { min: 100, max: 300 },
+  '300 以上': { min: 300 },
+}
+
 async function loadListings() {
   loading.value = true
   try {
-    const res = await getMarketList({ page: 1, page_size: 20 })
+    const params: any = {
+      page: 1,
+      page_size: 20,
+    }
+
+    // 应用价格筛选
+    if (filters.price_range && priceRangeMap[filters.price_range]) {
+      const range = priceRangeMap[filters.price_range]
+      if (range.min !== undefined) params.min_price = range.min
+      if (range.max !== undefined) params.max_price = range.max
+    }
+
+    // 应用自定义价格
+    if (filters.min_price !== undefined && filters.min_price > 0) {
+      params.min_price = filters.min_price
+    }
+    if (filters.max_price !== undefined && filters.max_price > 0) {
+      params.max_price = filters.max_price
+    }
+
+    // 应用 IP 名称筛选
+    if (filters.ip_name) {
+      params.ip_name = filters.ip_name
+    }
+
+    // 应用角色名称筛选
+    if (filters.character_name) {
+      params.character_name = filters.character_name
+    }
+
+    // 应用品类筛选
+    if (filters.category) {
+      params.category = categoryMap[filters.category] || filters.category
+    }
+
+    // 应用排序
+    if (filters.sort !== 'default') {
+      params.sort = filters.sort
+    }
+
+    const res = await getMarketList(params)
     if (res.code === 200) {
       listings.value = res.data.results
       totalCount.value = res.data.count
@@ -34,12 +109,29 @@ async function loadListings() {
   }
 }
 
+function applyFilters() {
+  loadListings()
+}
+
+function resetFilters() {
+  filters.ip_name = ''
+  filters.character_name = ''
+  filters.category = ''
+  filters.price_range = ''
+  filters.min_price = undefined
+  filters.max_price = undefined
+  filters.sort = 'default'
+  loadListings()
+}
+
 async function loadMyListings() {
   try {
     const res = await getMyListings({ page: 1, page_size: 20 })
     if (res.code === 200) {
       myListings.value = res.data.results
-      myCount.value = res.data.count
+      if (res.data.stats) {
+        myStats.value = res.data.stats
+      }
     }
   } catch (e) {
     console.error('加载我的挂单失败', e)
@@ -90,24 +182,45 @@ onMounted(() => {
           <p class="eyebrow">筛选条件</p>
           <h2>精准确认</h2>
         </div>
-        <label><span>IP 来源</span>
-          <select><option>全部 IP</option><option>动漫</option><option>游戏</option><option>文学角色</option><option>影视</option></select>
-        </label>
-        <label><span>角色名称</span><input type="text" placeholder="输入角色名称"></label>
+        <label><span>IP 名称</span><input v-model="filters.ip_name" type="text" placeholder="如：原神、明日方舟"></label>
+        <label><span>角色名称</span><input v-model="filters.character_name" type="text" placeholder="输入角色名称"></label>
         <label><span>谷子品类</span>
-          <select><option>全部品类</option><option>徽章</option><option>色纸</option><option>卡片</option><option>亚克力</option><option>明信片</option><option>挂件</option></select>
+          <select v-model="filters.category">
+            <option value="">全部品类</option>
+            <option>手办</option>
+            <option>徽章</option>
+            <option>海报</option>
+            <option>亚克力</option>
+            <option>玩偶</option>
+            <option>卡片</option>
+            <option>其他</option>
+          </select>
         </label>
         <label><span>价格区间</span>
-          <select><option>不限价格</option><option>0 至 50</option><option>50 至 100</option><option>100 至 300</option><option>300 以上</option></select>
+          <select v-model="filters.price_range">
+            <option value="">不限价格</option>
+            <option>0 至 50</option>
+            <option>50 至 100</option>
+            <option>100 至 300</option>
+            <option>300 以上</option>
+          </select>
         </label>
         <div class="price-custom">
-          <input type="number" placeholder="最低价">
-          <input type="number" placeholder="最高价">
+          <input v-model.number="filters.min_price" type="number" placeholder="最低价">
+          <input v-model.number="filters.max_price" type="number" placeholder="最高价">
         </div>
         <label><span>排列方式</span>
-          <select><option>默认排序</option><option>价格低到高</option><option>价格高到低</option><option>发布时间</option></select>
+          <select v-model="filters.sort">
+            <option value="default">默认排序</option>
+            <option value="price_asc">价格低到高</option>
+            <option value="price_desc">价格高到低</option>
+            <option value="time">发布时间</option>
+          </select>
         </label>
-        <button class="primary full" type="button">应用筛选</button>
+        <div class="filter-actions">
+          <button class="primary full" type="button" @click="applyFilters">应用筛选</button>
+          <button class="secondary full" type="button" @click="resetFilters">重置筛选</button>
+        </div>
       </aside>
 
       <section class="goods-panel">
@@ -160,7 +273,10 @@ onMounted(() => {
           <div class="section-head">
             <p class="eyebrow">我的发布</p><h2>发布状态</h2>
           </div>
-          <div class="publish-row"><span>在售谷子</span><strong>{{ myCount }}</strong></div>
+          <div class="publish-row"><span>在售谷子</span><strong>{{ myStats.active }}</strong></div>
+          <div class="publish-row"><span>已售谷子</span><strong>{{ myStats.sold }}</strong></div>
+          <div class="publish-row"><span>已取消</span><strong>{{ myStats.cancelled }}</strong></div>
+          <div class="publish-row"><span>总发布</span><strong>{{ myStats.total }}</strong></div>
         </section>
         <section class="assist-card safe-card">
           <div class="section-head"><p class="eyebrow">安全与提示</p><h2>交易前确认</h2></div>
@@ -208,6 +324,7 @@ input, select { width: 100%; height: 44px; border: 1px solid var(--line); border
 h2 { font-size: 23px; }
 label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .price-custom { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.filter-actions { display: grid; gap: 8px; }
 .full { width: 100%; }
 .goods-panel { padding: 22px; }
 .list-head { display: flex; justify-content: space-between; gap: 16px; align-items: center; }

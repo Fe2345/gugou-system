@@ -1,5 +1,8 @@
 import logging
+import os
+import uuid
 
+from django.conf import settings
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
@@ -15,6 +18,44 @@ from .serializers import (
 )
 
 logger = logging.getLogger("gugou")
+
+
+class ImageUploadView(APIView):
+    """图片上传接口"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        image_file = request.FILES.get('image')
+        if not image_file:
+            return error(message="请选择要上传的图片", code=400)
+
+        # 验证文件类型
+        allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if image_file.content_type not in allowed_types:
+            return error(message="仅支持 JPG、PNG、GIF、WebP 格式的图片", code=400)
+
+        # 验证文件大小 (限制5MB)
+        if image_file.size > 5 * 1024 * 1024:
+            return error(message="图片大小不能超过 5MB", code=400)
+
+        # 生成唯一文件名
+        ext = os.path.splitext(image_file.name)[1]
+        filename = f"market/{uuid.uuid4().hex}{ext}"
+
+        # 确保目录存在
+        upload_dir = os.path.join(settings.MEDIA_ROOT, "market")
+        os.makedirs(upload_dir, exist_ok=True)
+
+        # 保存文件
+        filepath = os.path.join(settings.MEDIA_ROOT, filename)
+        with open(filepath, 'wb+') as destination:
+            for chunk in image_file.chunks():
+                destination.write(chunk)
+
+        # 返回可访问的URL
+        image_url = f"{settings.MEDIA_URL}{filename}"
+
+        return success(data={"image_url": image_url}, message="图片上传成功")
 
 
 class ListingCreateView(APIView):
@@ -64,6 +105,9 @@ class ListingListView(APIView):
         product_id = request.query_params.get("product_id")
         min_price = request.query_params.get("min_price")
         max_price = request.query_params.get("max_price")
+        ip_name = request.query_params.get("ip_name")
+        character_name = request.query_params.get("character_name")
+        category = request.query_params.get("category")
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
 
@@ -79,8 +123,26 @@ class ListingListView(APIView):
         if max_price:
             queryset = queryset.filter(price__lte=max_price)
 
+        # 通过关联的 Product 表筛选
+        if ip_name:
+            queryset = queryset.filter(product__ip_name__icontains=ip_name)
+
+        if character_name:
+            queryset = queryset.filter(product__character_name__icontains=character_name)
+
+        if category:
+            queryset = queryset.filter(product__category=category)
+
         # 排序
-        queryset = queryset.order_by("-created_at")
+        sort = request.query_params.get("sort", "-created_at")
+        if sort == "price_asc":
+            queryset = queryset.order_by("price")
+        elif sort == "price_desc":
+            queryset = queryset.order_by("-price")
+        elif sort == "time":
+            queryset = queryset.order_by("-created_at")
+        else:
+            queryset = queryset.order_by("-created_at")
 
         # 分页
         from django.core.paginator import Paginator
@@ -113,8 +175,24 @@ class MyListingListView(APIView):
     def get(self, request):
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
+        status_filter = request.query_params.get("status")
 
-        queryset = Listing.objects.filter(seller=request.user).order_by("-created_at")
+        queryset = Listing.objects.filter(seller=request.user)
+
+        # 按状态筛选
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        queryset = queryset.order_by("-created_at")
+
+        # 统计各状态数量
+        from django.db.models import Count, Q
+        stats = Listing.objects.filter(seller=request.user).aggregate(
+            total=Count('listing_id'),
+            active=Count('listing_id', filter=Q(status=Listing.Status.ACTIVE)),
+            sold=Count('listing_id', filter=Q(status=Listing.Status.SOLD)),
+            cancelled=Count('listing_id', filter=Q(status=Listing.Status.CANCELLED)),
+        )
 
         from django.core.paginator import Paginator
         paginator = Paginator(queryset, page_size)
@@ -122,5 +200,6 @@ class MyListingListView(APIView):
 
         serializer = ListingListSerializer(page_obj, many=True)
         data = paginated(page_obj, serializer, page_size)
+        data['stats'] = stats
 
         return success(data=data)

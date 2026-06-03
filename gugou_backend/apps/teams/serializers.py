@@ -33,10 +33,6 @@ class TeamProjectCreateSerializer(serializers.Serializer):
         except Product.DoesNotExist:
             raise serializers.ValidationError({"product_id": "商品不存在"})
 
-        # 验证团购价格不能高于商品参考价
-        if attrs["team_price"] >= product.reference_price:
-            raise serializers.ValidationError({"team_price": "团购价格必须低于商品参考价"})
-
         attrs["product"] = product
         return attrs
 

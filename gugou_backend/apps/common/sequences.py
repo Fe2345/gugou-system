@@ -35,6 +35,10 @@ def _get_file_seq(key: str) -> int:
 
 def next_seq(key: str) -> int:
     """原子递增序号。优先使用 Redis，不可用时回退到文件。"""
+    use_redis = getattr(settings, "USE_REDIS", False)
+    if not use_redis:
+        return _get_file_seq(key)
+
     try:
         import redis
         global _client
@@ -44,9 +48,13 @@ def next_seq(key: str) -> int:
                 port=int(settings.REDIS_PORT),
                 db=1,
                 decode_responses=True,
-                socket_connect_timeout=1,
-                socket_timeout=1,
+                socket_connect_timeout=2,
+                socket_timeout=2,
             )
-        return _client.incr(key)
-    except Exception:
+        result = _client.incr(key)
+        return result
+    except Exception as e:
+        import logging
+        logging.getLogger("gugou").warning("Redis不可用，回退到文件序列: %s", e)
+        _client = None
         return _get_file_seq(key)

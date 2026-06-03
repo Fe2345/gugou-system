@@ -7,7 +7,12 @@ import { getMyListings, cancelListing, type MarketItem } from '@/api/market'
 const router = useRouter()
 const listings = ref<MarketItem[]>([])
 const loading = ref(false)
-const totalCount = ref(0)
+const myStats = ref({
+  total: 0,
+  active: 0,
+  sold: 0,
+  cancelled: 0,
+})
 
 const statusMap: Record<string, { text: string; cls: string }> = {
   active: { text: '在售', cls: 'status-active' },
@@ -23,7 +28,9 @@ async function loadListings() {
     const res = await getMyListings({ page: 1, page_size: 50 })
     if (res.code === 200) {
       listings.value = res.data.results
-      totalCount.value = res.data.count
+      if (res.data.stats) {
+        myStats.value = res.data.stats
+      }
     }
   } catch (e) {
     console.error('加载我的挂单失败', e)
@@ -73,16 +80,16 @@ onMounted(() => {
 
     <section class="data-grid">
       <article class="data-card">
-        <span>总挂单</span><strong>{{ totalCount }}</strong><p>全部发布</p>
+        <span>总挂单</span><strong>{{ myStats.total }}</strong><p>全部发布</p>
       </article>
       <article class="data-card">
-        <span>在售</span><strong>{{ listings.filter(l => l.status === 'active').length }}</strong><p>展示中</p>
+        <span>在售</span><strong>{{ myStats.active }}</strong><p>展示中</p>
       </article>
       <article class="data-card">
-        <span>已售</span><strong>{{ listings.filter(l => l.status === 'sold').length }}</strong><p>交易完成</p>
+        <span>已售</span><strong>{{ myStats.sold }}</strong><p>交易完成</p>
       </article>
       <article class="data-card">
-        <span>已取消</span><strong>{{ listings.filter(l => l.status === 'cancelled').length }}</strong><p>已下架</p>
+        <span>已取消</span><strong>{{ myStats.cancelled }}</strong><p>已下架</p>
       </article>
     </section>
 

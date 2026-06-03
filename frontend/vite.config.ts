@@ -31,7 +31,6 @@ export default defineConfig(({ mode }) => {
             const queryIndex = path.indexOf('?')
             const pathname = queryIndex >= 0 ? path.slice(0, queryIndex) : path
             const query = queryIndex >= 0 ? path.slice(queryIndex) : ''
-
             return pathname.endsWith('/') ? path : `${pathname}/${query}`
           },
         },

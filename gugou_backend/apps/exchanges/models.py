@@ -21,7 +21,9 @@ class ExchangeRequest(BaseModel):
     )
     offered_asset = models.ForeignKey(
         "assets.UserAsset",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="exchange_requests",
         verbose_name="发起方资产",
     )
@@ -60,7 +62,9 @@ class ExchangeMatch(BaseModel):
     )
     applicant_asset = models.ForeignKey(
         "assets.UserAsset",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="exchange_matches",
         verbose_name="申请方资产",
     )

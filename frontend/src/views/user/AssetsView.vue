@@ -99,7 +99,8 @@ async function handleAdd() {
     const res = await addAsset(addForm)
     if (res.code === 200) {
       showAddModal.value = false
-      await loadAssets()
+      // 刷新列表，但不因刷新失败而提示添加失败
+      loadAssets().catch(() => {})
     } else {
       alert(res.message || '添加失败')
     }
@@ -156,7 +157,7 @@ async function handleSaveEdit() {
     })
     if (res.code === 200) {
       showEditModal.value = false
-      await loadAssets()
+      loadAssets().catch(() => {})
     } else {
       alert(res.message || '保存失败')
     }
@@ -186,7 +187,7 @@ async function handleDelete() {
     if (res.code === 200) {
       showDeleteConfirm.value = false
       assetToDelete.value = null
-      await loadAssets()
+      loadAssets().catch(() => {})
     } else {
       alert(res.message || '删除失败')
     }
@@ -219,7 +220,7 @@ async function handleOperation() {
     })
     if (res.code === 200) {
       showOperationModal.value = false
-      await loadAssets()
+      loadAssets().catch(() => {})
     } else {
       alert(res.message || '操作失败')
     }
