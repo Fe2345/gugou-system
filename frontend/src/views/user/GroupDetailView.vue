@@ -1,14 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
-import { getGroupDetail, joinGroup, cancelGroup, type GroupDetailItem } from '@/api/group'
+import { useUserStore } from '@/stores/user'
+import { getGroupDetail, joinGroup, leaveGroup, cancelGroup, type GroupDetailItem } from '@/api/group'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 const detail = ref<GroupDetailItem | null>(null)
 const loading = ref(false)
 const actionLoading = ref(false)
+
+const currentUserId = computed(() => userStore.userInfo?.id || '')
+const isCreator = computed(() => detail.value?.creator_id === currentUserId.value)
+const isParticipant = computed(() => {
+  if (!detail.value?.participants) return false
+  return detail.value.participants.some(p => p.user_id === currentUserId.value && p.status === 'joined')
+})
 
 const statusMap: Record<string, { text: string; cls: string }> = {
   recruiting: { text: '招募中', cls: 'status-active' },
@@ -58,7 +67,7 @@ async function handleJoin() {
 
 async function handleCancel() {
   if (!detail.value) return
-  if (!confirm('确认取消此拼团？')) return
+  if (!confirm('确认取消此拼团？取消后所有参与者将退出。')) return
   actionLoading.value = true
   try {
     const res = await cancelGroup(detail.value.team_id)
@@ -70,6 +79,25 @@ async function handleCancel() {
     }
   } catch (e: any) {
     alert(e?.response?.data?.message || '取消失败')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+async function handleLeave() {
+  if (!detail.value) return
+  if (!confirm('确认退出此拼团？')) return
+  actionLoading.value = true
+  try {
+    const res = await leaveGroup(detail.value.team_id)
+    if (res.code === 200) {
+      alert('已退出拼团')
+      loadDetail()
+    } else {
+      alert(res.message || '退出失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '退出失败')
   } finally {
     actionLoading.value = false
   }
@@ -150,11 +178,17 @@ onMounted(() => {
         <section class="action-card">
           <h3>操作</h3>
           <div class="action-list">
-            <button v-if="detail.status === 'recruiting' && !detail.is_expired" class="primary full" type="button" :disabled="actionLoading" @click="handleJoin">
+            <!-- 未参与且可参与时显示 -->
+            <button v-if="detail.status === 'recruiting' && !detail.is_expired && !isParticipant && !isCreator" class="primary full" type="button" :disabled="actionLoading" @click="handleJoin">
               {{ actionLoading ? '参与中...' : '参与拼团' }}
             </button>
-            <button v-if="detail.status === 'recruiting'" class="danger full" type="button" :disabled="actionLoading" @click="handleCancel">
+            <!-- 团长显示取消拼团 -->
+            <button v-if="isCreator && detail.status === 'recruiting'" class="danger full" type="button" :disabled="actionLoading" @click="handleCancel">
               {{ actionLoading ? '取消中...' : '取消拼团' }}
+            </button>
+            <!-- 团员显示退出拼团 -->
+            <button v-if="isParticipant && !isCreator && detail.status === 'recruiting'" class="danger full" type="button" :disabled="actionLoading" @click="handleLeave">
+              {{ actionLoading ? '退出中...' : '退出拼团' }}
             </button>
             <button class="secondary full" type="button" @click="router.push('/group')">返回列表</button>
           </div>

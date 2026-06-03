@@ -16,6 +16,7 @@ from .serializers import (
     TeamProjectDetailSerializer,
     TeamProjectFailSerializer,
     TeamProjectJoinSerializer,
+    TeamProjectLeaveSerializer,
     TeamProjectListSerializer,
     TeamParticipantSerializer,
 )
@@ -118,6 +119,30 @@ class TeamProjectCancelView(APIView):
             return error(message=flatten_errors(serializer.errors), code=400)
         serializer.save()
         return success(message="拼团已取消")
+
+
+class TeamProjectLeaveView(APIView):
+    """团员退出拼团"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, team_id):
+        try:
+            team = TeamProject.objects.get(team_id=team_id)
+        except TeamProject.DoesNotExist:
+            return error(message="拼团不存在", code=404)
+
+        serializer = TeamProjectLeaveSerializer(
+            data={},
+            context={"request": request, "team": team}
+        )
+        if not serializer.is_valid():
+            return error(message=flatten_errors(serializer.errors), code=400)
+        serializer.save()
+
+        # 重新获取拼团信息
+        team.refresh_from_db()
+        data = TeamProjectDetailSerializer(team).data
+        return success(data=data, message="已退出拼团")
 
 
 class MyTeamProjectListView(APIView):

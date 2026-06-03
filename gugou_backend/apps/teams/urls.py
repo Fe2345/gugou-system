@@ -13,6 +13,7 @@ from .views import (
     TeamProjectCreateView,
     TeamProjectDetailView,
     TeamProjectJoinView,
+    TeamProjectLeaveView,
     TeamProjectListView,
 )
 
@@ -23,6 +24,7 @@ urlpatterns = [
     path("my/", MyTeamProjectListView.as_view(), name="team-my"),
     path("<str:team_id>/", TeamProjectDetailView.as_view(), name="team-detail"),
     path("<str:team_id>/join/", TeamProjectJoinView.as_view(), name="team-join"),
+    path("<str:team_id>/leave/", TeamProjectLeaveView.as_view(), name="team-leave"),
     path("<str:team_id>/cancel/", TeamProjectCancelView.as_view(), name="team-cancel"),
     path("<str:team_id>/check-fail/", TeamProjectCheckFailView.as_view(), name="team-check-fail"),
     # 管理员端接口

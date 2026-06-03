@@ -174,6 +174,48 @@ class TeamProjectCancelSerializer(serializers.Serializer):
         return team
 
 
+class TeamProjectLeaveSerializer(serializers.Serializer):
+    """团员退出拼团序列化器"""
+
+    def validate(self, attrs):
+        team = self.context["team"]
+        user = self.context["request"].user
+
+        # 验证拼团状态
+        if team.status != TeamProject.Status.RECRUITING:
+            raise serializers.ValidationError("只能退出招募中的拼团")
+
+        # 验证是否是参与者
+        try:
+            participant = TeamParticipant.objects.get(
+                team=team, user=user, status=TeamParticipant.Status.JOINED
+            )
+        except TeamParticipant.DoesNotExist:
+            raise serializers.ValidationError("您尚未参与此拼团")
+
+        # 团长不能用此接口退出，需要用取消接口
+        if user == team.creator:
+            raise serializers.ValidationError("团长不能退出拼团，请使用取消拼团功能")
+
+        attrs["participant"] = participant
+        return attrs
+
+    def save(self):
+        team = self.context["team"]
+        participant = self.validated_data["participant"]
+
+        # 更新参与者状态
+        participant.status = TeamParticipant.Status.CANCELLED
+        participant.save()
+
+        # 更新当前人数
+        team.current_count = max(0, team.current_count - 1)
+        team.save()
+
+        logger.info("用户 %s 退出拼团 %s", participant.user.user_id, team.team_id)
+        return team
+
+
 class TeamProjectFailSerializer(serializers.Serializer):
     def validate(self, attrs):
         team = self.instance

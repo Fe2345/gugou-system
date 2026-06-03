@@ -63,6 +63,10 @@ export function joinGroup(id: string): Promise<ApiResponse<GroupDetailItem>> {
   return request.post(`/teams/${id}/join/`)
 }
 
+export function leaveGroup(id: string): Promise<ApiResponse<GroupDetailItem>> {
+  return request.post(`/teams/${id}/leave/`)
+}
+
 export function cancelGroup(id: string): Promise<ApiResponse<void>> {
   return request.post(`/teams/${id}/cancel/`)
 }
