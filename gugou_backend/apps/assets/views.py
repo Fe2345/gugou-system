@@ -146,12 +146,41 @@ class AssetOperateView(APIView):
         except UserAsset.DoesNotExist:
             return error(message="资产不存在", code=404)
 
+        # 检查资产是否已被订单锁定
+        from apps.market.models import Listing
+        from apps.orders.models import Order
+
+        # 检查是否有活跃的挂单关联此资产
+        active_listing = Listing.objects.filter(
+            asset=asset,
+            status__in=[Listing.Status.ACTIVE, Listing.Status.LOCKED]
+        ).first()
+
+        if active_listing:
+            # 检查是否有未完成的订单
+            active_order = Order.objects.filter(
+                listing=active_listing,
+                status__in=[Order.Status.PENDING_PAYMENT, Order.Status.PAID]
+            ).exists()
+
+            if active_order:
+                return error(message="该资产已被订单锁定，无法进行操作", code=400)
+
         op_type = serializer.validated_data["type"]
         status_map = {
             "list": UserAsset.Status.SELLING,
             "delist": UserAsset.Status.HOLDING,
             "sold": UserAsset.Status.SOLD,
         }
+
+        # 验证操作合法性
+        if op_type == "list" and asset.status != UserAsset.Status.HOLDING:
+            return error(message="只有持有中的资产才能上架", code=400)
+        elif op_type == "delist" and asset.status != UserAsset.Status.SELLING:
+            return error(message="只有出售中的资产才能下架", code=400)
+        elif op_type == "sold" and asset.status != UserAsset.Status.SELLING:
+            return error(message="只有出售中的资产才能标记为已售出", code=400)
+
         asset.status = status_map[op_type]
         asset.save()
         return success(message="操作成功")

@@ -135,7 +135,13 @@ class PaymentSuccessView(APIView):
         serializer = PaymentSuccessSerializer(payment, data={})
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors), code=400)
-        serializer.save()
+
+        try:
+            serializer.save()
+        except Exception as e:
+            logger.exception("支付确认操作失败: %s", str(e))
+            return error(message=f"操作失败: {str(e)}", code=500)
+
         return success(message="支付成功")
 
 
@@ -155,7 +161,13 @@ class OrderCompleteView(APIView):
         serializer = OrderCompleteSerializer(order, data={})
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors), code=400)
-        serializer.save()
+
+        try:
+            serializer.save()
+        except Exception as e:
+            logger.exception("订单完成操作失败: %s", str(e))
+            return error(message=f"操作失败: {str(e)}", code=500)
+
         return success(message="订单已完成")
 
 
@@ -175,5 +187,11 @@ class OrderCancelView(APIView):
         serializer = OrderCancelSerializer(order, data=request.data, context={"request": request})
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors), code=400)
-        serializer.save()
+
+        try:
+            serializer.save()
+        except Exception as e:
+            logger.exception("订单取消操作失败: %s", str(e))
+            return error(message=f"操作失败: {str(e)}", code=500)
+
         return success(message="订单已取消")
