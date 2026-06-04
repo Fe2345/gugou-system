@@ -3,6 +3,9 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getMarketList, getMyListings, type MarketItem } from '@/api/market'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
 
 const router = useRouter()
 const listings = ref<MarketItem[]>([])
@@ -243,7 +246,7 @@ onMounted(() => {
 
         <div v-else class="sale-list">
           <article v-for="item in listings" :key="item.listing_id" class="sale-card">
-            <img :src="item.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80'" :alt="item.product_name">
+            <img :src="item.images?.[0]?.image_url || item.product_image || '/default-product.png'" :alt="item.product_name">
             <div class="sale-info">
               <div class="sale-title">
                 <h3>{{ item.product_name }}</h3>
@@ -261,7 +264,8 @@ onMounted(() => {
               </div>
               <div class="card-actions">
                 <button class="secondary" type="button" @click="router.push(`/market/${item.listing_id}`)">查看详情</button>
-                <button class="primary" type="button" @click="router.push(`/my-orders/create?listing=${item.listing_id}`)">发起交易</button>
+                <button v-if="userStore.userInfo?.id !== item.seller_id" class="primary" type="button" @click="router.push(`/my-orders/create?listing=${item.listing_id}`)">发起交易</button>
+                <span v-else class="self-listing-hint">这是您发布的商品</span>
               </div>
             </div>
           </article>
@@ -344,6 +348,7 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .meta-grid span { display: block; color: var(--muted); font-size: 13px; }
 .meta-grid strong { display: block; margin-top: 8px; font-size: 14px; }
 .card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.self-listing-hint { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
 .assist-panel { align-self: start; display: grid; gap: 16px; }
 .assist-card { padding: 18px; }
 .publish-row { padding: 12px; border-radius: 8px; background: var(--soft); }
