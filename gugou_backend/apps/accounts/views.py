@@ -1,4 +1,6 @@
 import logging
+import os
+import uuid
 
 from django.conf import settings
 from django.utils import timezone
@@ -168,3 +170,40 @@ class LoginRecordsView(APIView):
         )
         data = LoginRecordSerializer(records, many=True).data
         return success(data=data)
+
+
+class AvatarUploadView(APIView):
+    """头像上传接口"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        image_file = request.FILES.get('avatar')
+        if not image_file:
+            return error(message="请选择要上传的头像", code=400)
+
+        allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if image_file.content_type not in allowed_types:
+            return error(message="仅支持 JPG、PNG、GIF、WebP 格式的图片", code=400)
+
+        if image_file.size > 2 * 1024 * 1024:
+            return error(message="头像大小不能超过 2MB", code=400)
+
+        ext = os.path.splitext(image_file.name)[1]
+        filename = f"avatars/{uuid.uuid4().hex}{ext}"
+
+        upload_dir = os.path.join(settings.MEDIA_ROOT, "avatars")
+        os.makedirs(upload_dir, exist_ok=True)
+
+        filepath = os.path.join(settings.MEDIA_ROOT, filename)
+        with open(filepath, 'wb+') as destination:
+            for chunk in image_file.chunks():
+                destination.write(chunk)
+
+        image_url = f"{settings.MEDIA_URL}{filename}"
+
+        from apps.accounts.models import UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile.avatar = image_url
+        profile.save(update_fields=["avatar", "updated_at"])
+
+        return success(data={"avatar": image_url}, message="头像上传成功")

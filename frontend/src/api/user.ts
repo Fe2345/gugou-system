@@ -45,3 +45,11 @@ export async function changePhone(phone: string): Promise<ApiResponse<UserInfo>>
 export async function deleteAccount(): Promise<ApiResponse<void>> {
   return request.post('/user/delete-account')
 }
+
+export async function uploadAvatar(file: File): Promise<ApiResponse<{ avatar: string }>> {
+  const formData = new FormData()
+  formData.append('avatar', file)
+  return request.post('/user/avatar/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
