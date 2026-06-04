@@ -32,6 +32,12 @@ const addForm = reactive<AssetForm>({
   description: '',
 })
 
+const addFormErrors = reactive<Record<string, string>>({})
+
+function clearAddError(field: string) {
+  delete addFormErrors[field]
+}
+
 const editForm = reactive({
   productName: '',
   ipName: '',
@@ -85,6 +91,7 @@ function openAddModal() {
   addForm.quantity = 1
   addForm.acquirePrice = 0
   addForm.description = ''
+  Object.keys(addFormErrors).forEach(k => delete addFormErrors[k])
   showAddModal.value = true
 }
 
@@ -92,8 +99,24 @@ function closeAddModal() {
   showAddModal.value = false
 }
 
+function validateAddForm(): boolean {
+  let valid = true
+  if (!addForm.productName) {
+    addFormErrors.productName = '谷子名称不能为空'
+    valid = false
+  }
+  if (!addForm.acquirePrice && addForm.acquirePrice !== 0) {
+    addFormErrors.acquirePrice = '入手价不能为空'
+    valid = false
+  } else if (addForm.acquirePrice <= 0) {
+    addFormErrors.acquirePrice = '入手价不得小于或等于0'
+    valid = false
+  }
+  return valid
+}
+
 async function handleAdd() {
-  if (!addForm.productName || !addForm.acquirePrice) return
+  if (!validateAddForm()) return
   loading.value = true
   try {
     const res = await addAsset(addForm)
@@ -359,7 +382,8 @@ function getValueChange(asset: AssetItem) {
       <form class="modal-form" @submit.prevent="handleAdd">
         <label>
           <span>谷子名称 *</span>
-          <input v-model="addForm.productName" type="text" required placeholder="请输入谷子名称">
+          <input v-model="addForm.productName" type="text" required placeholder="请输入谷子名称" @input="clearAddError('productName')">
+          <span v-if="addFormErrors.productName" class="field-error">{{ addFormErrors.productName }}</span>
         </label>
         <div class="form-row">
           <label>
@@ -383,7 +407,8 @@ function getValueChange(asset: AssetItem) {
         </div>
         <label>
           <span>入手价 *</span>
-          <input v-model.number="addForm.acquirePrice" type="number" min="0" step="0.01" required placeholder="请输入购买价格">
+          <input v-model.number="addForm.acquirePrice" type="number" min="0" step="0.01" required placeholder="请输入购买价格" @input="clearAddError('acquirePrice')">
+          <span v-if="addFormErrors.acquirePrice" class="field-error">{{ addFormErrors.acquirePrice }}</span>
         </label>
         <label>
           <span>描述</span>
@@ -606,6 +631,7 @@ tbody tr:hover { background: #fbfdfe; }
 .modal-form input, .modal-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font: inherit; font-size: 14px; background: #fff; box-sizing: border-box; }
 .modal-form textarea { resize: vertical; min-height: 70px; }
 .modal-form input:focus, .modal-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,100,120,0.1); outline: none; }
+.field-error { color: #be123c; font-size: 13px; margin-top: 2px; }
 .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 18px 28px; border-top: 1px solid var(--line); }
 .modal-confirm .modal-body { padding: 28px; }
