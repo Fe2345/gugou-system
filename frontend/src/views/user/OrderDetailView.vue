@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getOrderDetail, cancelOrder, confirmOrder, createPayment, confirmPayment } from '@/api/order'
+import { useUserStore } from '@/stores/user'
 import type { OrderItem } from '@/types/order'
 
 const route = useRoute()
@@ -10,6 +12,7 @@ const router = useRouter()
 const order = ref<OrderItem | null>(null)
 const loading = ref(false)
 const actionLoading = ref(false)
+const forbidden = ref(false)
 
 const statusMap: Record<string, { text: string; cls: string }> = {
   created: { text: '已创建', cls: 'status-pending' },
@@ -29,7 +32,13 @@ async function loadOrder() {
     if (res.code === 200) {
       order.value = res.data
     }
-  } catch (e) {
+  } catch (e: any) {
+    const status = e?.response?.status
+    if (status === 403) {
+      forbidden.value = true
+      setTimeout(() => router.replace('/my-orders'), 1500)
+      return
+    }
     console.error('加载订单详情失败', e)
   } finally {
     loading.value = false
@@ -44,16 +53,16 @@ async function handlePay() {
     if (payRes.code === 200) {
       const confirmRes = await confirmPayment(order.value.order_id, payRes.data.payment_id)
       if (confirmRes.code === 200) {
-        alert('支付成功')
+        ElMessage.success('支付成功')
         loadOrder()
       } else {
-        alert(confirmRes.message || '支付确认失败')
+        ElMessage.error(confirmRes.message || '支付确认失败')
       }
     } else {
-      alert(payRes.message || '创建支付失败')
+      ElMessage.error(payRes.message || '创建支付失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '支付失败')
+    ElMessage.error(e?.response?.data?.message || '支付失败')
   } finally {
     actionLoading.value = false
   }
@@ -61,18 +70,26 @@ async function handlePay() {
 
 async function handleConfirm() {
   if (!order.value) return
-  if (!confirm('确认完成此订单？')) return
+  try {
+    await ElMessageBox.confirm('确认完成此订单？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   actionLoading.value = true
   try {
     const res = await confirmOrder(order.value.order_id)
     if (res.code === 200) {
-      alert('订单已确认完成')
+      ElMessage.success('订单已确认完成')
       loadOrder()
     } else {
-      alert(res.message || '确认失败')
+      ElMessage.error(res.message || '确认失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '确认失败')
+    ElMessage.error(e?.response?.data?.message || '确认失败')
   } finally {
     actionLoading.value = false
   }
@@ -80,18 +97,26 @@ async function handleConfirm() {
 
 async function handleCancel() {
   if (!order.value) return
-  if (!confirm('确认取消此订单？')) return
+  try {
+    await ElMessageBox.confirm('确认取消此订单？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   actionLoading.value = true
   try {
     const res = await cancelOrder(order.value.order_id)
     if (res.code === 200) {
-      alert('订单已取消')
+      ElMessage.success('订单已取消')
       loadOrder()
     } else {
-      alert(res.message || '取消失败')
+      ElMessage.error(res.message || '取消失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '取消失败')
+    ElMessage.error(e?.response?.data?.message || '取消失败')
   } finally {
     actionLoading.value = false
   }
@@ -103,6 +128,11 @@ function formatDate(dateStr: string | null) {
 }
 
 onMounted(() => {
+  const userStore = useUserStore()
+  if (!userStore.isLoggedIn) {
+    router.replace('/login')
+    return
+  }
   loadOrder()
 })
 </script>
@@ -119,6 +149,7 @@ onMounted(() => {
     </section>
 
     <div v-if="loading" class="empty-state"><strong>加载中...</strong></div>
+    <div v-else-if="forbidden" class="empty-state"><strong>无权查看此订单</strong><p>即将返回订单列表...</p></div>
     <div v-else-if="!order" class="empty-state"><strong>订单不存在</strong></div>
     <section v-else class="detail-layout">
       <article class="detail-main">

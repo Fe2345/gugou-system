@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -33,7 +34,7 @@ async function loadAssets() {
 
 async function handleSubmit() {
   if (!form.value.offered_asset_id) {
-    alert('请选择换出资产')
+    ElMessage.warning('请选择换出资产')
     return
   }
   submitting.value = true
@@ -44,13 +45,13 @@ async function handleSubmit() {
       price_difference_note: form.value.price_difference_note || undefined,
     })
     if (res.code === 200) {
-      alert('发布成功')
+      ElMessage.success('发布成功')
       router.push('/swap/my')
     } else {
-      alert(res.message || '发布失败')
+      ElMessage.error(res.message || '发布失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '发布失败')
+    ElMessage.error(e?.response?.data?.message || '发布失败')
   } finally {
     submitting.value = false
   }
