@@ -36,6 +36,20 @@ class AssetCreateSerializer(serializers.Serializer):
     acquirePrice = serializers.DecimalField(max_digits=10, decimal_places=2, default=0)
     description = serializers.CharField(required=False, default="", allow_blank=True)
 
+    def validate(self, data):
+        # 品类合法性校验
+        from apps.products.models import Product
+        category = data.get("category", "")
+        if category and category not in Product.Category.values:
+            raise serializers.ValidationError({"category": f"无效的品类：{category}"})
+
+        # 未选择已有商品时，IP/角色/品类必须填写
+        if not data.get("productId"):
+            for field, label in [("ipName", "IP名称"), ("characterName", "角色名称"), ("category", "品类")]:
+                if not data.get(field, "").strip():
+                    raise serializers.ValidationError({field: f"{label}不能为空"})
+        return data
+
     def create(self, validated_data):
         from apps.products.models import Product
         from apps.common.id_generator import generate_product_id

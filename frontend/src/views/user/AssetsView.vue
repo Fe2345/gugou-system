@@ -3,7 +3,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getAssetsList, addAsset, updateAsset, deleteAsset, operateAsset } from '@/api/assets'
-import { getGoodsList } from '@/api/goods'
+import { getGoodsList, getGoodsCategories } from '@/api/goods'
 import { publishToMarket, cancelListing, getMyListings } from '@/api/market'
 import type { AssetItem, AssetForm, AssetSummary, AssetStatus } from '@/types/assets'
 import type { GoodsItem } from '@/types/goods'
@@ -90,6 +90,8 @@ function clearProductSelection() {
   showProductDropdown.value = false
 }
 
+const categories = ref<{ value: string; label: string }[]>([])
+
 const addFormErrors = reactive<Record<string, string>>({})
 
 function clearAddError(field: string) {
@@ -127,8 +129,12 @@ async function loadAssets() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadAssets()
+  try {
+    const catRes = await getGoodsCategories()
+    if (catRes.code === 200) categories.value = catRes.data
+  } catch { /* 品类列表加载失败不影响主流程 */ }
 })
 
 // 搜索筛选
@@ -146,7 +152,7 @@ function openAddModal() {
   addForm.productName = ''
   addForm.ipName = ''
   addForm.characterName = ''
-  addForm.category = ''
+  addForm.category = categories.value[0]?.value || 'other'
   addForm.quantity = 1
   addForm.acquirePrice = 0
   addForm.description = ''
@@ -166,6 +172,18 @@ function validateAddForm(): boolean {
   let valid = true
   if (!addForm.productName) {
     addFormErrors.productName = '谷子名称不能为空'
+    valid = false
+  }
+  if (!addForm.ipName || !addForm.ipName.trim()) {
+    addFormErrors.ipName = 'IP不能为空'
+    valid = false
+  }
+  if (!addForm.characterName || !addForm.characterName.trim()) {
+    addFormErrors.characterName = '角色不能为空'
+    valid = false
+  }
+  if (!addForm.category || !addForm.category.trim()) {
+    addFormErrors.category = '品类不能为空'
     valid = false
   }
   if (!addForm.acquirePrice && addForm.acquirePrice !== 0) {
@@ -514,7 +532,7 @@ function viewPriceTrend(asset: AssetItem) {
             <div v-if="showProductDropdown && productSearchResults.length > 0" class="product-dropdown">
               <div v-for="p in productSearchResults" :key="p.product_id" class="product-option" @click="selectProduct(p)">
                 <strong>{{ p.name }}</strong>
-                <span>{{ p.ip_name }} / {{ p.character_name }} · {{ p.category }}</span>
+                <span>{{ p.ipName }} / {{ p.characterName }} · {{ p.category }}</span>
               </div>
             </div>
           </div>
@@ -529,18 +547,23 @@ function viewPriceTrend(asset: AssetItem) {
         </label>
         <div class="form-row">
           <label>
-            <span>IP</span>
-            <input v-model="addForm.ipName" type="text" placeholder="如：原神">
+            <span>IP *</span>
+            <input v-model="addForm.ipName" type="text" required placeholder="如：原神" @input="clearAddError('ipName')">
+            <span v-if="addFormErrors.ipName" class="field-error">{{ addFormErrors.ipName }}</span>
           </label>
           <label>
-            <span>角色</span>
-            <input v-model="addForm.characterName" type="text" placeholder="如：胡桃">
+            <span>角色 *</span>
+            <input v-model="addForm.characterName" type="text" required placeholder="如：胡桃" @input="clearAddError('characterName')">
+            <span v-if="addFormErrors.characterName" class="field-error">{{ addFormErrors.characterName }}</span>
           </label>
         </div>
         <div class="form-row">
           <label>
-            <span>品类</span>
-            <input v-model="addForm.category" type="text" placeholder="如：徽章">
+            <span>品类 *</span>
+            <select v-model="addForm.category" required @change="clearAddError('category')">
+              <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+            </select>
+            <span v-if="addFormErrors.category" class="field-error">{{ addFormErrors.category }}</span>
           </label>
           <label>
             <span>数量 *</span>
