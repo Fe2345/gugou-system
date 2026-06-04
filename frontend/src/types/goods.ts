@@ -9,6 +9,7 @@ export interface GoodsItem {
   description: string
   status: 'active' | 'inactive' | 'frozen' | 'archived'
   createdAt: string
+  isInUse: boolean
 }
 
 export interface GoodsForm {

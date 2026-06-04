@@ -2,7 +2,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
-import { addGoods, getGoodsCategories, getGoodsList, getMyGoodsList, updateGoods } from '@/api/goods'
+import { addGoods, getGoodsCategories, getGoodsList, getMyGoodsList, updateGoods, deleteGoods } from '@/api/goods'
 import { useUserStore } from '@/stores/user'
 import type { GoodsItem } from '@/types/goods'
 
@@ -130,8 +130,20 @@ function openCreateForm() {
   showForm.value = true
 }
 
+function canEdit(product: GoodsItem): boolean {
+  if (product.status === 'inactive') return true
+  if (product.status === 'active' && !product.isInUse) return true
+  return false
+}
+
+function canDelete(product: GoodsItem): boolean {
+  if (product.status === 'inactive') return true
+  if (product.status === 'active' && !product.isInUse) return true
+  return false
+}
+
 function openEditForm(product: GoodsItem) {
-  if (product.status !== 'inactive') return
+  if (!canEdit(product)) return
   editingProduct.value = product
   goodsForm.name = product.name
   goodsForm.ipName = product.ipName
@@ -183,6 +195,20 @@ function closeDetail() {
   selectedProduct.value = null
 }
 
+async function handleDeleteProduct(product: GoodsItem) {
+  if (!confirm(`确定要删除商品"${product.name}"吗？此操作不可恢复。`)) return
+  try {
+    const res = await deleteGoods(product.id)
+    if (res.code === 200) {
+      await Promise.all([loadProducts(searchQuery.value), loadMyProducts()])
+    } else {
+      alert(res.message || '删除失败')
+    }
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '删除失败')
+  }
+}
+
 function getStatusText(status: string) {
   const map: Record<string, string> = {
     active: '已上架',
@@ -201,7 +227,7 @@ function getStatusText(status: string) {
       <div>
         <p class="eyebrow">商品库</p>
         <h1>商品查询与提交</h1>
-        <p>用户可以提交商品并在待审核期间修改信息；审核通过上架后商品信息锁定，由管理员负责审核。</p>
+        <p>用户可以提交商品并在待审核期间修改信息；审核通过上架后，若商品未被其他功能使用，仍可修改或删除（修改需重新审核）。</p>
       </div>
       <form class="search-box" @submit.prevent="handleSearch">
         <input v-model="searchQuery" type="search" placeholder="搜索商品名称、IP 或角色" />
@@ -232,8 +258,9 @@ function getStatusText(status: string) {
             <p>{{ p.ipName }} / {{ p.characterName }} / {{ p.category }}</p>
           </div>
           <span class="status-badge" :class="p.status">{{ getStatusText(p.status) }}</span>
-          <button v-if="p.status === 'inactive'" class="secondary" type="button" @click="openEditForm(p)">修改</button>
+          <button v-if="canEdit(p)" class="secondary" type="button" @click="openEditForm(p)">修改</button>
           <button v-else class="secondary" type="button" disabled>不可修改</button>
+          <button v-if="canDelete(p)" class="danger-btn" type="button" @click="handleDeleteProduct(p)">删除</button>
         </article>
       </div>
     </section>
@@ -309,7 +336,7 @@ function getStatusText(status: string) {
   <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
     <div class="modal">
       <div class="modal-header">
-        <h2>{{ editingProduct ? '修改待审核商品' : '添加商品' }}</h2>
+        <h2>{{ editingProduct ? (editingProduct.status === 'active' ? '修改商品（将重新审核）' : '修改待审核商品') : '添加商品' }}</h2>
         <button class="modal-close" type="button" @click="closeForm">&times;</button>
       </div>
       <form class="modal-form" @submit.prevent="saveGoods">
@@ -399,7 +426,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .submit-panel { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 20px 22px; }
 .my-panel { padding: 22px; }
 .mine-list { display: grid; gap: 10px; }
-.mine-item { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.mine-item { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto auto auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.danger-btn { min-height: 32px; border: 1px solid #fecaca; border-radius: 6px; padding: 0 12px; color: #be123c; background: #fff; font-weight: 700; cursor: pointer; font: inherit; font-size: 13px; }
+.danger-btn:hover { background: #fee2e2; }
 .mine-item img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--soft); }
 .mine-item p { color: var(--muted); font-size: 13px; margin-top: 4px; }
 .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; margin-top: 20px; }

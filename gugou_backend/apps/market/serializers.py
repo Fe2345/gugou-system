@@ -93,13 +93,14 @@ class ListingListSerializer(serializers.ModelSerializer):
     seller_id = serializers.CharField(source="seller.user_id", read_only=True)
     seller_name = serializers.CharField(source="seller.nickname", read_only=True)
     product_name = serializers.CharField(source="product.name", read_only=True)
+    product_image = serializers.ImageField(source="product.main_image", read_only=True)
     images = ListingImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Listing
         fields = [
             "listing_id", "seller_id", "seller_name", "product_id", "product_name",
-            "price", "quantity", "description", "status", "images", "created_at",
+            "product_image", "price", "quantity", "description", "status", "images", "created_at",
         ]
 
 
@@ -107,13 +108,14 @@ class ListingDetailSerializer(serializers.ModelSerializer):
     seller_id = serializers.CharField(source="seller.user_id", read_only=True)
     seller_name = serializers.CharField(source="seller.nickname", read_only=True)
     product_name = serializers.CharField(source="product.name", read_only=True)
+    product_image = serializers.ImageField(source="product.main_image", read_only=True)
     images = ListingImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Listing
         fields = [
             "listing_id", "seller_id", "seller_name", "product_id", "product_name",
-            "asset_id", "price", "quantity", "description", "status", "images",
+            "product_image", "asset_id", "price", "quantity", "description", "status", "images",
             "created_at", "updated_at",
         ]
 
