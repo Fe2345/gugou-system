@@ -12,7 +12,7 @@ class AssetSerializer(serializers.ModelSerializer):
     ipName = serializers.CharField(source="product.ip_name", read_only=True)
     characterName = serializers.CharField(source="product.character_name", read_only=True)
     category = serializers.CharField(source="product.category", read_only=True)
-    mainImage = serializers.CharField(source="product.main_image", read_only=True)
+    mainImage = serializers.ImageField(source="product.main_image", read_only=True)
     acquirePrice = serializers.DecimalField(source="acquire_price", max_digits=10, decimal_places=2, read_only=True)
     currentValue = serializers.DecimalField(source="current_value", max_digits=10, decimal_places=2, read_only=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)

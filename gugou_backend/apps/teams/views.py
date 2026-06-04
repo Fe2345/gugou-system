@@ -111,7 +111,7 @@ class TeamProjectCancelView(APIView):
             return error(message="拼团不存在", code=404)
 
         # 验证权限：只有创建者可以取消
-        if request.user != team.creator:
+        if request.user.user_id != team.creator_id:
             return error(message="无权操作此拼团", code=403)
 
         serializer = TeamProjectCancelSerializer(team, data={}, context={"request": request})

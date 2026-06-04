@@ -5,9 +5,9 @@
     "character_name": "沙奈朵",
     "category": "figure",
     "reference_price": 688,
-    "main_image": "/images/products/沙奈朵手办.png",
+    "main_image": "products/2026/05/沙奈朵手办.png",
     "images": [
-      "/images/products/沙奈朵手办.png"
+      "products/2026/05/沙奈朵手办.png"
     ],
     "description": "精灵宝可梦沙奈朵手办，限量发售"
   },
@@ -17,9 +17,9 @@
     "character_name": "初音",
     "category": "badge",
     "reference_price": 58,
-    "main_image": "/images/products/春日限定徽章.png",
+    "main_image": "products/2026/05/春日限定徽章.png",
     "images": [
-      "/images/products/春日限定徽章.png"
+      "products/2026/05/春日限定徽章.png"
     ],
     "description": "春日祭限定徽章，樱花主题"
   },
@@ -29,9 +29,9 @@
     "character_name": "阿尼亚",
     "category": "acrylic",
     "reference_price": 75,
-    "main_image": "/images/products/阿尼亚表情包立牌.png",
+    "main_image": "products/2026/05/阿尼亚表情包立牌.png",
     "images": [
-      "/images/products/阿尼亚表情包立牌.png"
+      "products/2026/05/阿尼亚表情包立牌.png"
     ],
     "description": "阿尼亚经典表情亚克力立牌"
   },
@@ -41,9 +41,9 @@
     "character_name": "蕾姆",
     "category": "figure",
     "reference_price": 298,
-    "main_image": "/images/products/蕾姆泳装手办.png",
+    "main_image": "products/2026/05/蕾姆泳装手办.png",
     "images": [
-      "/images/products/蕾姆泳装手办.png"
+      "products/2026/05/蕾姆泳装手办.png"
     ],
     "description": "蕾姆泳装Ver. 1/7比例手办"
   },
@@ -53,9 +53,9 @@
     "character_name": "炭治郎",
     "category": "figure",
     "reference_price": 450,
-    "main_image": "/images/products/炭治郎日轮刀模型.png",
+    "main_image": "products/2026/05/炭治郎日轮刀模型.png",
     "images": [
-      "/images/products/炭治郎日轮刀模型.png"
+      "products/2026/05/炭治郎日轮刀模型.png"
     ],
     "description": "炭治郎日轮刀 1:1复刻模型"
   },
@@ -65,9 +65,9 @@
     "character_name": "皮卡丘",
     "category": "doll",
     "reference_price": 129,
-    "main_image": "/images/products/皮卡丘毛绒玩偶.png",
+    "main_image": "products/2026/05/皮卡丘毛绒玩偶.png",
     "images": [
-      "/images/products/皮卡丘毛绒玩偶.png"
+      "products/2026/05/皮卡丘毛绒玩偶.png"
     ],
     "description": "皮卡丘大号毛绒玩偶 30cm"
   },
@@ -77,9 +77,9 @@
     "character_name": "明日香",
     "category": "card",
     "reference_price": 45,
-    "main_image": "/images/products/明日香限定卡片.png",
+    "main_image": "products/2026/05/明日香限定卡片.png",
     "images": [
-      "/images/products/明日香限定卡片.png"
+      "products/2026/05/明日香限定卡片.png"
     ],
     "description": "EVA明日香限定收藏卡片"
   },
@@ -89,9 +89,9 @@
     "character_name": "路飞",
     "category": "poster",
     "reference_price": 35,
-    "main_image": "/images/products/路飞五档海报.png",
+    "main_image": "products/2026/05/路飞五档海报.png",
     "images": [
-      "/images/products/路飞五档海报.png"
+      "products/2026/05/路飞五档海报.png"
     ],
     "description": "路飞五档尼卡形态 A2海报"
   },
@@ -101,9 +101,9 @@
     "character_name": "亚丝娜",
     "category": "acrylic",
     "reference_price": 42,
-    "main_image": "/images/products/亚丝娜亚克力挂件.png",
+    "main_image": "products/2026/05/亚丝娜亚克力挂件.png",
     "images": [
-      "/images/products/亚丝娜亚克力挂件.png"
+      "products/2026/05/亚丝娜亚克力挂件.png"
     ],
     "description": "亚丝娜战斗服Ver.亚克力挂件"
   },
@@ -113,9 +113,9 @@
     "character_name": "祢豆子",
     "category": "doll",
     "reference_price": 89,
-    "main_image": "/images/products/祢豆子竹筒玩偶.png",
+    "main_image": "products/2026/05/祢豆子竹筒玩偶.png",
     "images": [
-      "/images/products/祢豆子竹筒玩偶.png"
+      "products/2026/05/祢豆子竹筒玩偶.png"
     ],
     "description": "祢豆子竹筒装迷你玩偶 20cm"
   },
@@ -125,9 +125,9 @@
     "character_name": "雷电影",
     "category": "badge",
     "reference_price": 118,
-    "main_image": "/images/products/雷电影主题徽章套装.png",
+    "main_image": "products/2026/05/雷电影主题徽章套装.png",
     "images": [
-      "/images/products/雷电影主题徽章套装.png"
+      "products/2026/05/雷电影主题徽章套装.png"
     ],
     "description": "雷电影主题金属徽章"
   },
@@ -137,9 +137,9 @@
     "character_name": "枫原万叶",
     "category": "acrylic",
     "reference_price": 86,
-    "main_image": "/images/products/枫原万叶流沙亚克力.png",
+    "main_image": "products/2026/05/枫原万叶流沙亚克力.png",
     "images": [
-      "/images/products/枫原万叶流沙亚克力.png"
+      "products/2026/05/枫原万叶流沙亚克力.png"
     ],
     "description": "枫叶主题双层流沙亚克力摆件，适合桌面展示"
   },
@@ -149,9 +149,9 @@
     "character_name": "纳西妲",
     "category": "acrylic",
     "reference_price": 92,
-    "main_image": "/images/products/纳西妲立牌.png",
+    "main_image": "products/2026/05/纳西妲立牌.png",
     "images": [
-      "/images/products/纳西妲立牌.png"
+      "products/2026/05/纳西妲立牌.png"
     ],
     "description": "纳西妲亚克力立牌，透明底座款"
   },
@@ -161,9 +161,9 @@
     "character_name": "钟离",
     "category": "poster",
     "reference_price": 138,
-    "main_image": "/images/products/钟离烫金色纸.png",
+    "main_image": "products/2026/05/钟离烫金色纸.png",
     "images": [
-      "/images/products/钟离烫金色纸.png"
+      "products/2026/05/钟离烫金色纸.png"
     ],
     "description": "钟离主题限定烫金色纸，岩纹压印工艺"
   },
@@ -173,9 +173,9 @@
     "character_name": "芙宁娜",
     "category": "card",
     "reference_price": 76,
-    "main_image": "/images/products/芙宁娜纪念卡册.png",
+    "main_image": "products/2026/05/芙宁娜纪念卡册.png",
     "images": [
-      "/images/products/芙宁娜纪念卡册.png"
+      "products/2026/05/芙宁娜纪念卡册.png"
     ],
     "description": "芙宁娜角色纪念卡册，内含角色卡与场景卡"
   },
@@ -185,9 +185,9 @@
     "character_name": "星野爱",
     "category": "badge",
     "reference_price": 68,
-    "main_image": "/images/products/星野爱徽章.png",
+    "main_image": "products/2026/05/星野爱徽章.png",
     "images": [
-      "/images/products/星野爱徽章.png"
+      "products/2026/05/星野爱徽章.png"
     ],
     "description": "星野爱徽章"
   },
@@ -197,9 +197,9 @@
     "character_name": "有马加奈",
     "category": "acrylic",
     "reference_price": 72,
-    "main_image": "/images/products/有马加奈角色立牌.png",
+    "main_image": "products/2026/05/有马加奈角色立牌.png",
     "images": [
-      "/images/products/有马加奈角色立牌.png"
+      "products/2026/05/有马加奈角色立牌.png"
     ],
     "description": "角色亚克力立牌，有马加奈造型，适合桌面展示"
   },
@@ -209,9 +209,9 @@
     "character_name": "黑川茜",
     "category": "card",
     "reference_price": 39,
-    "main_image": "/images/products/黑川茜收藏卡.png",
+    "main_image": "products/2026/05/黑川茜收藏卡.png",
     "images": [
-      "/images/products/黑川茜收藏卡.png"
+      "products/2026/05/黑川茜收藏卡.png"
     ],
     "description": "黑川茜写真风收藏卡，单包装随机闪卡"
   },
@@ -221,9 +221,9 @@
     "character_name": "五条悟",
     "category": "figure",
     "reference_price": 398,
-    "main_image": "/images/products/五条悟无量空处手办.png",
+    "main_image": "products/2026/05/五条悟无量空处手办.png",
     "images": [
-      "/images/products/五条悟无量空处手办.png"
+      "products/2026/05/五条悟无量空处手办.png"
     ],
     "description": "五条悟无量空处姿态手办，特效件可拆卸"
   },
@@ -233,9 +233,9 @@
     "character_name": "虎杖悠仁",
     "category": "badge",
     "reference_price": 52,
-    "main_image": "/images/products/虎杖悠仁战斗徽章.png",
+    "main_image": "products/2026/05/虎杖悠仁战斗徽章.png",
     "images": [
-      "/images/products/虎杖悠仁战斗徽章.png"
+      "products/2026/05/虎杖悠仁战斗徽章.png"
     ],
     "description": "虎杖悠仁战斗姿态徽章，哑光金属底"
   },
@@ -245,9 +245,9 @@
     "character_name": "伏黑惠",
     "category": "poster",
     "reference_price": 46,
-    "main_image": "/images/products/伏黑惠海报.png",
+    "main_image": "products/2026/05/伏黑惠海报.png",
     "images": [
-      "/images/products/伏黑惠海报.png"
+      "products/2026/05/伏黑惠海报.png"
     ],
     "description": "伏黑惠式神主题 A2 海报，厚磅纸印刷"
   },
@@ -257,9 +257,9 @@
     "character_name": "钉崎野蔷薇",
     "category": "acrylic",
     "reference_price": 48,
-    "main_image": "/images/products/钉崎野蔷薇亚克力挂件.png",
+    "main_image": "products/2026/05/钉崎野蔷薇亚克力挂件.png",
     "images": [
-      "/images/products/钉崎野蔷薇亚克力挂件.png"
+      "products/2026/05/钉崎野蔷薇亚克力挂件.png"
     ],
     "description": "钉崎野蔷薇武器主题亚克力挂件，双面印刷"
   },
@@ -269,9 +269,9 @@
     "character_name": "灶门炭治郎",
     "category": "figure",
     "reference_price": 328,
-    "main_image": "/images/products/灶门炭治郎水之呼吸手办.png",
+    "main_image": "products/2026/05/灶门炭治郎水之呼吸手办.png",
     "images": [
-      "/images/products/灶门炭治郎水之呼吸手办.png"
+      "products/2026/05/灶门炭治郎水之呼吸手办.png"
     ],
     "description": "水之呼吸特效底座手办，动态斩击姿态"
   },
@@ -281,9 +281,9 @@
     "character_name": "我妻善逸",
     "category": "badge",
     "reference_price": 49,
-    "main_image": "/images/products/我妻善逸雷之呼吸徽章.png",
+    "main_image": "products/2026/05/我妻善逸雷之呼吸徽章.png",
     "images": [
-      "/images/products/我妻善逸雷之呼吸徽章.png"
+      "products/2026/05/我妻善逸雷之呼吸徽章.png"
     ],
     "description": "雷之呼吸主题闪电边框徽章"
   },
@@ -293,9 +293,9 @@
     "character_name": "嘴平伊之助",
     "category": "doll",
     "reference_price": 79,
-    "main_image": "/images/products/嘴平伊之助毛绒挂件.png",
+    "main_image": "products/2026/05/嘴平伊之助毛绒挂件.png",
     "images": [
-      "/images/products/嘴平伊之助毛绒挂件.png"
+      "products/2026/05/嘴平伊之助毛绒挂件.png"
     ],
     "description": "伊之助头套造型毛绒挂件，附金属扣"
   },
@@ -305,9 +305,9 @@
     "character_name": "蝴蝶忍",
     "category": "poster",
     "reference_price": 88,
-    "main_image": "/images/products/蝴蝶忍色纸.png",
+    "main_image": "products/2026/05/蝴蝶忍色纸.png",
     "images": [
-      "/images/products/蝴蝶忍色纸.png"
+      "products/2026/05/蝴蝶忍色纸.png"
     ],
     "description": "蝴蝶忍主题色纸，紫色珠光纸材"
   },
@@ -317,9 +317,9 @@
     "character_name": "路飞",
     "category": "figure",
     "reference_price": 520,
-    "main_image": "/images/products/路飞尼卡手办.png",
+    "main_image": "products/2026/05/路飞尼卡手办.png",
     "images": [
-      "/images/products/路飞尼卡手办.png"
+      "products/2026/05/路飞尼卡手办.png"
     ],
     "description": "路飞五档尼卡形态手办，云雾特效底座"
   },
@@ -329,9 +329,9 @@
     "character_name": "索隆",
     "category": "acrylic",
     "reference_price": 84,
-    "main_image": "/images/products/索隆三刀流亚克力.png",
+    "main_image": "products/2026/05/索隆三刀流亚克力.png",
     "images": [
-      "/images/products/索隆三刀流亚克力.png"
+      "products/2026/05/索隆三刀流亚克力.png"
     ],
     "description": "索隆三刀流动作亚克力立牌，绿色刀光底座"
   },
@@ -341,9 +341,9 @@
     "character_name": "娜美",
     "category": "card",
     "reference_price": 55,
-    "main_image": "/images/products/娜美航海图卡套.png",
+    "main_image": "products/2026/05/娜美航海图卡套.png",
     "images": [
-      "/images/products/娜美航海图卡套.png"
+      "products/2026/05/娜美航海图卡套.png"
     ],
     "description": "娜美航海图主题卡套，含透明保护袋"
   },
@@ -353,9 +353,9 @@
     "character_name": "乔巴",
     "category": "doll",
     "reference_price": 119,
-    "main_image": "/images/products/乔巴冬岛毛绒玩偶.png",
+    "main_image": "products/2026/05/乔巴冬岛毛绒玩偶.png",
     "images": [
-      "/images/products/乔巴冬岛毛绒玩偶.png"
+      "products/2026/05/乔巴冬岛毛绒玩偶.png"
     ],
     "description": "乔巴冬岛造型毛绒玩偶，坐姿款 25cm"
   },
@@ -365,9 +365,9 @@
     "character_name": "漩涡鸣人",
     "category": "figure",
     "reference_price": 368,
-    "main_image": "/images/products/鸣人九尾查克拉手办.png",
+    "main_image": "products/2026/05/鸣人九尾查克拉手办.png",
     "images": [
-      "/images/products/鸣人九尾查克拉手办.png"
+      "products/2026/05/鸣人九尾查克拉手办.png"
     ],
     "description": "鸣人九尾查克拉模式手办，透明火焰特效"
   },
@@ -377,9 +377,9 @@
     "character_name": "宇智波佐助",
     "category": "badge",
     "reference_price": 64,
-    "main_image": "/images/products/佐助须佐能乎徽章.png",
+    "main_image": "products/2026/05/佐助须佐能乎徽章.png",
     "images": [
-      "/images/products/佐助须佐能乎徽章.png"
+      "products/2026/05/佐助须佐能乎徽章.png"
     ],
     "description": "须佐能乎主题镭射徽章，紫色闪膜"
   },
@@ -389,9 +389,9 @@
     "character_name": "旗木卡卡西",
     "category": "poster",
     "reference_price": 42,
-    "main_image": "/images/products/卡卡西写轮眼海报.png",
+    "main_image": "products/2026/05/卡卡西写轮眼海报.png",
     "images": [
-      "/images/products/卡卡西写轮眼海报.png"
+      "products/2026/05/卡卡西写轮眼海报.png"
     ],
     "description": "卡卡西写轮眼主题 A2 海报，暗纹背景"
   },
@@ -401,9 +401,9 @@
     "character_name": "宇智波鼬",
     "category": "acrylic",
     "reference_price": 98,
-    "main_image": "/images/products/宇智波鼬亚克力.png",
+    "main_image": "products/2026/05/宇智波鼬亚克力.png",
     "images": [
-      "/images/products/宇智波鼬亚克力.png"
+      "products/2026/05/宇智波鼬亚克力.png"
     ],
     "description": "鼬与乌鸦剪影双层亚克力摆件"
   },
@@ -413,9 +413,9 @@
     "character_name": "初音未来",
     "category": "figure",
     "reference_price": 428,
-    "main_image": "/images/products/初音未来雪未来手办.png",
+    "main_image": "products/2026/05/初音未来雪未来手办.png",
     "images": [
-      "/images/products/初音未来雪未来手办.png"
+      "products/2026/05/初音未来雪未来手办.png"
     ],
     "description": "雪未来主题手办，雪花底座与围巾配件"
   },
@@ -425,9 +425,9 @@
     "character_name": "绫波丽",
     "category": "figure",
     "reference_price": 360,
-    "main_image": "/images/products/绫波丽白色驾驶服手办.png",
+    "main_image": "products/2026/05/绫波丽白色驾驶服手办.png",
     "images": [
-      "/images/products/绫波丽白色驾驶服手办.png"
+      "products/2026/05/绫波丽白色驾驶服手办.png"
     ],
     "description": "绫波丽白色驾驶服手办，透明底座款"
   },
@@ -437,9 +437,9 @@
     "character_name": "明日香",
     "category": "figure",
     "reference_price": 372,
-    "main_image": "/images/products/明日香红色驾驶服手办.png",
+    "main_image": "products/2026/05/明日香红色驾驶服手办.png",
     "images": [
-      "/images/products/明日香红色驾驶服手办.png"
+      "products/2026/05/明日香红色驾驶服手办.png"
     ],
     "description": "明日香红色驾驶服手办，战斗姿态款"
   },
@@ -449,9 +449,9 @@
     "character_name": "初号机",
     "category": "badge",
     "reference_price": 72,
-    "main_image": "/images/products/初号机金属徽章.png",
+    "main_image": "products/2026/05/初号机金属徽章.png",
     "images": [
-      "/images/products/初号机金属徽章.png"
+      "products/2026/05/初号机金属徽章.png"
     ],
     "description": "初号机头部金属徽章，紫绿色珐琅"
   },
@@ -461,9 +461,9 @@
     "character_name": "初号机",
     "category": "poster",
     "reference_price": 95,
-    "main_image": "/images/products/EVA 机体设定海报.png",
+    "main_image": "products/2026/05/EVA 机体设定海报.png",
     "images": [
-      "/images/products/EVA 机体设定海报.png"
+      "products/2026/05/EVA 机体设定海报.png"
     ],
     "description": "EVA 机体设定图 A1 海报，工程图风格"
   },
@@ -473,9 +473,9 @@
     "character_name": "阿尼亚",
     "category": "doll",
     "reference_price": 108,
-    "main_image": "/images/products/阿尼亚校服毛绒玩偶.png",
+    "main_image": "products/2026/05/阿尼亚校服毛绒玩偶.png",
     "images": [
-      "/images/products/阿尼亚校服毛绒玩偶.png"
+      "products/2026/05/阿尼亚校服毛绒玩偶.png"
     ],
     "description": "阿尼亚校服造型毛绒玩偶，坐姿 22cm"
   },
@@ -485,9 +485,9 @@
     "character_name": "约尔",
     "category": "acrylic",
     "reference_price": 82,
-    "main_image": "/images/products/约尔亚克力.png",
+    "main_image": "products/2026/05/约尔亚克力.png",
     "images": [
-      "/images/products/约尔亚克力.png"
+      "products/2026/05/约尔亚克力.png"
     ],
     "description": "约尔主题亚克力立牌，黑红配色"
   },
@@ -497,9 +497,9 @@
     "character_name": "劳埃德",
     "category": "card",
     "reference_price": 36,
-    "main_image": "/images/products/劳埃德任务卡片.png",
+    "main_image": "products/2026/05/劳埃德任务卡片.png",
     "images": [
-      "/images/products/劳埃德任务卡片.png"
+      "products/2026/05/劳埃德任务卡片.png"
     ],
     "description": "劳埃德任务档案风收藏卡片"
   },
@@ -509,9 +509,9 @@
     "character_name": "波奇塔",
     "category": "doll",
     "reference_price": 69,
-    "main_image": "/images/products/波奇塔毛绒挂件.png",
+    "main_image": "products/2026/05/波奇塔毛绒挂件.png",
     "images": [
-      "/images/products/波奇塔毛绒挂件.png"
+      "products/2026/05/波奇塔毛绒挂件.png"
     ],
     "description": "波奇塔迷你毛绒挂件，链条可拆卸"
   },
@@ -521,9 +521,9 @@
     "character_name": "电次",
     "category": "figure",
     "reference_price": 410,
-    "main_image": "/images/products/电次电锯形态手办.png",
+    "main_image": "products/2026/05/电次电锯形态手办.png",
     "images": [
-      "/images/products/电次电锯形态手办.png"
+      "products/2026/05/电次电锯形态手办.png"
     ],
     "description": "电次电锯形态动态手办，血迹特效涂装"
   },
@@ -533,9 +533,9 @@
     "character_name": "帕瓦",
     "category": "badge",
     "reference_price": 54,
-    "main_image": "/images/products/帕瓦恶魔角徽章.png",
+    "main_image": "products/2026/05/帕瓦恶魔角徽章.png",
     "images": [
-      "/images/products/帕瓦恶魔角徽章.png"
+      "products/2026/05/帕瓦恶魔角徽章.png"
     ],
     "description": "帕瓦恶魔角造型徽章，红色闪膜"
   },
@@ -545,9 +545,9 @@
     "character_name": "早川秋",
     "category": "poster",
     "reference_price": 58,
-    "main_image": "/images/products/早川秋海报.png",
+    "main_image": "products/2026/05/早川秋海报.png",
     "images": [
-      "/images/products/早川秋海报.png"
+      "products/2026/05/早川秋海报.png"
     ],
     "description": "主题海报，暗色电影海报风"
   },
@@ -557,9 +557,9 @@
     "character_name": "喜多川海梦",
     "category": "acrylic",
     "reference_price": 88,
-    "main_image": "/images/products/喜多川海梦水族馆立牌.png",
+    "main_image": "products/2026/05/喜多川海梦水族馆立牌.png",
     "images": [
-      "/images/products/喜多川海梦水族馆立牌.png"
+      "products/2026/05/喜多川海梦水族馆立牌.png"
     ],
     "description": "水族馆约会主题亚克力立牌，蓝色透明底座"
   },
@@ -569,9 +569,9 @@
     "character_name": "时崎狂三",
     "category": "figure",
     "reference_price": 488,
-    "main_image": "/images/products/时崎狂三哥特手办.png",
+    "main_image": "products/2026/05/时崎狂三哥特手办.png",
     "images": [
-      "/images/products/时崎狂三哥特手办.png"
+      "products/2026/05/时崎狂三哥特手办.png"
     ],
     "description": "狂三哥特礼服手办，钟表底座与枪械配件"
   },
@@ -581,9 +581,9 @@
     "character_name": "夜刀神十香",
     "category": "badge",
     "reference_price": 59,
-    "main_image": "/images/products/夜刀神十香灵装徽章.png",
+    "main_image": "products/2026/05/夜刀神十香灵装徽章.png",
     "images": [
-      "/images/products/夜刀神十香灵装徽章.png"
+      "products/2026/05/夜刀神十香灵装徽章.png"
     ],
     "description": "十香灵装主题徽章，紫色渐变底"
   },
@@ -593,9 +593,9 @@
     "character_name": "雪之下雪乃",
     "category": "poster",
     "reference_price": 82,
-    "main_image": "/images/products/雪之下雪乃校园色纸.png",
+    "main_image": "products/2026/05/雪之下雪乃校园色纸.png",
     "images": [
-      "/images/products/雪之下雪乃校园色纸.png"
+      "products/2026/05/雪之下雪乃校园色纸.png"
     ],
     "description": "雪乃校园主题收藏色纸，社团教室背景"
   },
@@ -605,9 +605,9 @@
     "character_name": "由比滨结衣",
     "category": "acrylic",
     "reference_price": 52,
-    "main_image": "/images/products/由比滨结衣亚克力挂件.png",
+    "main_image": "products/2026/05/由比滨结衣亚克力挂件.png",
     "images": [
-      "/images/products/由比滨结衣亚克力挂件.png"
+      "products/2026/05/由比滨结衣亚克力挂件.png"
     ],
     "description": "结衣校服造型亚克力挂件，糖果色底板"
   },
@@ -617,9 +617,9 @@
     "character_name": "牧濑红莉栖",
     "category": "figure",
     "reference_price": 399,
-    "main_image": "/images/products/牧濑红莉栖实验室手办.png",
+    "main_image": "products/2026/05/牧濑红莉栖实验室手办.png",
     "images": [
-      "/images/products/牧濑红莉栖实验室手办.png"
+      "products/2026/05/牧濑红莉栖实验室手办.png"
     ],
     "description": "红莉栖实验室白大褂手办，附书本配件"
   },
@@ -629,9 +629,9 @@
     "character_name": "冈部伦太郎",
     "category": "badge",
     "reference_price": 44,
-    "main_image": "/images/products/冈部伦太郎凤凰院徽章.png",
+    "main_image": "products/2026/05/冈部伦太郎凤凰院徽章.png",
     "images": [
-      "/images/products/冈部伦太郎凤凰院徽章.png"
+      "products/2026/05/冈部伦太郎凤凰院徽章.png"
     ],
     "description": "凤凰院凶真主题徽章，实验室标识设计"
   },
@@ -641,9 +641,9 @@
     "character_name": "Saber",
     "category": "figure",
     "reference_price": 568,
-    "main_image": "/images/products/Saber誓约胜利之剑手办.png",
+    "main_image": "products/2026/05/Saber誓约胜利之剑手办.png",
     "images": [
-      "/images/products/Saber誓约胜利之剑手办.png"
+      "products/2026/05/Saber誓约胜利之剑手办.png"
     ],
     "description": "Saber 持剑战斗姿态手办，透明剑光特效"
   },
@@ -653,9 +653,9 @@
     "character_name": "远坂凛",
     "category": "badge",
     "reference_price": 62,
-    "main_image": "/images/products/远坂凛宝石魔术徽章.png",
+    "main_image": "products/2026/05/远坂凛宝石魔术徽章.png",
     "images": [
-      "/images/products/远坂凛宝石魔术徽章.png"
+      "products/2026/05/远坂凛宝石魔术徽章.png"
     ],
     "description": "远坂凛宝石魔术主题徽章，红宝石烫印"
   },
@@ -665,9 +665,9 @@
     "character_name": "间桐樱",
     "category": "acrylic",
     "reference_price": 74,
-    "main_image": "/images/products/间桐樱樱花亚克力.png",
+    "main_image": "products/2026/05/间桐樱樱花亚克力.png",
     "images": [
-      "/images/products/间桐樱樱花亚克力.png"
+      "products/2026/05/间桐樱樱花亚克力.png"
     ],
     "description": "樱花主题亚克力立牌，淡紫透明底座"
   },
@@ -677,9 +677,9 @@
     "character_name": "爱蜜莉雅",
     "category": "figure",
     "reference_price": 336,
-    "main_image": "/images/products/爱蜜莉雅雪花手办.png",
+    "main_image": "products/2026/05/爱蜜莉雅雪花手办.png",
     "images": [
-      "/images/products/爱蜜莉雅雪花手办.png"
+      "products/2026/05/爱蜜莉雅雪花手办.png"
     ],
     "description": "爱蜜莉雅雪花主题手办，银白色礼服款"
   },
@@ -689,9 +689,9 @@
     "character_name": "拉姆",
     "category": "badge",
     "reference_price": 48,
-    "main_image": "/images/products/拉姆女仆徽章.png",
+    "main_image": "products/2026/05/拉姆女仆徽章.png",
     "images": [
-      "/images/products/拉姆女仆徽章.png"
+      "products/2026/05/拉姆女仆徽章.png"
     ],
     "description": "拉姆女仆装主题徽章，粉色边框"
   },
@@ -701,9 +701,9 @@
     "character_name": "蕾姆/拉姆",
     "category": "poster",
     "reference_price": 108,
-    "main_image": "/images/products/蕾姆拉姆双人色纸.png",
+    "main_image": "products/2026/05/蕾姆拉姆双人色纸.png",
     "images": [
-      "/images/products/蕾姆拉姆双人色纸.png"
+      "products/2026/05/蕾姆拉姆双人色纸.png"
     ],
     "description": "蕾姆与拉姆双人收藏色纸，限定双签风设计"
   },
@@ -713,9 +713,9 @@
     "character_name": "空条承太郎",
     "category": "figure",
     "reference_price": 498,
-    "main_image": "/images/products/空条承太郎白金之星手办.png",
+    "main_image": "products/2026/05/空条承太郎白金之星手办.png",
     "images": [
-      "/images/products/空条承太郎白金之星手办.png"
+      "products/2026/05/空条承太郎白金之星手办.png"
     ],
     "description": "承太郎与白金之星组合手办，双角色底座"
   },
@@ -725,9 +725,9 @@
     "character_name": "乔鲁诺",
     "category": "badge",
     "reference_price": 66,
-    "main_image": "/images/products/乔鲁诺黄金体验徽章.png",
+    "main_image": "products/2026/05/乔鲁诺黄金体验徽章.png",
     "images": [
-      "/images/products/乔鲁诺黄金体验徽章.png"
+      "products/2026/05/乔鲁诺黄金体验徽章.png"
     ],
     "description": "乔鲁诺黄金体验主题徽章，金色镜面工艺"
   },
@@ -737,9 +737,9 @@
     "character_name": "阿米娅",
     "category": "badge",
     "reference_price": 38,
-    "main_image": "/images/products/阿米娅罗德岛徽章.png",
+    "main_image": "products/2026/05/阿米娅罗德岛徽章.png",
     "images": [
-      "/images/products/阿米娅罗德岛徽章.png"
+      "products/2026/05/阿米娅罗德岛徽章.png"
     ],
     "description": "阿米娅罗德岛主题徽章，采用角色立绘与罗德岛标识设计"
   },
@@ -749,9 +749,9 @@
     "character_name": "凯尔希",
     "category": "acrylic",
     "reference_price": 88,
-    "main_image": "/images/products/凯尔希女仆亚克力立牌.png",
+    "main_image": "products/2026/05/凯尔希女仆亚克力立牌.png",
     "images": [
-      "/images/products/凯尔希女仆亚克力立牌.png"
+      "products/2026/05/凯尔希女仆亚克力立牌.png"
     ],
     "description": "凯尔希女仆主题亚克力立牌，适合桌面展示与收藏"
   },
@@ -761,9 +761,9 @@
     "character_name": "陈",
     "category": "other",
     "reference_price": 45,
-    "main_image": "/images/products/火陈通行证挂件.png",
+    "main_image": "products/2026/05/火陈通行证挂件.png",
     "images": [
-      "/images/products/火陈通行证挂件.png"
+      "products/2026/05/火陈通行证挂件.png"
     ],
     "description": "火陈主题挂件，配有角色武器与龙门元素装饰"
   },
@@ -773,9 +773,9 @@
     "character_name": "能天使",
     "category": "acrylic",
     "reference_price": 86,
-    "main_image": "/images/products/能天使拉特兰亚克力立牌.png",
+    "main_image": "products/2026/05/能天使拉特兰亚克力立牌.png",
     "images": [
-      "/images/products/能天使拉特兰亚克力立牌.png"
+      "products/2026/05/能天使拉特兰亚克力立牌.png"
     ],
     "description": "能天使拉特兰主题亚克力立牌，采用活泼明亮的角色形象设计"
   },
@@ -785,9 +785,9 @@
     "character_name": "银灰",
     "category": "acrylic",
     "reference_price": 98,
-    "main_image": "/images/products/银灰谢拉格收藏立牌.png",
+    "main_image": "products/2026/05/银灰谢拉格收藏立牌.png",
     "images": [
-      "/images/products/银灰谢拉格收藏立牌.png"
+      "products/2026/05/银灰谢拉格收藏立牌.png"
     ],
     "description": "银灰谢拉格主题收藏立牌，突出领主形象与雪境风格"
   },
@@ -797,9 +797,9 @@
     "character_name": "艾雅法拉",
     "category": "figure",
     "reference_price": 50,
-    "main_image": "/images/products/艾雅法拉手办.png",
+    "main_image": "products/2026/05/艾雅法拉手办.png",
     "images": [
-      "/images/products/艾雅法拉手办.png"
+      "products/2026/05/艾雅法拉手办.png"
     ],
     "description": "艾雅法拉火山主题手办，结合术师元素与温暖色调设计"
   },
@@ -809,9 +809,9 @@
     "character_name": "史尔特尔",
     "category": "acrylic",
     "reference_price": 108,
-    "main_image": "/images/products/史尔特尔主题立牌.png",
+    "main_image": "products/2026/05/史尔特尔主题立牌.png",
     "images": [
-      "/images/products/史尔特尔黄昏主题立牌.png"
+      "products/2026/05/史尔特尔黄昏主题立牌.png"
     ],
     "description": "史尔特尔主题亚克力立牌，突出火焰与剑刃视觉元素"
   },
@@ -821,9 +821,9 @@
     "character_name": "浊心斯卡蒂",
     "category": "badge",
     "reference_price": 58,
-    "main_image": "/images/products/浊心斯卡蒂深海主题徽章.png",
+    "main_image": "products/2026/05/浊心斯卡蒂深海主题徽章.png",
     "images": [
-      "/images/products/浊心斯卡蒂深海主题徽章.png"
+      "products/2026/05/浊心斯卡蒂深海主题徽章.png"
     ],
     "description": "浊心斯卡蒂深海主题徽章，采用蓝色系与海嗣风格元素设计"
   },
@@ -833,9 +833,9 @@
     "character_name": "森蚺",
     "category": "figure",
     "reference_price": 52,
-    "main_image": "/images/products/森蚺手办.png",
+    "main_image": "products/2026/05/森蚺手办.png",
     "images": [
-      "/images/products/森蚺手办.png"
+      "products/2026/05/森蚺手办.png"
     ],
     "description": "森蚺手办，优美又华丽"
   },
@@ -845,9 +845,9 @@
     "character_name": "黑白的阿维斯塔",
     "category": "other",
     "reference_price": 52,
-    "main_image": "/images/products/《黑白的阿维斯塔》小说第一卷 凶战士篇.jpg",
+    "main_image": "products/2026/05/《黑白的阿维斯塔》小说第一卷 凶战士篇.jpg",
     "images": [
-      "/images/products/《黑白的阿维斯塔》小说第一卷 凶战士篇.jpg"
+      "products/2026/05/《黑白的阿维斯塔》小说第一卷 凶战士篇.jpg"
     ],
     "description": "《黑白的阿维斯塔》小说第一卷 凶战士篇"
   },
@@ -857,9 +857,9 @@
     "character_name": "黑白的阿维斯塔",
     "category": "other",
     "reference_price": 52,
-    "main_image": "/images/products/《黑白的阿维斯塔》小说第二卷 惭愧之空篇.jpg",
+    "main_image": "products/2026/05/《黑白的阿维斯塔》小说第二卷 惭愧之空篇.jpg",
     "images": [
-      "/images/products/《黑白的阿维斯塔》小说第二卷 惭愧之空篇.jpg"
+      "products/2026/05/《黑白的阿维斯塔》小说第二卷 惭愧之空篇.jpg"
     ],
     "description": "《黑白的阿维斯塔》小说第二卷 惭愧之空篇"
   },
@@ -869,9 +869,9 @@
     "character_name": "黑白的阿维斯塔",
     "category": "other",
     "reference_price": 52,
-    "main_image": "/images/products/《黑白的阿维斯塔》小说第三卷 不变之物篇.jpg",
+    "main_image": "products/2026/05/《黑白的阿维斯塔》小说第三卷 不变之物篇.jpg",
     "images": [
-      "/images/products/《黑白的阿维斯塔》小说第三卷 不变之物篇.jpg"
+      "products/2026/05/《黑白的阿维斯塔》小说第三卷 不变之物篇.jpg"
     ],
     "description": "《黑白的阿维斯塔》小说第三卷 不变之物篇"
   },
@@ -881,9 +881,9 @@
     "character_name": "黑白的阿维斯塔",
     "category": "other",
     "reference_price": 52,
-    "main_image": "/images/products/《黑白的阿维斯塔》小说第四卷 堕天无惭乐土篇.jpg",
+    "main_image": "products/2026/05/《黑白的阿维斯塔》小说第四卷 堕天无惭乐土篇.jpg",
     "images": [
-      "/images/products/《黑白的阿维斯塔》小说第四卷 堕天无惭乐土篇.jpg"
+      "products/2026/05/《黑白的阿维斯塔》小说第四卷 堕天无惭乐土篇.jpg"
     ],
     "description": "《黑白的阿维斯塔》小说第四卷 堕天无惭乐土篇"
   }
