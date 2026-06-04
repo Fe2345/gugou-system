@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getOrderDetail, cancelOrder, confirmOrder, createPayment, confirmPayment } from '@/api/order'
+import { useUserStore } from '@/stores/user'
 import type { OrderItem } from '@/types/order'
 
 const route = useRoute()
@@ -10,6 +11,7 @@ const router = useRouter()
 const order = ref<OrderItem | null>(null)
 const loading = ref(false)
 const actionLoading = ref(false)
+const forbidden = ref(false)
 
 const statusMap: Record<string, { text: string; cls: string }> = {
   created: { text: '已创建', cls: 'status-pending' },
@@ -29,7 +31,13 @@ async function loadOrder() {
     if (res.code === 200) {
       order.value = res.data
     }
-  } catch (e) {
+  } catch (e: any) {
+    const status = e?.response?.status
+    if (status === 403) {
+      forbidden.value = true
+      setTimeout(() => router.replace('/my-orders'), 1500)
+      return
+    }
     console.error('加载订单详情失败', e)
   } finally {
     loading.value = false
@@ -103,6 +111,11 @@ function formatDate(dateStr: string | null) {
 }
 
 onMounted(() => {
+  const userStore = useUserStore()
+  if (!userStore.isLoggedIn) {
+    router.replace('/login')
+    return
+  }
   loadOrder()
 })
 </script>
@@ -119,6 +132,7 @@ onMounted(() => {
     </section>
 
     <div v-if="loading" class="empty-state"><strong>加载中...</strong></div>
+    <div v-else-if="forbidden" class="empty-state"><strong>无权查看此订单</strong><p>即将返回订单列表...</p></div>
     <div v-else-if="!order" class="empty-state"><strong>订单不存在</strong></div>
     <section v-else class="detail-layout">
       <article class="detail-main">
