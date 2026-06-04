@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -41,13 +42,13 @@ async function handleSubmit() {
       quantity: quantity.value,
     })
     if (res.code === 200) {
-      alert('下单成功')
+      ElMessage.success('下单成功')
       router.push(`/my-orders/${res.data.order_id}`)
     } else {
-      alert(res.message || '下单失败')
+      ElMessage.error(res.message || '下单失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '下单失败')
+    ElMessage.error(e?.response?.data?.message || '下单失败')
   } finally {
     submitting.value = false
   }

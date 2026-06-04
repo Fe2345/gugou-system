@@ -3,7 +3,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getAssetsList, addAsset, updateAsset, deleteAsset } from '@/api/assets'
-import { getGoodsDetail, getGoodsList } from '@/api/goods'
+import { getGoodsDetail, getGoodsList, getGoodsCategories } from '@/api/goods'
 import { publishToMarket, cancelListing, getMyListings } from '@/api/market'
 import type { AssetItem, AssetForm, AssetSummary } from '@/types/assets'
 import type { GoodsItem } from '@/types/goods'
@@ -107,6 +107,14 @@ function clearProductSelection() {
   showProductDropdown.value = false
 }
 
+const categories = ref<{ value: string; label: string }[]>([])
+
+const addFormErrors = reactive<Record<string, string>>({})
+
+function clearAddError(field: string) {
+  delete addFormErrors[field]
+}
+
 const editForm = reactive({
   productName: '',
   ipName: '',
@@ -138,8 +146,12 @@ async function loadAssets() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadAssets()
+  try {
+    const catRes = await getGoodsCategories()
+    if (catRes.code === 200) categories.value = catRes.data
+  } catch { /* 品类列表加载失败不影响主流程 */ }
   openApprovedProductAssetForm()
 })
 
@@ -160,10 +172,11 @@ function openAddModal() {
   addForm.productName = ''
   addForm.ipName = ''
   addForm.characterName = ''
-  addForm.category = 'other'
+  addForm.category = categories.value[0]?.value || 'other'
   addForm.quantity = 1
   addForm.acquirePrice = 0
   addForm.description = ''
+  Object.keys(addFormErrors).forEach(k => delete addFormErrors[k])
   acquirePriceError.value = false
   productSearchQuery.value = ''
   productSearchResults.value = []
@@ -202,7 +215,36 @@ function closeAddModal() {
   }
 }
 
+function validateAddForm(): boolean {
+  let valid = true
+  if (!addForm.productName) {
+    addFormErrors.productName = '谷子名称不能为空'
+    valid = false
+  }
+  if (!addForm.ipName || !addForm.ipName.trim()) {
+    addFormErrors.ipName = 'IP不能为空'
+    valid = false
+  }
+  if (!addForm.characterName || !addForm.characterName.trim()) {
+    addFormErrors.characterName = '角色不能为空'
+    valid = false
+  }
+  if (!addForm.category || !addForm.category.trim()) {
+    addFormErrors.category = '品类不能为空'
+    valid = false
+  }
+  if (!addForm.acquirePrice && addForm.acquirePrice !== 0) {
+    addFormErrors.acquirePrice = '入手价不能为空'
+    valid = false
+  } else if (addForm.acquirePrice <= 0) {
+    addFormErrors.acquirePrice = '入手价不得小于或等于0'
+    valid = false
+  }
+  return valid
+}
+
 async function handleAdd() {
+  if (!validateAddForm()) return
   acquirePriceError.value = false
   if (!addForm.productName || addForm.quantity < 1 || addForm.acquirePrice < 0) {
     showFeedback('添加失败', '请检查商品名称、数量和入手价。', 'error')
@@ -584,25 +626,29 @@ function viewPriceTrend(asset: AssetItem) {
         </div>
         <label>
           <span>谷子名称 *</span>
-          <input v-model="addForm.productName" type="text" required :readonly="approvedProductMode" placeholder="请输入谷子名称">
+          <input v-model="addForm.productName" type="text" required :readonly="approvedProductMode" placeholder="请输入谷子名称" @input="clearAddError('productName')">
+          <span v-if="addFormErrors.productName" class="field-error">{{ addFormErrors.productName }}</span>
         </label>
         <div class="form-row">
           <label>
-            <span>IP</span>
-            <input v-model="addForm.ipName" type="text" :readonly="approvedProductMode" placeholder="如：原神">
+            <span>IP *</span>
+            <input v-model="addForm.ipName" type="text" required :readonly="approvedProductMode" placeholder="如：原神" @input="clearAddError('ipName')">
+            <span v-if="addFormErrors.ipName" class="field-error">{{ addFormErrors.ipName }}</span>
           </label>
           <label>
-            <span>角色</span>
-            <input v-model="addForm.characterName" type="text" :readonly="approvedProductMode" placeholder="如：胡桃">
+            <span>角色 *</span>
+            <input v-model="addForm.characterName" type="text" required :readonly="approvedProductMode" placeholder="如：胡桃" @input="clearAddError('characterName')">
+            <span v-if="addFormErrors.characterName" class="field-error">{{ addFormErrors.characterName }}</span>
           </label>
         </div>
         <div class="form-row">
           <label>
-            <span>品类</span>
+            <span>品类 *</span>
             <input v-if="approvedProductMode" :value="getCategoryLabel(addForm.category)" type="text" readonly>
-            <select v-else v-model="addForm.category">
-              <option v-for="cat in categoryOptions" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+            <select v-else v-model="addForm.category" required @change="clearAddError('category')">
+              <option v-for="cat in (categories.length ? categories : categoryOptions)" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
             </select>
+            <span v-if="addFormErrors.category" class="field-error">{{ addFormErrors.category }}</span>
           </label>
           <label>
             <span>数量 *</span>
@@ -611,8 +657,8 @@ function viewPriceTrend(asset: AssetItem) {
         </div>
         <label>
           <span>入手价 *</span>
-          <input v-model.number="addForm.acquirePrice" type="number" min="0" step="0.01" required :readonly="approvedProductMode" placeholder="请输入购买价格" :class="{ 'input-error': acquirePriceError }" @input="acquirePriceError = false">
-          <p v-if="acquirePriceError" class="error-text">请填写入手价格</p>
+          <input v-model.number="addForm.acquirePrice" type="number" min="0" step="0.01" required :readonly="approvedProductMode" placeholder="请输入购买价格" :class="{ 'input-error': acquirePriceError }" @input="acquirePriceError = false; clearAddError('acquirePrice')">
+          <span v-if="addFormErrors.acquirePrice" class="field-error">{{ addFormErrors.acquirePrice }}</span>
         </label>
         <label>
           <span>描述</span>
@@ -881,6 +927,7 @@ tbody tr:hover { background: #fbfdfe; }
 .modal-form input[readonly] { color: var(--muted); background: var(--soft); }
 .modal-form textarea { resize: vertical; min-height: 70px; }
 .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,100,120,0.1); outline: none; }
+.field-error { color: #be123c; font-size: 13px; margin-top: 2px; }
 .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .product-search-wrap { position: relative; }
 .product-dropdown {
