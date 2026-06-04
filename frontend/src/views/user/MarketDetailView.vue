@@ -3,9 +3,11 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getMarketDetail, cancelListing, type MarketItem } from '@/api/market'
+import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 const item = ref<MarketItem | null>(null)
 const loading = ref(false)
 
@@ -92,11 +94,15 @@ onMounted(() => {
           <p>{{ item.description || '暂无描述' }}</p>
         </div>
 
-        <div v-if="item.images && item.images.length > 0" class="images-section">
+        <div class="images-section">
           <h3>商品图片</h3>
-          <div class="image-list">
+          <div v-if="item.images && item.images.length > 0" class="image-list">
             <img v-for="(img, idx) in item.images" :key="idx" :src="img.image_url" alt="商品图片">
           </div>
+          <div v-else-if="item.product_image" class="image-list">
+            <img :src="item.product_image" alt="商品图片">
+          </div>
+          <p v-else class="no-image">暂无图片</p>
         </div>
       </article>
 
@@ -104,7 +110,8 @@ onMounted(() => {
         <section class="action-card">
           <h3>操作</h3>
           <div class="action-list">
-            <button v-if="item.status === 'active'" class="primary full" type="button" @click="router.push(`/my-orders/create?listing=${item.listing_id}`)">发起交易</button>
+            <button v-if="item.status === 'active' && userStore.userInfo?.id !== item.seller_id" class="primary full" type="button" @click="router.push(`/my-orders/create?listing=${item.listing_id}`)">发起交易</button>
+            <p v-else-if="item.status === 'active' && userStore.userInfo?.id === item.seller_id" class="self-hint">这是您发布的商品，无法发起交易</p>
             <button v-if="item.status === 'active'" class="danger full" type="button" @click="handleCancel">取消挂单</button>
             <button class="secondary full" type="button" @click="router.push('/market')">返回市场</button>
           </div>
@@ -141,9 +148,11 @@ h1 { font-size: 32px; }
 .desc-section p { color: var(--muted); line-height: 1.7; }
 .image-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 .image-list img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+.no-image { color: var(--muted); font-size: 14px; }
 .action-card { padding: 18px; }
 .action-card h3 { font-size: 18px; margin-bottom: 14px; }
 .action-list { display: grid; gap: 10px; }
+.self-hint { color: var(--muted); font-size: 13px; text-align: center; margin: 0; }
 .primary, .secondary, .danger { min-height: 44px; padding: 0 18px; border-radius: 8px; font-weight: 800; cursor: pointer; font: inherit; }
 .primary { border: 0; color: #fff; background: var(--accent); }
 .primary:hover { background: var(--accent-dark); }

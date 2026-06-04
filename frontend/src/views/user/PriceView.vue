@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { queryPrice, getHotPrices, getMyAssetPrices } from '@/api/pricing'
 import { useUserStore } from '@/stores/user'
 import type { PriceItem } from '@/types/pricing'
 
 const userStore = useUserStore()
+const route = useRoute()
 const keyword = ref('')
 const range = ref<'7d' | '30d' | '90d'>('30d')
 const loading = ref(false)
@@ -77,9 +79,10 @@ const conclusionTexts = computed(() => {
 })
 
 async function handleSearch() {
+  if (!keyword.value.trim()) return
   loading.value = true
   selectedAssetId.value = null
-  const res = await queryPrice({ keyword: keyword.value || '玛奇朵', range: range.value })
+  const res = await queryPrice({ keyword: keyword.value, range: range.value })
   item.value = res.data
   loading.value = false
 }
@@ -116,13 +119,22 @@ function setRange(r: '7d' | '30d' | '90d') {
 }
 
 onMounted(async () => {
-  await loadMyAssets()
-  const firstAsset = myAssets.value[0]
-  if (firstAsset) {
-    selectAsset(firstAsset)
-  } else {
-    keyword.value = '玛奇朵'
+  // 从 URL 参数读取关键词并自动搜索
+  const queryKeyword = route.query.keyword as string
+  if (queryKeyword) {
+    keyword.value = queryKeyword
     await handleSearch()
+  }
+
+  await loadMyAssets()
+  if (!queryKeyword) {
+    const firstAsset = myAssets.value[0]
+    if (firstAsset) {
+      selectAsset(firstAsset)
+    } else {
+      keyword.value = '玛奇朵'
+      await handleSearch()
+    }
   }
   const res = await getHotPrices()
   hotPrices.value = res.data
@@ -149,11 +161,34 @@ onMounted(async () => {
       </form>
     </section>
 
+    <section class="summary-panel" v-if="item">
+      <div class="product-info">
+        <p class="eyebrow">当前谷子</p>
+        <h2>{{ item.name }}</h2>
+        <div class="meta-tags">
+          <span>{{ item.ipName }}</span><span>{{ item.characterName }}</span><span>{{ categoryLabel(item.category) }}</span>
+        </div>
+      </div>
+      <div class="metric-grid" aria-label="价格指标">
+        <article><span>当前参考价</span><strong>¥{{ item.currentPrice }}</strong></article>
+        <article><span>{{ rangeLabel }}均价</span><strong>¥{{ item.avgPrice }}</strong></article>
+        <article><span>最高成交价</span><strong>¥{{ item.maxPrice }}</strong></article>
+        <article><span>最低成交价</span><strong>¥{{ item.minPrice }}</strong></article>
+        <article :class="changeClass"><span>涨跌幅</span><strong>{{ item.changePercent > 0 ? '+' : '' }}{{ item.changePercent }}%</strong></article>
+      </div>
+    </section>
+    <section class="summary-panel" v-else-if="keyword.trim() && !loading">
+      <div class="product-info">
+        <p class="eyebrow">当前谷子</p>
+        <h2>未找到匹配结果</h2>
+      </div>
+    </section>
+
     <section class="my-assets-panel" v-if="userStore.isLoggedIn && myAssets.length > 0">
       <div class="section-head">
         <div>
-          <p class="eyebrow">我的资产</p>
-          <h2>持有商品价格走势</h2>
+          <p class="eyebrow">资产价格分析</p>
+          <h2>我的资产价格分析</h2>
         </div>
         <div class="range-tabs" aria-label="时间范围">
           <button type="button" :class="{ active: range === '7d' }" @click="setRange('7d')">近7天</button>
@@ -171,29 +206,6 @@ onMounted(async () => {
           </div>
           <p class="asset-cost" v-if="a.acquirePrice">购入价 ¥{{ a.acquirePrice }}</p>
         </article>
-      </div>
-    </section>
-
-    <section class="summary-panel" v-if="item">
-      <div class="product-info">
-        <p class="eyebrow">当前谷子</p>
-        <h2>{{ item.name }}</h2>
-        <div class="meta-tags">
-          <span>{{ item.ipName }}</span><span>{{ item.characterName }}</span><span>{{ categoryLabel(item.category) }}</span>
-        </div>
-      </div>
-      <div class="metric-grid" aria-label="价格指标">
-        <article><span>当前参考价</span><strong>¥{{ item.currentPrice }}</strong></article>
-        <article><span>{{ rangeLabel }}均价</span><strong>¥{{ item.avgPrice }}</strong></article>
-        <article><span>最高成交价</span><strong>¥{{ item.maxPrice }}</strong></article>
-        <article><span>最低成交价</span><strong>¥{{ item.minPrice }}</strong></article>
-        <article :class="changeClass"><span>涨跌幅</span><strong>{{ item.changePercent > 0 ? '+' : '' }}{{ item.changePercent }}%</strong></article>
-      </div>
-    </section>
-    <section class="summary-panel" v-else-if="!loading">
-      <div class="product-info">
-        <p class="eyebrow">当前谷子</p>
-        <h2>未找到匹配结果</h2>
       </div>
     </section>
 
