@@ -12,11 +12,29 @@ class ProductSerializer(serializers.ModelSerializer):
     referencePrice = serializers.DecimalField(source="reference_price", max_digits=10, decimal_places=2, read_only=True)
     mainImage = serializers.ImageField(source="main_image", read_only=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+    isInUse = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = ["id", "name", "ipName", "characterName", "category",
-                  "referencePrice", "mainImage", "description", "status", "createdAt"]
+                  "referencePrice", "mainImage", "description", "status", "createdAt", "isInUse"]
+
+    def get_isInUse(self, obj):
+        """检查商品是否被其他模块使用"""
+        from apps.assets.models import UserAsset
+        from apps.market.models import Listing
+        from apps.orders.models import Order
+        from apps.teams.models import TeamProject
+
+        if UserAsset.objects.filter(product=obj).exists():
+            return True
+        if Listing.objects.filter(product=obj, status__in=["active", "locked"]).exists():
+            return True
+        if Order.objects.filter(product=obj).exclude(status="cancelled").exists():
+            return True
+        if TeamProject.objects.filter(product=obj).exists():
+            return True
+        return False
 
 
 class ProductCreateSerializer(serializers.Serializer):

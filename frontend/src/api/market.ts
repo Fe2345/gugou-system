@@ -7,6 +7,7 @@ export interface MarketItem {
   seller_name: string
   product_id: string
   product_name: string
+  product_image: string | null
   price: number
   quantity: number
   description: string
