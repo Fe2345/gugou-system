@@ -3,7 +3,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
-import { deleteAccount, getUserInfo, updateUserInfo, changePassword, changePhone, getLoginRecords } from '@/api/user'
+import { deleteAccount, getUserInfo, updateUserInfo, changePassword, changePhone, getLoginRecords, uploadAvatar } from '@/api/user'
 import { getAddresses, addAddress, updateAddress, deleteAddress, getDivisions } from '@/api/address'
 import { getCreditRecords, getCreditSummary } from '@/api/credit'
 import type { AddressItem, AddressForm, DivisionItem } from '@/api/address'
@@ -28,7 +28,6 @@ const menus = [
   { key: 'address', label: '地址管理' },
   { key: 'security', label: '安全设置' },
   { key: 'credit', label: '信用评价' },
-  { key: 'messages', label: '消息通知' },
 ]
 
 // 编辑资料弹窗
@@ -53,6 +52,10 @@ const creditRecords = ref<CreditRecord[]>([])
 const loadingCredit = ref(false)
 const creditPage = ref(1)
 const creditTotal = ref(0)
+
+// 头像上传
+const avatarInput = ref<HTMLInputElement | null>(null)
+const uploadingAvatar = ref(false)
 
 // --- 地址管理 ---
 const addresses = ref<AddressItem[]>([])
@@ -149,6 +152,36 @@ async function loadMoreCreditRecords() {
     creditRecords.value.push(...res.data.results)
   } catch {
     creditPage.value--
+  }
+}
+
+// --- 头像上传 ---
+function triggerAvatarUpload() {
+  avatarInput.value?.click()
+}
+
+async function handleAvatarChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  if (file.size > 2 * 1024 * 1024) {
+    showMessage('头像大小不能超过 2MB', 'error')
+    input.value = ''
+    return
+  }
+
+  uploadingAvatar.value = true
+  try {
+    const res = await uploadAvatar(file)
+    if (user.value) user.value.avatar = res.data.avatar
+    showMessage('头像更新成功')
+    await loadUser()
+  } catch {
+    showMessage('头像上传失败', 'error')
+  } finally {
+    uploadingAvatar.value = false
+    input.value = ''
   }
 }
 
@@ -375,7 +408,12 @@ onMounted(() => {
   <main v-else class="page">
     <!-- 用户头部卡片 -->
     <section class="user-hero">
-      <div class="avatar">{{ (user.nickname || user.phone).charAt(0) }}</div>
+      <div class="avatar-wrapper" @click="triggerAvatarUpload" :title="uploadingAvatar ? '上传中...' : '点击更换头像'">
+        <img v-if="user.avatar" :src="user.avatar" class="avatar-img" alt="头像" />
+        <div v-else class="avatar">{{ (user.nickname || user.phone).charAt(0) }}</div>
+        <div class="avatar-overlay">{{ uploadingAvatar ? '...' : '+' }}</div>
+      </div>
+      <input ref="avatarInput" type="file" accept="image/*" style="display: none" @change="handleAvatarChange" />
       <div class="user-info">
         <p class="eyebrow">用户中心</p>
         <h1>{{ user.nickname || '未设置昵称' }}</h1>
@@ -411,7 +449,14 @@ onMounted(() => {
             </div>
           </div>
           <div class="profile-grid">
-            <div><span>头像</span><strong>{{ user.avatar ? '已设置' : '未设置' }}</strong></div>
+            <div class="avatar-info">
+              <span>头像</span>
+              <div class="avatar-preview" @click="triggerAvatarUpload">
+                <img v-if="user.avatar" :src="user.avatar" alt="头像" />
+                <div v-else class="avatar-placeholder">{{ (user.nickname || user.phone).charAt(0) }}</div>
+                <span class="change-hint">点击更换</span>
+              </div>
+            </div>
             <div><span>昵称</span><strong>{{ user.nickname || '未设置' }}</strong></div>
             <div><span>手机号</span><strong>{{ maskPhone(user.phone) }}</strong></div>
             <div><span>联系方式</span><strong>{{ user.contact || '未填写' }}</strong></div>
@@ -535,11 +580,6 @@ onMounted(() => {
           </div>
         </section>
 
-        <!-- 消息通知 -->
-        <section v-show="activeMenu === 'messages'" class="panel">
-          <div class="section-head"><div><p class="eyebrow">消息通知</p><h2>消息列表</h2></div></div>
-          <div class="empty-state"><strong>功能开发中</strong><p>后续版本将支持消息通知。</p></div>
-        </section>
       </section>
 
       <aside class="right-panel">
@@ -658,7 +698,7 @@ onMounted(() => {
 <style scoped>
 .page { width: min(1240px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 44px; }
 .loading-text { text-align: center; color: var(--muted); padding: 60px 0; font-size: 18px; }
-.toast { margin-top: 16px; padding: 12px 18px; border-radius: 8px; color: #1f6b45; background: #e8f7ef; border: 1px solid #bce5ce; font-weight: 600; }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; padding: 12px 18px; border-radius: 8px; color: #1f6b45; background: #e8f7ef; border: 1px solid #bce5ce; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .toast.error { color: #b9352b; background: #fdecea; border-color: #f0b8b3; }
 .user-hero {
   display: grid; grid-template-columns: 86px minmax(0, 1fr) 240px; gap: 20px; align-items: center;
@@ -668,6 +708,10 @@ onMounted(() => {
   box-shadow: var(--shadow);
 }
 .avatar { width: 86px; height: 86px; display: grid; place-items: center; border-radius: 10px; color: #172126; background: var(--gold); font-size: 34px; font-weight: 900; text-transform: uppercase; }
+.avatar-wrapper { position: relative; width: 86px; height: 86px; border-radius: 10px; cursor: pointer; overflow: hidden; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+.avatar-overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.5); color: #fff; font-size: 24px; font-weight: 700; opacity: 0; transition: opacity 0.2s; border-radius: 10px; }
+.avatar-wrapper:hover .avatar-overlay { opacity: 1; }
 .eyebrow { margin: 0 0 8px; color: var(--gold); font-size: 13px; font-weight: 800; }
 h1, h2, p { margin: 0; }
 h1 { font-size: 34px; }
@@ -713,6 +757,12 @@ h2 { font-size: 23px; }
 .bio-section { margin-top: 16px; padding: 14px; border-radius: 8px; background: var(--soft); }
 .bio-section span { display: block; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
 .bio-section p { color: var(--ink); line-height: 1.6; }
+.avatar-info { grid-column: 1 / -1; }
+.avatar-preview { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; margin-top: 8px; }
+.avatar-preview img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
+.avatar-preview .avatar-placeholder { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 8px; background: var(--gold); color: #172126; font-size: 24px; font-weight: 900; }
+.avatar-preview .change-hint { color: var(--accent); font-size: 14px; font-weight: 600; }
+.avatar-preview:hover .change-hint { text-decoration: underline; }
 .muted-text { color: var(--muted); font-size: 14px; margin-top: 12px; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; min-width: 400px; border-collapse: collapse; font-size: 14px; }

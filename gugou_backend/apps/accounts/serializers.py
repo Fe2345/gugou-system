@@ -42,10 +42,15 @@ class LoginSerializer(serializers.Serializer):
         account = attrs["account"]
         password = attrs["password"]
 
+        # 先检查账号是否存在
+        from apps.accounts.models import User
+        if not User.objects.filter(phone=account).exists():
+            raise serializers.ValidationError("账户不存在")
+
         user = authenticate(request=self.context.get("request"), username=account, password=password)
         if user is None:
             logger.warning("登录失败: account=%s", account)
-            raise serializers.ValidationError("账号或密码错误")
+            raise serializers.ValidationError("密码错误")
 
         if user.status in (User.Status.DISABLED, User.Status.DELETED):
             logger.warning("登录被拒: %s status=%s", user.user_id, user.status)
