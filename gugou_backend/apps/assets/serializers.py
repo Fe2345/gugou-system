@@ -36,6 +36,26 @@ class AssetCreateSerializer(serializers.Serializer):
     acquirePrice = serializers.DecimalField(max_digits=10, decimal_places=2, default=0)
     description = serializers.CharField(required=False, default="", allow_blank=True)
 
+    def validate_productId(self, value):
+        if not value:
+            return value
+        from apps.products.models import Product
+        if not Product.objects.filter(product_id=value).exists():
+            raise serializers.ValidationError("商品不存在或已被删除")
+        return value
+
+    def validate_category(self, value):
+        category_map = {
+            "手办": "figure",
+            "徽章": "badge",
+            "海报": "poster",
+            "亚克力": "acrylic",
+            "玩偶": "doll",
+            "卡片": "card",
+            "其他": "other",
+        }
+        return category_map.get(value, value or "other")
+
     def create(self, validated_data):
         from apps.products.models import Product
         from apps.common.id_generator import generate_product_id

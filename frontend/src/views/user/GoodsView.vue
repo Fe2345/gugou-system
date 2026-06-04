@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref, reactive, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { addGoods, getGoodsCategories, getGoodsList, getMyGoodsList, updateGoods } from '@/api/goods'
 import { useUserStore } from '@/stores/user'
 import type { GoodsItem } from '@/types/goods'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 const loading = ref(false)
 const saving = ref(false)
@@ -19,6 +20,15 @@ const editingProduct = ref<GoodsItem | null>(null)
 const showForm = ref(false)
 const totalCount = ref(0)
 const defaultPageSize = 100
+const categoryLabels: Record<string, string> = {
+  figure: '手办',
+  badge: '徽章',
+  poster: '海报',
+  acrylic: '亚克力',
+  doll: '玩偶',
+  card: '卡片',
+  other: '其他',
+}
 
 const filterForm = reactive({
   ipName: '',
@@ -38,6 +48,18 @@ const goodsForm = reactive({
 })
 const mainImageFile = ref<File | null>(null)
 const mainImagePreview = ref('')
+const dismissedApprovedIds = ref<Set<string>>(new Set())
+const feedback = reactive({
+  visible: false,
+  title: '',
+  message: '',
+  type: 'success' as 'success' | 'error',
+})
+
+const notificationStorageKey = computed(() => `approved-goods-dismissed:${userStore.userInfo?.id || 'guest'}`)
+const approvedNotifications = computed(() => (
+  myProducts.value.filter(p => p.status === 'active' && !dismissedApprovedIds.value.has(p.id))
+))
 
 async function loadProducts(keyword?: string) {
   loading.value = true
@@ -77,10 +99,12 @@ async function loadMyProducts() {
 }
 
 onMounted(async () => {
+  const stored = localStorage.getItem(notificationStorageKey.value)
+  dismissedApprovedIds.value = new Set(stored ? JSON.parse(stored) : [])
   const keyword = route.query.keyword as string
   if (keyword) searchQuery.value = keyword
   const catRes = await getGoodsCategories()
-  categories.value = catRes.data
+  categories.value = catRes.data.map(cat => ({ ...cat, label: categoryLabels[cat.value] || cat.label }))
   goodsForm.category = categories.value[0]?.value || 'other'
   await Promise.all([loadProducts(searchQuery.value), loadMyProducts()])
 })
@@ -115,9 +139,10 @@ function resetGoodsForm() {
 
 function handleImageChange(e: Event) {
   const input = e.target as HTMLInputElement
-  if (input.files?.length) {
-    mainImageFile.value = input.files[0]
-    mainImagePreview.value = URL.createObjectURL(input.files[0])
+  const file = input.files?.[0]
+  if (file) {
+    mainImageFile.value = file
+    mainImagePreview.value = URL.createObjectURL(file)
   } else {
     mainImageFile.value = null
     mainImagePreview.value = ''
@@ -165,11 +190,15 @@ async function saveGoods() {
     }
     if (editingProduct.value) {
       await updateGoods(editingProduct.value.id, formData)
+      showFeedback('保存成功', '待审核商品信息已更新。')
     } else {
       await addGoods(formData)
+      showFeedback('提交审核成功', '您的商品已经提交给管理员审核，通过后会在这里收到通知。')
     }
     closeForm()
     await Promise.all([loadProducts(searchQuery.value), loadMyProducts()])
+  } catch (e: any) {
+    showFeedback('提交失败', e?.response?.data?.message || '操作失败，请稍后重试。', 'error')
   } finally {
     saving.value = false
   }
@@ -181,6 +210,36 @@ function viewDetail(product: GoodsItem) {
 
 function closeDetail() {
   selectedProduct.value = null
+}
+
+function dismissApprovedNotice(productId: string) {
+  const next = new Set(dismissedApprovedIds.value)
+  next.add(productId)
+  dismissedApprovedIds.value = next
+  localStorage.setItem(notificationStorageKey.value, JSON.stringify([...next]))
+}
+
+function goToApprovedDetail(product: GoodsItem) {
+  selectedProduct.value = product
+}
+
+function addApprovedToAssets(product: GoodsItem) {
+  router.push({ path: '/assets', query: { productId: product.id, source: 'approved' } })
+}
+
+function showFeedback(title: string, message: string, type: 'success' | 'error' = 'success') {
+  feedback.title = title
+  feedback.message = message
+  feedback.type = type
+  feedback.visible = true
+}
+
+function closeFeedback() {
+  feedback.visible = false
+}
+
+function getCategoryLabel(category: string) {
+  return categoryLabels[category] || categories.value.find(cat => cat.value === category)?.label || category
 }
 
 function getStatusText(status: string) {
@@ -217,6 +276,23 @@ function getStatusText(status: string) {
       <button class="primary" type="button" @click="openCreateForm">添加商品</button>
     </section>
 
+    <section v-if="approvedNotifications.length" class="notice-stack" aria-label="approved product notifications">
+      <article v-for="p in approvedNotifications" :key="p.id" class="approval-notice">
+        <button class="notice-close" type="button" aria-label="close notification" @click="dismissApprovedNotice(p.id)">&times;</button>
+        <div class="notice-icon">✓</div>
+        <div class="notice-body">
+          <p class="eyebrow">审核通过</p>
+          <h2>您的商品已经审核通过</h2>
+          <p>“{{ p.name }}” 已经通过管理员审核并上架，可以查看详情，也可以直接添加到我的资产。</p>
+          <div class="notice-actions">
+            <button class="secondary" type="button" @click="goToApprovedDetail(p)">查看详情</button>
+            <button class="primary" type="button" @click="addApprovedToAssets(p)">添加到我的资产</button>
+          </div>
+        </div>
+        <img v-if="p.mainImage" :src="p.mainImage" :alt="p.name" />
+      </article>
+    </section>
+
     <section v-if="myProducts.length" class="my-panel">
       <div class="section-head list-head">
         <div>
@@ -229,7 +305,7 @@ function getStatusText(status: string) {
           <img :src="p.mainImage" :alt="p.name" />
           <div>
             <strong>{{ p.name }}</strong>
-            <p>{{ p.ipName }} / {{ p.characterName }} / {{ p.category }}</p>
+            <p>{{ p.ipName }} / {{ p.characterName }} / {{ getCategoryLabel(p.category) }}</p>
           </div>
           <span class="status-badge" :class="p.status">{{ getStatusText(p.status) }}</span>
           <button v-if="p.status === 'inactive'" class="secondary" type="button" @click="openEditForm(p)">修改</button>
@@ -294,7 +370,7 @@ function getStatusText(status: string) {
                 <span class="status-badge" :class="p.status">{{ getStatusText(p.status) }}</span>
               </div>
               <h3>{{ p.name }}</h3>
-              <p class="product-meta">{{ p.ipName }} / {{ p.characterName }} / {{ p.category }}</p>
+              <p class="product-meta">{{ p.ipName }} / {{ p.characterName }} / {{ getCategoryLabel(p.category) }}</p>
               <p>{{ p.description }}</p>
             </div>
             <div class="product-actions">
@@ -359,7 +435,7 @@ function getStatusText(status: string) {
             <div><span>商品编号</span><strong>{{ selectedProduct.id }}</strong></div>
             <div><span>IP</span><strong>{{ selectedProduct.ipName }}</strong></div>
             <div><span>角色</span><strong>{{ selectedProduct.characterName }}</strong></div>
-            <div><span>品类</span><strong>{{ selectedProduct.category }}</strong></div>
+            <div><span>品类</span><strong>{{ getCategoryLabel(selectedProduct.category) }}</strong></div>
             <div><span>创建时间</span><strong>{{ selectedProduct.createdAt }}</strong></div>
           </div>
           <p class="detail-desc">{{ selectedProduct.description || '暂无描述' }}</p>
@@ -368,6 +444,16 @@ function getStatusText(status: string) {
       <div class="modal-actions">
         <button type="button" class="primary" @click="closeDetail">关闭</button>
       </div>
+    </div>
+  </div>
+
+  <div v-if="feedback.visible" class="modal-overlay" @click.self="closeFeedback">
+    <div class="feedback-modal" :class="feedback.type">
+      <button class="modal-close" type="button" @click="closeFeedback">&times;</button>
+      <div class="feedback-icon">{{ feedback.type === 'success' ? '✓' : '!' }}</div>
+      <h2>{{ feedback.title }}</h2>
+      <p>{{ feedback.message }}</p>
+      <button class="primary" type="button" @click="closeFeedback">知道了</button>
     </div>
   </div>
 </template>
@@ -398,6 +484,20 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .submit-panel, .my-panel { margin-top: 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); }
 .submit-panel { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 20px 22px; }
 .my-panel { padding: 22px; }
+.notice-stack { display: grid; gap: 14px; margin-top: 20px; }
+.approval-notice {
+  position: relative; display: grid; grid-template-columns: 52px minmax(0, 1fr) 112px; gap: 16px; align-items: center;
+  padding: 18px 54px 18px 18px; border: 1px solid #b7e4c7; border-radius: 10px;
+  background: linear-gradient(135deg, #f0fdf4, #ffffff 58%, #ecfeff); box-shadow: 0 14px 34px rgba(15,100,120,0.12);
+}
+.notice-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #16a34a; font-size: 28px; font-weight: 900; }
+.notice-body { display: grid; gap: 8px; }
+.notice-body h2 { font-size: 22px; }
+.notice-body p:last-of-type { color: var(--muted); line-height: 1.7; }
+.notice-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.approval-notice img { width: 112px; height: 112px; border-radius: 10px; object-fit: contain; background: #fff; border: 1px solid var(--line); }
+.notice-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border: 0; border-radius: 8px; color: var(--muted); background: rgba(255,255,255,0.82); font-size: 22px; cursor: pointer; }
+.notice-close:hover { color: var(--ink); background: #fff; }
 .mine-list { display: grid; gap: 10px; }
 .mine-item { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
 .mine-item img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--soft); }
@@ -457,10 +557,17 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .detail-desc { color: var(--muted); line-height: 1.7; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; padding-top: 8px; }
 .detail-content + .modal-actions { padding: 20px 28px; border-top: 1px solid var(--line); }
+.feedback-modal { position: relative; width: min(420px, 100%); padding: 34px 30px 28px; border-radius: 14px; text-align: center; background: var(--panel); box-shadow: 0 24px 70px rgba(0,0,0,0.28); }
+.feedback-icon { width: 58px; height: 58px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #16a34a; font-size: 32px; font-weight: 900; }
+.feedback-modal.error .feedback-icon { background: #be123c; }
+.feedback-modal h2 { font-size: 24px; }
+.feedback-modal p { margin: 10px 0 22px; color: var(--muted); line-height: 1.7; }
 
 @media (max-width: 980px) {
   .hero, .layout, .detail-content { grid-template-columns: 1fr; }
   .mine-item { grid-template-columns: 56px minmax(0, 1fr); }
+  .approval-notice { grid-template-columns: 52px minmax(0, 1fr); }
+  .approval-notice img { grid-column: 1 / -1; width: 100%; height: 180px; }
 }
 @media (max-width: 620px) {
   .page { width: min(100% - 20px, 1180px); }

@@ -57,6 +57,7 @@ async function handleFileChange(event: Event) {
   }
 
   const file = files[0]
+  if (!file) return
 
   // 验证文件类型
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']

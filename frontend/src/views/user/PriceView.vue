@@ -117,8 +117,9 @@ function setRange(r: '7d' | '30d' | '90d') {
 
 onMounted(async () => {
   await loadMyAssets()
-  if (myAssets.value.length > 0) {
-    selectAsset(myAssets.value[0])
+  const firstAsset = myAssets.value[0]
+  if (firstAsset) {
+    selectAsset(firstAsset)
   } else {
     keyword.value = '玛奇朵'
     await handleSearch()

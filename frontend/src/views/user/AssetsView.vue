@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getAssetsList, addAsset, updateAsset, deleteAsset, operateAsset } from '@/api/assets'
+import { getGoodsDetail } from '@/api/goods'
 import type { AssetItem, AssetForm, AssetSummary, AssetStatus } from '@/types/assets'
 
+const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const assets = ref<AssetItem[]>([])
 const summary = ref<AssetSummary>({ totalCount: 0, categoryCount: 0, totalCost: 0, totalValue: 0, valueChange: 0 })
@@ -21,8 +25,26 @@ const showOperationModal = ref(false)
 const selectedAsset = ref<AssetItem | null>(null)
 const assetToDelete = ref<AssetItem | null>(null)
 const operationType = ref<'list' | 'delist' | 'sold'>('list')
+const approvedProductMode = ref(false)
+const approvedProductName = ref('')
+const feedback = reactive({
+  visible: false,
+  title: '',
+  message: '',
+  type: 'success' as 'success' | 'error',
+})
+const categoryOptions = [
+  { value: 'figure', label: '手办' },
+  { value: 'badge', label: '徽章' },
+  { value: 'poster', label: '海报' },
+  { value: 'acrylic', label: '亚克力' },
+  { value: 'doll', label: '玩偶' },
+  { value: 'card', label: '卡片' },
+  { value: 'other', label: '其他' },
+]
 
 const addForm = reactive<AssetForm>({
+  productId: '',
   productName: '',
   ipName: '',
   characterName: '',
@@ -65,6 +87,7 @@ async function loadAssets() {
 
 onMounted(() => {
   loadAssets()
+  openApprovedProductAssetForm()
 })
 
 // 搜索筛选
@@ -78,40 +101,103 @@ function handleFilter() {
 
 // 添加资产
 function openAddModal() {
+  approvedProductMode.value = false
+  approvedProductName.value = ''
+  addForm.productId = ''
   addForm.productName = ''
   addForm.ipName = ''
   addForm.characterName = ''
-  addForm.category = ''
+  addForm.category = 'other'
   addForm.quantity = 1
   addForm.acquirePrice = 0
   addForm.description = ''
   showAddModal.value = true
 }
 
+async function openApprovedProductAssetForm() {
+  const productId = typeof route.query.productId === 'string' ? route.query.productId : ''
+  if (!productId) return
+
+  try {
+    const res = await getGoodsDetail(productId)
+    if (res.code !== 200) return
+    const product = res.data
+    approvedProductMode.value = route.query.source === 'approved'
+    approvedProductName.value = product.name
+    addForm.productId = product.id
+    addForm.productName = product.name
+    addForm.ipName = product.ipName
+    addForm.characterName = product.characterName
+    addForm.category = product.category
+    addForm.quantity = 1
+    addForm.acquirePrice = Number(product.referencePrice) || 0
+    addForm.description = ''
+    showAddModal.value = true
+  } catch (e) {
+    console.error('加载商品信息失败', e)
+  }
+}
+
 function closeAddModal() {
   showAddModal.value = false
+  if (route.query.productId) {
+    router.replace({ path: '/assets' })
+  }
 }
 
 async function handleAdd() {
-  if (!addForm.productName || !addForm.acquirePrice) return
+  if (!addForm.productName || addForm.quantity < 1 || addForm.acquirePrice < 0) {
+    showFeedback('添加失败', '请检查商品名称、数量和入手价。', 'error')
+    return
+  }
   loading.value = true
   try {
     const res = await addAsset(addForm)
     if (res.code === 200) {
       showAddModal.value = false
+      approvedProductMode.value = false
+      approvedProductName.value = ''
+      if (route.query.productId) {
+        router.replace({ path: '/assets' })
+      }
       // 刷新列表，但不因刷新失败而提示添加失败
       loadAssets().catch(() => {})
+      showFeedback('添加成功', '资产已经加入“我的资产”，可以在列表中查看和管理。')
     } else {
-      alert(res.message || '添加失败')
+      showFeedback('添加失败', res.message || '添加失败，请稍后重试。', 'error')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '添加资产失败')
+    showFeedback('添加失败', e?.response?.data?.message || '添加资产失败，请稍后重试。', 'error')
   } finally {
     loading.value = false
   }
 }
 
 // 查看详情
+function showFeedback(title: string, message: string, type: 'success' | 'error' = 'success') {
+  feedback.title = title
+  feedback.message = message
+  feedback.type = type
+  feedback.visible = true
+}
+
+function closeFeedback() {
+  feedback.visible = false
+}
+
+function getCategoryLabel(category: string) {
+  const map: Record<string, string> = {
+    figure: '手办',
+    badge: '徽章',
+    poster: '海报',
+    acrylic: '亚克力',
+    doll: '玩偶',
+    card: '卡片',
+    other: '其他',
+  }
+  return map[category] || category
+}
+
 function viewDetail(asset: AssetItem) {
   selectedAsset.value = asset
   showDetailModal.value = true
@@ -327,7 +413,7 @@ function getValueChange(asset: AssetItem) {
               <td>{{ asset.id }}</td>
               <td><strong>{{ asset.productName }}</strong></td>
               <td>{{ asset.ipName }} / {{ asset.characterName }}</td>
-              <td>{{ asset.category }}</td>
+              <td>{{ getCategoryLabel(asset.category) }}</td>
               <td>{{ asset.quantity }}</td>
               <td>{{ formatMoney(asset.acquirePrice) }}</td>
               <td>{{ formatMoney(asset.currentValue) }}</td>
@@ -356,38 +442,45 @@ function getValueChange(asset: AssetItem) {
         <h2>添加资产</h2>
         <button class="modal-close" @click="closeAddModal">&times;</button>
       </div>
+      <div v-if="approvedProductMode" class="prefill-banner">
+        <strong>商品已自动填入</strong>
+        <p>“{{ approvedProductName }}” 来自您审核通过的商品，只需要补充资产描述后提交即可。</p>
+      </div>
       <form class="modal-form" @submit.prevent="handleAdd">
         <label>
           <span>谷子名称 *</span>
-          <input v-model="addForm.productName" type="text" required placeholder="请输入谷子名称">
+          <input v-model="addForm.productName" type="text" required :readonly="approvedProductMode" placeholder="请输入谷子名称">
         </label>
         <div class="form-row">
           <label>
             <span>IP</span>
-            <input v-model="addForm.ipName" type="text" placeholder="如：原神">
+            <input v-model="addForm.ipName" type="text" :readonly="approvedProductMode" placeholder="如：原神">
           </label>
           <label>
             <span>角色</span>
-            <input v-model="addForm.characterName" type="text" placeholder="如：胡桃">
+            <input v-model="addForm.characterName" type="text" :readonly="approvedProductMode" placeholder="如：胡桃">
           </label>
         </div>
         <div class="form-row">
           <label>
             <span>品类</span>
-            <input v-model="addForm.category" type="text" placeholder="如：徽章">
+            <input v-if="approvedProductMode" :value="getCategoryLabel(addForm.category)" type="text" readonly>
+            <select v-else v-model="addForm.category">
+              <option v-for="cat in categoryOptions" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+            </select>
           </label>
           <label>
             <span>数量 *</span>
-            <input v-model.number="addForm.quantity" type="number" min="1" required>
+            <input v-model.number="addForm.quantity" type="number" min="1" required :readonly="approvedProductMode">
           </label>
         </div>
         <label>
           <span>入手价 *</span>
-          <input v-model.number="addForm.acquirePrice" type="number" min="0" step="0.01" required placeholder="请输入购买价格">
+          <input v-model.number="addForm.acquirePrice" type="number" min="0" step="0.01" required :readonly="approvedProductMode" placeholder="请输入购买价格">
         </label>
         <label>
           <span>描述</span>
-          <textarea v-model="addForm.description" rows="3" placeholder="选填"></textarea>
+          <textarea v-model="addForm.description" rows="3" :placeholder="approvedProductMode ? '写一下这个资产的版本、成色、来源或备注' : '选填'"></textarea>
         </label>
         <div class="modal-actions">
           <button type="button" class="secondary" @click="closeAddModal">取消</button>
@@ -415,7 +508,7 @@ function getValueChange(asset: AssetItem) {
             <div class="field"><label>资产编号</label><span>{{ selectedAsset.id }}</span></div>
             <div class="field"><label>IP</label><span>{{ selectedAsset.ipName }}</span></div>
             <div class="field"><label>角色</label><span>{{ selectedAsset.characterName }}</span></div>
-            <div class="field"><label>品类</label><span>{{ selectedAsset.category }}</span></div>
+            <div class="field"><label>品类</label><span>{{ getCategoryLabel(selectedAsset.category) }}</span></div>
             <div class="field"><label>数量</label><span>{{ selectedAsset.quantity }}</span></div>
             <div class="field"><label>入手价</label><span>{{ formatMoney(selectedAsset.acquirePrice) }}</span></div>
             <div class="field"><label>当前估值</label><span>{{ formatMoney(selectedAsset.currentValue) }}</span></div>
@@ -526,6 +619,16 @@ function getValueChange(asset: AssetItem) {
       </div>
     </div>
   </div>
+
+  <div v-if="feedback.visible" class="modal-overlay" @click.self="closeFeedback">
+    <div class="feedback-modal" :class="feedback.type">
+      <button class="modal-close" type="button" @click="closeFeedback">&times;</button>
+      <div class="feedback-icon">{{ feedback.type === 'success' ? '✓' : '!' }}</div>
+      <h2>{{ feedback.title }}</h2>
+      <p>{{ feedback.message }}</p>
+      <button class="primary" type="button" @click="closeFeedback">知道了</button>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -558,6 +661,7 @@ h1 { font-size: 40px; line-height: 1.16; }
 .overview-card.loss strong { color: #b9352b; }
 .toolbar { display: grid; grid-template-columns: minmax(280px, 1fr) 180px 180px 120px; gap: 12px; align-items: center; margin-top: 20px; padding: 18px; }
 input, select { width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; color: var(--ink); background: #fff; outline: none; font: inherit; }
+input[readonly] { color: var(--muted); background: var(--soft); cursor: default; }
 input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(15,100,120,0.12); }
 .table-panel { margin-top: 20px; padding: 22px; }
 .section-head { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 16px; }
@@ -600,17 +704,26 @@ tbody tr:hover { background: #fbfdfe; }
 .modal-header h2 { font-size: 24px; }
 .modal-close { width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--soft); color: var(--muted); font-size: 24px; cursor: pointer; display: grid; place-items: center; }
 .modal-close:hover { background: #fee2e2; color: #be123c; }
+.prefill-banner { margin: 18px 28px 0; padding: 14px 16px; border: 1px solid #b7e4c7; border-radius: 10px; background: #f0fdf4; }
+.prefill-banner strong { color: #15803d; font-size: 15px; }
+.prefill-banner p { margin-top: 6px; color: var(--muted); line-height: 1.6; }
 .modal-form { padding: 28px; display: grid; gap: 18px; }
 .modal-form label { display: grid; gap: 8px; }
 .modal-form label span { color: var(--muted); font-size: 14px; font-weight: 600; }
-.modal-form input, .modal-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font: inherit; font-size: 14px; background: #fff; box-sizing: border-box; }
+.modal-form input, .modal-form select, .modal-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font: inherit; font-size: 14px; background: #fff; box-sizing: border-box; }
+.modal-form input[readonly] { color: var(--muted); background: var(--soft); }
 .modal-form textarea { resize: vertical; min-height: 70px; }
-.modal-form input:focus, .modal-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,100,120,0.1); outline: none; }
+.modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,100,120,0.1); outline: none; }
 .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 18px 28px; border-top: 1px solid var(--line); }
 .modal-confirm .modal-body { padding: 28px; }
 .modal-confirm .modal-body p { margin: 0; line-height: 1.6; font-size: 16px; }
 .modal-confirm .modal-body .warning { color: #be123c; margin-top: 10px; font-size: 14px; }
+.feedback-modal { position: relative; width: min(420px, 100%); padding: 34px 30px 28px; border-radius: 14px; text-align: center; background: var(--panel); box-shadow: 0 24px 70px rgba(0,0,0,0.28); }
+.feedback-icon { width: 58px; height: 58px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #16a34a; font-size: 32px; font-weight: 900; }
+.feedback-modal.error .feedback-icon { background: #be123c; }
+.feedback-modal h2 { font-size: 24px; }
+.feedback-modal p { margin: 10px 0 22px; color: var(--muted); line-height: 1.7; }
 .modal-confirm .modal-actions { padding: 0 28px 28px; border-top: 0; }
 
 /* 详情弹窗内容 */

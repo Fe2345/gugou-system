@@ -1,10 +1,13 @@
 import os
+import socket
 import threading
+import time
 from pathlib import Path
 
 from django.conf import settings
 
 _client = None
+_redis_disabled_until = 0
 _lock = threading.Lock()
 _seq_file = Path(settings.BASE_DIR) / ".seq_cache"
 
@@ -39,17 +42,26 @@ def next_seq(key: str) -> int:
     if not use_redis:
         return _get_file_seq(key)
 
+    global _redis_disabled_until
+    if time.monotonic() < _redis_disabled_until:
+        return _get_file_seq(key)
+
     try:
+        host = settings.REDIS_HOST
+        port = int(settings.REDIS_PORT)
+        with socket.create_connection((host, port), timeout=0.1):
+            pass
+
         import redis
         global _client
         if _client is None:
             _client = redis.Redis(
-                host=settings.REDIS_HOST,
-                port=int(settings.REDIS_PORT),
+                host=host,
+                port=port,
                 db=1,
                 decode_responses=True,
-                socket_connect_timeout=2,
-                socket_timeout=2,
+                socket_connect_timeout=0.2,
+                socket_timeout=0.2,
             )
         result = _client.incr(key)
         return result
@@ -57,4 +69,5 @@ def next_seq(key: str) -> int:
         import logging
         logging.getLogger("gugou").warning("Redis不可用，回退到文件序列: %s", e)
         _client = None
+        _redis_disabled_until = time.monotonic() + 30
         return _get_file_seq(key)

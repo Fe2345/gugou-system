@@ -65,8 +65,8 @@ async function loadListings() {
     // 应用价格筛选
     if (filters.price_range && priceRangeMap[filters.price_range]) {
       const range = priceRangeMap[filters.price_range]
-      if (range.min !== undefined) params.min_price = range.min
-      if (range.max !== undefined) params.max_price = range.max
+      if (range?.min !== undefined) params.min_price = range.min
+      if (range?.max !== undefined) params.max_price = range.max
     }
 
     // 应用自定义价格
