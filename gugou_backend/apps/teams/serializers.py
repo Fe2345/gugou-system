@@ -2,6 +2,8 @@ import logging
 from datetime import timedelta
 
 from django.utils import timezone
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from apps.common.id_generator import generate_team_id
@@ -13,7 +15,7 @@ logger = logging.getLogger("gugou")
 class TeamProjectCreateSerializer(serializers.Serializer):
     product_id = serializers.CharField(max_length=25)
     target_count = serializers.IntegerField(min_value=2, max_value=100)
-    team_price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    team_price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal("0.01"))
     deadline_hours = serializers.IntegerField(min_value=1, max_value=72, default=24)
 
     def validate(self, attrs):
@@ -32,6 +34,8 @@ class TeamProjectCreateSerializer(serializers.Serializer):
             product = Product.objects.get(product_id=attrs["product_id"])
         except Product.DoesNotExist:
             raise serializers.ValidationError({"product_id": "商品不存在"})
+        if product.status != Product.Status.ACTIVE:
+            raise serializers.ValidationError({"product_id": "商品尚未上架，不能发起拼团"})
 
         attrs["product"] = product
         return attrs

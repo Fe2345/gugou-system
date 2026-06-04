@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
@@ -27,6 +27,13 @@ const form = ref({
   quantity: '1',
   description: '',
 })
+
+const selectableAssets = computed(() => (
+  assetsList.value.filter(asset => (
+    asset.status === 'holding'
+    && (!form.value.product_id || asset.productId === form.value.product_id)
+  ))
+))
 
 async function loadOptions() {
   try {
@@ -131,6 +138,12 @@ async function handleSubmit() {
 onMounted(() => {
   loadOptions()
 })
+
+watch(() => form.value.product_id, () => {
+  if (!selectableAssets.value.some(asset => asset.id === form.value.asset_id)) {
+    form.value.asset_id = ''
+  }
+})
 </script>
 
 <template>
@@ -163,8 +176,9 @@ onMounted(() => {
           <label>选择资产 <span class="required">*</span></label>
           <select v-model="form.asset_id" required>
             <option value="">请选择资产</option>
-            <option v-for="a in assetsList" :key="a.id" :value="a.id">{{ a.productName }} (数量: {{ a.quantity }})</option>
+            <option v-for="a in selectableAssets" :key="a.id" :value="a.id">{{ a.productName }} (数量: {{ a.quantity }})</option>
           </select>
+          <p v-if="form.product_id && !selectableAssets.length" class="hint">暂无可出售的匹配资产，请先在“我的资产”中添加该商品。</p>
         </div>
         <div class="form-row">
           <div class="form-group">

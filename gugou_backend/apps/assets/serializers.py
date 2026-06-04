@@ -64,13 +64,15 @@ class AssetCreateSerializer(serializers.Serializer):
         if product_id:
             product = Product.objects.get(product_id=product_id)
         else:
+            request = self.context.get("request")
             product = Product.objects.create(
                 product_id=generate_product_id(),
                 name=validated_data.get("productName", "未命名商品"),
                 ip_name=validated_data.get("ipName", ""),
                 character_name=validated_data.get("characterName", ""),
                 category=validated_data.get("category", "other"),
-                status="active",
+                status=Product.Status.INACTIVE,
+                created_by=request.user if request and request.user.is_authenticated else None,
             )
 
         acquire_price = validated_data.get("acquirePrice", 0)
