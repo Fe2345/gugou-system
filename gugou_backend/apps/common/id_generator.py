@@ -102,3 +102,9 @@ def generate_system_log_id() -> str:
     """SL + 年月日时分秒 + 4位递增号"""
     seq = next_seq(f"syslog:{_now()}")
     return f"SL{_now()}{_seq(seq)}"
+
+
+def generate_asset_flow_id() -> str:
+    """AF + 年月日时分秒 + 4位递增号"""
+    seq = next_seq(f"assetflow:{_now()}")
+    return f"AF{_now()}{_seq(seq)}"
