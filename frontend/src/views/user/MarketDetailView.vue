@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -40,13 +41,13 @@ async function handleCancel() {
   try {
     const res = await cancelListing(item.value.listing_id)
     if (res.code === 200) {
-      alert('取消成功')
+      ElMessage.success('取消成功')
       loadDetail()
     } else {
-      alert(res.message || '取消失败')
+      ElMessage.error(res.message || '取消失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '取消失败')
+    ElMessage.error(e?.response?.data?.message || '取消失败')
   }
 }
 

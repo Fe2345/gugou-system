@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -52,7 +53,7 @@ async function handleFileChange(event: Event) {
 
   // 限制最多5张图片
   if (imageList.value.length >= 5) {
-    alert('最多只能上传5张图片')
+    ElMessage.warning('最多只能上传5张图片')
     return
   }
 
@@ -61,13 +62,13 @@ async function handleFileChange(event: Event) {
   // 验证文件类型
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
-    alert('仅支持 JPG、PNG、GIF、WebP 格式的图片')
+    ElMessage.warning('仅支持 JPG、PNG、GIF、WebP 格式的图片')
     return
   }
 
   // 验证文件大小 (限制5MB)
   if (file.size > 5 * 1024 * 1024) {
-    alert('图片大小不能超过 5MB')
+    ElMessage.warning('图片大小不能超过 5MB')
     return
   }
 
@@ -80,10 +81,10 @@ async function handleFileChange(event: Event) {
         sort_order: imageList.value.length,
       })
     } else {
-      alert(res.message || '图片上传失败')
+      ElMessage.error(res.message || '图片上传失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '图片上传失败')
+    ElMessage.error(e?.response?.data?.message || '图片上传失败')
   } finally {
     uploading.value = false
     // 清空input值，允许重新选择同一文件
@@ -101,7 +102,7 @@ function removeImage(index: number) {
 
 async function handleSubmit() {
   if (!form.value.product_id || !form.value.asset_id || !form.value.price) {
-    alert('请填写必填项')
+    ElMessage.warning('请填写必填项')
     return
   }
   submitting.value = true
@@ -115,13 +116,13 @@ async function handleSubmit() {
       images: imageList.value.length > 0 ? imageList.value : undefined,
     })
     if (res.code === 200) {
-      alert('发布成功')
+      ElMessage.success('发布成功')
       router.push('/market/my')
     } else {
-      alert(res.message || '发布失败')
+      ElMessage.error(res.message || '发布失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '发布失败')
+    ElMessage.error(e?.response?.data?.message || '发布失败')
   } finally {
     submitting.value = false
   }

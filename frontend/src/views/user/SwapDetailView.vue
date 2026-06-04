@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -62,15 +63,15 @@ async function handleMatch() {
   try {
     const res = await matchSwap(detail.value.exchange_id, { applicant_asset_id: selectedAssetId.value })
     if (res.code === 200) {
-      alert('匹配请求已发送')
+      ElMessage.success('匹配请求已发送')
       showMatchDialog.value = false
       selectedAssetId.value = ''
       loadDetail()
     } else {
-      alert(res.message || '匹配失败')
+      ElMessage.error(res.message || '匹配失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '匹配失败')
+    ElMessage.error(e?.response?.data?.message || '匹配失败')
   } finally {
     actionLoading.value = false
   }
@@ -82,13 +83,13 @@ async function handleAccept(match: SwapMatchItem) {
   try {
     const res = await acceptMatch(detail.value.exchange_id, match.match_id)
     if (res.code === 200) {
-      alert('已接受匹配')
+      ElMessage.success('已接受匹配')
       loadDetail()
     } else {
-      alert(res.message || '操作失败')
+      ElMessage.error(res.message || '操作失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '操作失败')
+    ElMessage.error(e?.response?.data?.message || '操作失败')
   } finally {
     actionLoading.value = false
   }
@@ -100,13 +101,13 @@ async function handleReject(match: SwapMatchItem) {
   try {
     const res = await rejectMatch(detail.value.exchange_id, match.match_id)
     if (res.code === 200) {
-      alert('已拒绝匹配')
+      ElMessage.success('已拒绝匹配')
       loadDetail()
     } else {
-      alert(res.message || '操作失败')
+      ElMessage.error(res.message || '操作失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '操作失败')
+    ElMessage.error(e?.response?.data?.message || '操作失败')
   } finally {
     actionLoading.value = false
   }
@@ -119,13 +120,13 @@ async function handleComplete() {
   try {
     const res = await completeSwap(detail.value.exchange_id)
     if (res.code === 200) {
-      alert('换物已完成')
+      ElMessage.success('换物已完成')
       loadDetail()
     } else {
-      alert(res.message || '操作失败')
+      ElMessage.error(res.message || '操作失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '操作失败')
+    ElMessage.error(e?.response?.data?.message || '操作失败')
   } finally {
     actionLoading.value = false
   }
@@ -138,13 +139,13 @@ async function handleCancel() {
   try {
     const res = await cancelSwap(detail.value.exchange_id)
     if (res.code === 200) {
-      alert('已取消')
+      ElMessage.success('已取消')
       router.push('/swap/my')
     } else {
-      alert(res.message || '取消失败')
+      ElMessage.error(res.message || '取消失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '取消失败')
+    ElMessage.error(e?.response?.data?.message || '取消失败')
   } finally {
     actionLoading.value = false
   }

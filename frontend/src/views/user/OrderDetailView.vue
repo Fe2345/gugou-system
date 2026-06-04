@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -52,16 +53,16 @@ async function handlePay() {
     if (payRes.code === 200) {
       const confirmRes = await confirmPayment(order.value.order_id, payRes.data.payment_id)
       if (confirmRes.code === 200) {
-        alert('支付成功')
+        ElMessage.success('支付成功')
         loadOrder()
       } else {
-        alert(confirmRes.message || '支付确认失败')
+        ElMessage.error(confirmRes.message || '支付确认失败')
       }
     } else {
-      alert(payRes.message || '创建支付失败')
+      ElMessage.error(payRes.message || '创建支付失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '支付失败')
+    ElMessage.error(e?.response?.data?.message || '支付失败')
   } finally {
     actionLoading.value = false
   }
@@ -74,13 +75,13 @@ async function handleConfirm() {
   try {
     const res = await confirmOrder(order.value.order_id)
     if (res.code === 200) {
-      alert('订单已确认完成')
+      ElMessage.success('订单已确认完成')
       loadOrder()
     } else {
-      alert(res.message || '确认失败')
+      ElMessage.error(res.message || '确认失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '确认失败')
+    ElMessage.error(e?.response?.data?.message || '确认失败')
   } finally {
     actionLoading.value = false
   }
@@ -93,13 +94,13 @@ async function handleCancel() {
   try {
     const res = await cancelOrder(order.value.order_id)
     if (res.code === 200) {
-      alert('订单已取消')
+      ElMessage.success('订单已取消')
       loadOrder()
     } else {
-      alert(res.message || '取消失败')
+      ElMessage.error(res.message || '取消失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '取消失败')
+    ElMessage.error(e?.response?.data?.message || '取消失败')
   } finally {
     actionLoading.value = false
   }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -67,12 +68,12 @@ async function handlePay(order: OrderItem) {
     if (res.code === 200) {
       const payRes = await confirmPayment(order.order_id, res.data.payment_id)
       if (payRes.code === 200) {
-        alert('支付成功')
+        ElMessage.success('支付成功')
         loadOrders()
       }
     }
   } catch (e) {
-    alert('支付失败')
+    ElMessage.error('支付失败')
   }
 }
 
@@ -80,11 +81,11 @@ async function handleConfirm(order: OrderItem) {
   try {
     const res = await confirmOrder(order.order_id)
     if (res.code === 200) {
-      alert('订单已完成')
+      ElMessage.success('订单已完成')
       loadOrders()
     }
   } catch (e) {
-    alert('操作失败')
+    ElMessage.error('操作失败')
   }
 }
 
@@ -93,11 +94,11 @@ async function handleCancel(order: OrderItem) {
   try {
     const res = await cancelOrder(order.order_id, '用户主动取消')
     if (res.code === 200) {
-      alert('订单已取消')
+      ElMessage.success('订单已取消')
       loadOrders()
     }
   } catch (e) {
-    alert('取消失败')
+    ElMessage.error('取消失败')
   }
 }
 
