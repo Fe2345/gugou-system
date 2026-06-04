@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getAssetsList, addAsset, updateAsset, deleteAsset, operateAsset } from '@/api/assets'
+import { getGoodsList } from '@/api/goods'
+import { publishToMarket, cancelListing, getMyListings } from '@/api/market'
 import type { AssetItem, AssetForm, AssetSummary, AssetStatus } from '@/types/assets'
+import type { GoodsItem } from '@/types/goods'
 
+const router = useRouter()
 const loading = ref(false)
 const assets = ref<AssetItem[]>([])
 const summary = ref<AssetSummary>({ totalCount: 0, categoryCount: 0, totalCost: 0, totalValue: 0, valueChange: 0 })
@@ -20,9 +25,17 @@ const showOperationModal = ref(false)
 
 const selectedAsset = ref<AssetItem | null>(null)
 const assetToDelete = ref<AssetItem | null>(null)
-const operationType = ref<'list' | 'delist' | 'sold'>('list')
+
+// 上架弹窗
+const showListModal = ref(false)
+const listPrice = ref<number | null>(null)
+const listDescription = ref('')
+
+// 下架弹窗
+const showDelistModal = ref(false)
 
 const addForm = reactive<AssetForm>({
+  productId: '',
   productName: '',
   ipName: '',
   characterName: '',
@@ -31,6 +44,51 @@ const addForm = reactive<AssetForm>({
   acquirePrice: 0,
   description: '',
 })
+const acquirePriceError = ref(false)
+
+// 商品库搜索
+const productSearchQuery = ref('')
+const productSearchResults = ref<GoodsItem[]>([])
+const productSearchLoading = ref(false)
+const showProductDropdown = ref(false)
+
+async function searchProducts() {
+  const keyword = productSearchQuery.value.trim()
+  if (!keyword) {
+    productSearchResults.value = []
+    showProductDropdown.value = false
+    return
+  }
+  productSearchLoading.value = true
+  try {
+    const res = await getGoodsList({ keyword, pageSize: 20 })
+    if (res.code === 200) {
+      productSearchResults.value = res.data.list
+      showProductDropdown.value = res.data.list.length > 0
+    }
+  } catch (e) {
+    console.error('搜索商品失败', e)
+  } finally {
+    productSearchLoading.value = false
+  }
+}
+
+function selectProduct(product: GoodsItem) {
+  addForm.productId = product.id
+  addForm.productName = product.name
+  addForm.ipName = product.ipName
+  addForm.characterName = product.characterName
+  addForm.category = product.category
+  productSearchQuery.value = product.name
+  showProductDropdown.value = false
+}
+
+function clearProductSelection() {
+  addForm.productId = ''
+  productSearchQuery.value = ''
+  productSearchResults.value = []
+  showProductDropdown.value = false
+}
 
 const editForm = reactive({
   productName: '',
@@ -78,6 +136,7 @@ function handleFilter() {
 
 // 添加资产
 function openAddModal() {
+  addForm.productId = ''
   addForm.productName = ''
   addForm.ipName = ''
   addForm.characterName = ''
@@ -85,6 +144,10 @@ function openAddModal() {
   addForm.quantity = 1
   addForm.acquirePrice = 0
   addForm.description = ''
+  acquirePriceError.value = false
+  productSearchQuery.value = ''
+  productSearchResults.value = []
+  showProductDropdown.value = false
   showAddModal.value = true
 }
 
@@ -93,7 +156,12 @@ function closeAddModal() {
 }
 
 async function handleAdd() {
-  if (!addForm.productName || !addForm.acquirePrice) return
+  acquirePriceError.value = false
+  if (!addForm.acquirePrice || addForm.acquirePrice <= 0) {
+    acquirePriceError.value = true
+    return
+  }
+  if (!addForm.productName) return
   loading.value = true
   try {
     const res = await addAsset(addForm)
@@ -198,34 +266,85 @@ async function handleDelete() {
   }
 }
 
-// 资产操作：上架、下架、卖出
-function openOperation(asset: AssetItem, type: 'list' | 'delist' | 'sold') {
+// 上架到交易市场
+function openListModal(asset: AssetItem) {
   selectedAsset.value = asset
-  operationType.value = type
-  showOperationModal.value = true
+  listPrice.value = null
+  listDescription.value = ''
+  showListModal.value = true
 }
 
-function closeOperationModal() {
-  showOperationModal.value = false
+function closeListModal() {
+  showListModal.value = false
   selectedAsset.value = null
 }
 
-async function handleOperation() {
+async function handleListToMarket() {
+  if (!selectedAsset.value || !listPrice.value || listPrice.value <= 0) {
+    alert('请输入有效的售价')
+    return
+  }
+  loading.value = true
+  try {
+    // 创建市场挂单（后端会自动锁定资产并更新状态）
+    const marketRes = await publishToMarket({
+      product_id: selectedAsset.value.productId,
+      asset_id: selectedAsset.value.id,
+      price: listPrice.value,
+      quantity: selectedAsset.value.quantity,
+      description: listDescription.value || selectedAsset.value.description,
+    })
+    if (marketRes.code !== 200) {
+      alert(marketRes.message || '上架失败')
+      return
+    }
+    showListModal.value = false
+    loadAssets().catch(() => {})
+  } catch (e: any) {
+    alert(e?.response?.data?.message || '上架失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 下架（取消交易市场挂单）
+function openDelistModal(asset: AssetItem) {
+  selectedAsset.value = asset
+  showDelistModal.value = true
+}
+
+function closeDelistModal() {
+  showDelistModal.value = false
+  selectedAsset.value = null
+}
+
+async function handleDelistFromMarket() {
   if (!selectedAsset.value) return
   loading.value = true
   try {
-    const res = await operateAsset({
-      type: operationType.value,
-      assetId: selectedAsset.value.id,
-    })
-    if (res.code === 200) {
-      showOperationModal.value = false
-      loadAssets().catch(() => {})
-    } else {
-      alert(res.message || '操作失败')
+    // 1. 查找该资产的活跃挂单
+    const myListingsRes = await getMyListings({ page: 1, page_size: 100 })
+    if (myListingsRes.code !== 200) {
+      alert('获取挂单信息失败')
+      return
     }
+    const activeListing = myListingsRes.data.results.find(
+      (item) => item.product_id === selectedAsset!.value!.productId && item.status === 'active'
+    )
+    if (!activeListing) {
+      alert('未找到该资产的活跃挂单')
+      return
+    }
+    // 2. 取消市场挂单（后端会自动恢复资产状态为持有中）
+    const cancelRes = await cancelListing(activeListing.listing_id)
+    if (cancelRes.code !== 200) {
+      alert(cancelRes.message || '取消挂单失败')
+      return
+    }
+    showDelistModal.value = false
+    loadAssets().catch(() => {})
   } catch (e: any) {
-    alert(e?.response?.data?.message || '操作失败')
+    alert(e?.response?.data?.message || '下架失败')
   } finally {
     loading.value = false
   }
@@ -255,6 +374,11 @@ function formatMoney(amount: number) {
 // 计算变化值
 function getValueChange(asset: AssetItem) {
   return asset.currentValue - asset.acquirePrice
+}
+
+// 查看价格走势
+function viewPriceTrend(asset: AssetItem) {
+  router.push({ path: '/price', query: { keyword: asset.productName } })
 }
 </script>
 
@@ -338,8 +462,9 @@ function getValueChange(asset: AssetItem) {
               <td class="actions">
                 <button class="action-btn small" @click="viewDetail(asset)">详情</button>
                 <button class="action-btn small" @click="startEdit(asset)">编辑</button>
-                <button v-if="asset.status === 'holding'" class="action-btn small list" @click="openOperation(asset, 'list')">上架</button>
-                <button v-if="asset.status === 'selling' || asset.status === 'exchanging'" class="action-btn small delist" @click="openOperation(asset, 'delist')">下架</button>
+                <button class="action-btn small trend" @click="viewPriceTrend(asset)">价格走势</button>
+                <button v-if="asset.status === 'holding'" class="action-btn small list" @click="openListModal(asset)">上架</button>
+                <button v-if="asset.status === 'selling' || asset.status === 'exchanging'" class="action-btn small delist" @click="openDelistModal(asset)">下架</button>
                 <button class="action-btn small delete" @click="confirmDelete(asset)">删除</button>
               </td>
             </tr>
@@ -357,6 +482,22 @@ function getValueChange(asset: AssetItem) {
         <button class="modal-close" @click="closeAddModal">&times;</button>
       </div>
       <form class="modal-form" @submit.prevent="handleAdd">
+        <label>
+          <span>从商品库选择</span>
+          <div class="product-search-wrap">
+            <input v-model="productSearchQuery" type="text" placeholder="输入商品名称/IP/角色搜索" @input="searchProducts" @focus="searchProducts">
+            <button v-if="addForm.productId" type="button" class="clear-btn" @click="clearProductSelection">清除选择</button>
+            <div v-if="showProductDropdown && productSearchResults.length > 0" class="product-dropdown">
+              <div v-for="p in productSearchResults" :key="p.product_id" class="product-option" @click="selectProduct(p)">
+                <strong>{{ p.name }}</strong>
+                <span>{{ p.ip_name }} / {{ p.character_name }} · {{ p.category }}</span>
+              </div>
+            </div>
+          </div>
+        </label>
+        <div v-if="addForm.productId" class="selected-product-info">
+          <span>已选商品：{{ addForm.productName }}（{{ addForm.ipName }} / {{ addForm.characterName }}）</span>
+        </div>
         <label>
           <span>谷子名称 *</span>
           <input v-model="addForm.productName" type="text" required placeholder="请输入谷子名称">
@@ -383,7 +524,8 @@ function getValueChange(asset: AssetItem) {
         </div>
         <label>
           <span>入手价 *</span>
-          <input v-model.number="addForm.acquirePrice" type="number" min="0" step="0.01" required placeholder="请输入购买价格">
+          <input v-model.number="addForm.acquirePrice" type="number" min="0" step="0.01" required placeholder="请输入购买价格" :class="{ 'input-error': acquirePriceError }" @input="acquirePriceError = false">
+          <p v-if="acquirePriceError" class="error-text">请填写入手价格</p>
         </label>
         <label>
           <span>描述</span>
@@ -507,21 +649,50 @@ function getValueChange(asset: AssetItem) {
     </div>
   </div>
 
-  <!-- 资产操作弹窗（上架/下架） -->
-  <div v-if="showOperationModal && selectedAsset" class="modal-overlay" @click.self="closeOperationModal">
+  <!-- 上架弹窗 -->
+  <div v-if="showListModal && selectedAsset" class="modal-overlay" @click.self="closeListModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>上架到交易市场</h2>
+        <button class="modal-close" @click="closeListModal">&times;</button>
+      </div>
+      <form class="modal-form" @submit.prevent="handleListToMarket">
+        <div class="list-product-info">
+          <strong>{{ selectedAsset.productName }}</strong>
+          <span>{{ selectedAsset.ipName }} / {{ selectedAsset.characterName }} · {{ selectedAsset.category }}</span>
+          <span>数量：{{ selectedAsset.quantity }} · 估值：¥{{ selectedAsset.currentValue }}</span>
+        </div>
+        <label>
+          <span>售价（元）*</span>
+          <input v-model.number="listPrice" type="number" min="0.01" step="0.01" required placeholder="请输入售价">
+        </label>
+        <label>
+          <span>商品描述</span>
+          <textarea v-model="listDescription" rows="3" :placeholder="selectedAsset.description || '描述商品状态、瑕疵等信息（选填）'"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="secondary" @click="closeListModal">取消</button>
+          <button type="submit" class="primary" :disabled="loading">{{ loading ? '上架中...' : '确认上架' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 下架确认弹窗 -->
+  <div v-if="showDelistModal && selectedAsset" class="modal-overlay" @click.self="closeDelistModal">
     <div class="modal modal-confirm">
       <div class="modal-header">
-        <h2>{{ operationType === 'list' ? '上架出售' : '下架取消' }}</h2>
-        <button class="modal-close" @click="closeOperationModal">&times;</button>
+        <h2>确认下架</h2>
+        <button class="modal-close" @click="closeDelistModal">&times;</button>
       </div>
       <div class="modal-body">
-        <p v-if="operationType === 'list'">确定要将"{{ selectedAsset.productName }}"上架出售吗？上架后其他用户可以看到并购买。</p>
-        <p v-else>确定要将"{{ selectedAsset.productName }}"下架吗？下架后将恢复为持有状态。</p>
+        <p>确定要将"{{ selectedAsset.productName }}"从交易市场下架吗？</p>
+        <p class="warning">下架后该商品将从交易市场移除，资产恢复为持有状态。</p>
       </div>
       <div class="modal-actions">
-        <button type="button" class="secondary" @click="closeOperationModal">取消</button>
-        <button type="button" class="primary" :disabled="loading" @click="handleOperation">
-          {{ loading ? '处理中...' : '确认' }}
+        <button type="button" class="secondary" @click="closeDelistModal">取消</button>
+        <button type="button" class="primary" :disabled="loading" @click="handleDelistFromMarket">
+          {{ loading ? '处理中...' : '确认下架' }}
         </button>
       </div>
     </div>
@@ -591,6 +762,8 @@ tbody tr:hover { background: #fbfdfe; }
 .action-btn.delist:hover { background: #bbf7d0; }
 .action-btn.delete { background: #fee2e2; color: #be123c; }
 .action-btn.delete:hover { background: #fecaca; }
+.action-btn.trend { background: #e0e7ff; color: #4338ca; }
+.action-btn.trend:hover { background: #c7d2fe; }
 
 /* 弹窗样式 */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: grid; place-items: center; z-index: 1000; padding: 20px; }
@@ -607,11 +780,43 @@ tbody tr:hover { background: #fbfdfe; }
 .modal-form textarea { resize: vertical; min-height: 70px; }
 .modal-form input:focus, .modal-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,100,120,0.1); outline: none; }
 .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.product-search-wrap { position: relative; }
+.product-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
+  max-height: 240px; overflow-y: auto; margin-top: 4px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.product-option {
+  padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--soft);
+}
+.product-option:last-child { border-bottom: 0; }
+.product-option:hover { background: var(--soft); }
+.product-option strong { display: block; font-size: 14px; }
+.product-option span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.clear-btn {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  border: 0; background: var(--soft); color: var(--muted); border-radius: 4px;
+  padding: 2px 8px; font-size: 12px; cursor: pointer;
+}
+.selected-product-info {
+  padding: 10px 14px; background: #eaf6f8; border-radius: 8px;
+  color: var(--accent); font-size: 14px; font-weight: 600;
+}
+.input-error { border-color: #be123c !important; }
+.input-error:focus { box-shadow: 0 0 0 3px rgba(190,18,60,0.15) !important; }
+.error-text { color: #be123c; font-size: 13px; margin-top: 4px; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 18px 28px; border-top: 1px solid var(--line); }
 .modal-confirm .modal-body { padding: 28px; }
 .modal-confirm .modal-body p { margin: 0; line-height: 1.6; font-size: 16px; }
 .modal-confirm .modal-body .warning { color: #be123c; margin-top: 10px; font-size: 14px; }
 .modal-confirm .modal-actions { padding: 0 28px 28px; border-top: 0; }
+.list-product-info {
+  padding: 14px 16px; background: var(--soft); border-radius: 8px;
+  display: grid; gap: 4px;
+}
+.list-product-info strong { font-size: 16px; }
+.list-product-info span { color: var(--muted); font-size: 13px; }
 
 /* 详情弹窗内容 */
 .detail-content { padding: 28px; }

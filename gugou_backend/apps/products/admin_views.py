@@ -34,6 +34,21 @@ class AdminGoodsListView(APIView):
         status_filter = request.query_params.get("status", "").strip()
         category = request.query_params.get("category", "").strip()
 
+        # 统计基于关键词和分类筛选（不含状态筛选）
+        stats_base = Product.objects.all()
+        if keyword:
+            stats_base = stats_base.filter(
+                Q(name__icontains=keyword)
+                | Q(product_id__icontains=keyword)
+                | Q(created_by__user_id__icontains=keyword)
+            )
+        if category:
+            stats_base = stats_base.filter(category=category)
+
+        stats_queryset = stats_base.values("status").annotate(count=Count("product_id"))
+        stats_map = {item["status"]: item["count"] for item in stats_queryset}
+
+        # 列表查询（含状态筛选）
         queryset = Product.objects.all().order_by("-created_at")
 
         if keyword:
@@ -52,9 +67,6 @@ class AdminGoodsListView(APIView):
         queryset = queryset.annotate(
             stock=Sum("listings__quantity", filter=Q(listings__status="active"), default=0)
         )
-
-        stats_queryset = queryset.values("status").annotate(count=Count("product_id"))
-        stats_map = {item["status"]: item["count"] for item in stats_queryset}
 
         try:
             page = int(request.query_params.get("page", 1))
