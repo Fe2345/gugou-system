@@ -14,7 +14,7 @@ from apps.accounts.models import User
 from apps.products.models import Product, ProductImage
 from apps.assets.models import UserAsset
 from apps.pricing.models import PriceRecord
-from apps.market.models import Listing
+from apps.market.models import Listing, ListingImage
 from apps.orders.models import Order, PaymentRecord, OrderStatusLog
 from apps.exchanges.models import ExchangeRequest, ExchangeMatch
 from apps.teams.models import TeamProject, TeamParticipant
@@ -312,7 +312,20 @@ class Command(BaseCommand):
     def _seed_listings(self):
         """围绕演示流程创建市场挂单 - 增加数据量"""
         if Listing.objects.exists():
-            self.stdout.write("  Listings already exist, skip")
+            # 补充已有挂单缺失的图片
+            patched = 0
+            for listing in Listing.objects.filter(images__isnull=True).select_related("product"):
+                if listing.product.main_image:
+                    ListingImage.objects.create(
+                        listing=listing,
+                        image_url=f"/media/{listing.product.main_image}",
+                        sort_order=0,
+                    )
+                    patched += 1
+            if patched:
+                self.stdout.write(self.style.SUCCESS(f"Patched {patched} listings with images"))
+            else:
+                self.stdout.write("  Listings already exist, skip")
             return
 
         # 获取所有用户
@@ -357,7 +370,7 @@ class Command(BaseCommand):
                 # 创建挂单
                 price = float(product.reference_price) * random.uniform(0.85, 1.15)
                 listing_id = self._generate_listing_id()
-                Listing.objects.create(
+                listing = Listing.objects.create(
                     listing_id=listing_id,
                     seller=user,
                     asset=asset,
@@ -367,6 +380,15 @@ class Command(BaseCommand):
                     description=f"【演示】{user.nickname}出售 {product.name}",
                     status="active",
                 )
+
+                # 关联商品主图到挂单
+                if product.main_image:
+                    ListingImage.objects.create(
+                        listing=listing,
+                        image_url=f"/media/{product.main_image}",
+                        sort_order=0,
+                    )
+
                 asset.status = "selling"
                 asset.save(update_fields=["status", "updated_at"])
                 created += 1
