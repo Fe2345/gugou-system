@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -37,7 +37,15 @@ async function loadDetail() {
 
 async function handleCancel() {
   if (!item.value) return
-  if (!confirm('确认取消此挂单？')) return
+  try {
+    await ElMessageBox.confirm('确认取消此挂单？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   try {
     const res = await cancelListing(item.value.listing_id)
     if (res.code === 200) {

@@ -38,7 +38,7 @@ async function loadOptions() {
     if (goodsRes.code === 200) goodsList.value = goodsRes.data.list
     if (assetsRes.code === 200) assetsList.value = assetsRes.data.list
   } catch (e) {
-    console.error('加载选项失败', e)
+    ElMessage.error('加载选项失败')
   }
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -70,7 +70,15 @@ async function handlePay() {
 
 async function handleConfirm() {
   if (!order.value) return
-  if (!confirm('确认完成此订单？')) return
+  try {
+    await ElMessageBox.confirm('确认完成此订单？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   actionLoading.value = true
   try {
     const res = await confirmOrder(order.value.order_id)
@@ -89,7 +97,15 @@ async function handleConfirm() {
 
 async function handleCancel() {
   if (!order.value) return
-  if (!confirm('确认取消此订单？')) return
+  try {
+    await ElMessageBox.confirm('确认取消此订单？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   actionLoading.value = true
   try {
     const res = await cancelOrder(order.value.order_id)

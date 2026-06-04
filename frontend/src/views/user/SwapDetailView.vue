@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -115,7 +115,15 @@ async function handleReject(match: SwapMatchItem) {
 
 async function handleComplete() {
   if (!detail.value) return
-  if (!confirm('确认完成此换物？')) return
+  try {
+    await ElMessageBox.confirm('确认完成此换物？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   actionLoading.value = true
   try {
     const res = await completeSwap(detail.value.exchange_id)
@@ -134,7 +142,15 @@ async function handleComplete() {
 
 async function handleCancel() {
   if (!detail.value) return
-  if (!confirm('确认取消此换物请求？')) return
+  try {
+    await ElMessageBox.confirm('确认取消此换物请求？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   actionLoading.value = true
   try {
     const res = await cancelSwap(detail.value.exchange_id)

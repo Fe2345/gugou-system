@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
@@ -90,7 +90,15 @@ async function handleConfirm(order: OrderItem) {
 }
 
 async function handleCancel(order: OrderItem) {
-  if (!confirm('确定取消此订单？')) return
+  try {
+    await ElMessageBox.confirm('确定取消此订单？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   try {
     const res = await cancelOrder(order.order_id, '用户主动取消')
     if (res.code === 200) {
