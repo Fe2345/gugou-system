@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
+import { useUserStore } from '@/stores/user'
 import { getGroupList, joinGroup, type GroupItem } from '@/api/group'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const userStore = useUserStore()
+const currentUserId = computed(() => userStore.userInfo?.id || '')
 const groups = ref<GroupItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
+const searchKeyword = ref('')
+const filterStatus = ref('')
 
 const statusMap: Record<string, string> = {
   recruiting: '拼团中',
@@ -26,27 +32,36 @@ const statusClassMap: Record<string, string> = {
 async function loadGroups() {
   loading.value = true
   try {
-    const res = await getGroupList({ page: 1, page_size: 20 })
+    const res = await getGroupList({
+      page: 1,
+      page_size: 20,
+      keyword: searchKeyword.value || undefined,
+      status: filterStatus.value || undefined,
+    })
     if (res.code === 200) {
       groups.value = res.data.results
       totalCount.value = res.data.count
     }
   } catch (e) {
-    console.error('加载拼团列表失败', e)
+    ElMessage.error('加载拼团列表失败', e)
   } finally {
     loading.value = false
   }
+}
+
+function handleSearch() {
+  loadGroups()
 }
 
 async function handleJoin(group: GroupItem) {
   try {
     const res = await joinGroup(group.team_id)
     if (res.code === 200) {
-      alert('参与拼团成功')
+      ElMessage.success('参与拼团成功')
       loadGroups()
     }
   } catch (e) {
-    alert('参与失败')
+    ElMessage.error('参与失败')
   }
 }
 
@@ -74,9 +89,9 @@ onMounted(() => {
         <p>围绕谷子品类、参团人数和截止时间展示拼团状态，帮助您决定是否值得参与。</p>
       </div>
       <div class="hero-tools">
-        <form class="search-box" @submit.prevent>
-          <input type="search" placeholder="搜索谷子名称 / IP / 角色">
-          <button type="button">搜索</button>
+        <form class="search-box" @submit.prevent="handleSearch">
+          <input v-model="searchKeyword" type="search" placeholder="搜索拼团编号 / 商品名称 / 发起人">
+          <button type="submit">搜索</button>
         </form>
         <div class="hero-actions">
           <button class="primary" type="button" @click="router.push('/group/publish')">发起拼团</button>
@@ -89,9 +104,9 @@ onMounted(() => {
       <aside class="filter-panel" aria-label="拼团筛选条件">
         <div class="section-head"><p class="eyebrow">筛选条件</p><h2>拼团筛选</h2></div>
         <label><span>拼团状态</span>
-          <select><option>全部状态</option><option>拼团中</option><option>已成团</option><option>已失败</option></select>
+          <select v-model="filterStatus"><option value="">全部状态</option><option value="recruiting">拼团中</option><option value="success">已成团</option><option value="failed">已失败</option></select>
         </label>
-        <button class="primary full" type="button">应用筛选</button>
+        <button class="primary full" type="button" @click="handleSearch">应用筛选</button>
       </aside>
 
       <section class="list-panel">
@@ -138,7 +153,9 @@ onMounted(() => {
             <span v-if="group.is_expired" class="status status-expired">已过期</span>
             <div class="card-actions">
               <button class="secondary" type="button" @click="router.push(`/group/${group.team_id}`)">查看</button>
-              <button v-if="group.status === 'recruiting' && !group.is_expired" class="primary" type="button" @click="handleJoin(group)">参与</button>
+              <button v-if="group.status === 'recruiting' && !group.is_expired && group.creator_id !== currentUserId && !group.current_user_joined" class="primary" type="button" @click="handleJoin(group)">参与</button>
+              <span v-else-if="group.status === 'recruiting' && !group.is_expired && group.creator_id === currentUserId" class="creator-hint">你已是拼团发起人</span>
+              <span v-else-if="group.status === 'recruiting' && !group.is_expired && group.current_user_joined" class="creator-hint">已参与</span>
             </div>
           </div>
         </article>
@@ -208,7 +225,8 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .status-done { color: #1f7a4d; background: #e8f7ef; }
 .status-cancelled { color: #6b7280; background: #f3f4f6; }
 .status-expired { color: #b86b00; background: #fff3d7; }
-.card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 110px)); gap: 10px; }
+.card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 110px)); gap: 10px; align-items: center; }
+.creator-hint { color: var(--muted); font-size: 13px; }
 .right-panel { align-self: start; display: grid; gap: 16px; }
 .state-card { padding: 18px; }
 .state-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }

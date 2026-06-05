@@ -40,6 +40,7 @@ export interface SwapStatusLogItem {
 }
 
 export function getSwapList(params?: {
+  keyword?: string
   status?: string
   page?: number
   page_size?: number

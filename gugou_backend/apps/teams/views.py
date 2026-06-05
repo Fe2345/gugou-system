@@ -42,10 +42,19 @@ class TeamProjectListView(APIView):
     def get(self, request):
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
+        keyword = request.query_params.get("keyword", "").strip()
         status_filter = request.query_params.get("status")
         product_id = request.query_params.get("product_id")
 
         queryset = TeamProject.objects.all()
+
+        # 关键词搜索：编号、商品名称、发起人昵称
+        if keyword:
+            queryset = queryset.filter(
+                Q(team_id__icontains=keyword)
+                | Q(product__name__icontains=keyword)
+                | Q(creator__nickname__icontains=keyword)
+            )
 
         # 按状态筛选
         if status_filter:
@@ -62,7 +71,7 @@ class TeamProjectListView(APIView):
         paginator = Paginator(queryset, page_size)
         page_obj = paginator.get_page(page)
 
-        serializer = TeamProjectListSerializer(page_obj, many=True)
+        serializer = TeamProjectListSerializer(page_obj, many=True, context={"request": request})
         data = paginated(page_obj, serializer, page_size)
 
         return success(data=data)

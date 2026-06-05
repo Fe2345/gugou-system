@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
 import { getMyGroups, cancelGroup, leaveGroup, type GroupItem } from '@/api/group'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -36,32 +37,48 @@ async function loadGroups() {
 }
 
 async function handleCancel(item: GroupItem) {
-  if (!confirm('确认取消此拼团？取消后所有参与者将退出。')) return
+  try {
+    await ElMessageBox.confirm('取消后所有参与者将退出。', '确认取消此拼团？', {
+      confirmButtonText: '确认取消',
+      cancelButtonText: '再想想',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   try {
     const res = await cancelGroup(item.team_id)
     if (res.code === 200) {
-      alert('已取消')
+      ElMessage.success('已取消')
       loadGroups()
     } else {
-      alert(res.message || '取消失败')
+      ElMessage.error(res.message || '取消失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '取消失败')
+    ElMessage.error(e?.response?.data?.message || '取消失败')
   }
 }
 
 async function handleLeave(item: GroupItem) {
-  if (!confirm('确认退出此拼团？')) return
+  try {
+    await ElMessageBox.confirm('退出后将从该拼团参与者列表中移除。', '确认退出此拼团？', {
+      confirmButtonText: '确认退出',
+      cancelButtonText: '再想想',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   try {
     const res = await leaveGroup(item.team_id)
     if (res.code === 200) {
-      alert('已退出拼团')
+      ElMessage.success('已退出拼团')
       loadGroups()
     } else {
-      alert(res.message || '退出失败')
+      ElMessage.error(res.message || '退出失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '退出失败')
+    ElMessage.error(e?.response?.data?.message || '退出失败')
   }
 }
 

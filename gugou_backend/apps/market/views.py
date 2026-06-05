@@ -3,6 +3,7 @@ import os
 import uuid
 
 from django.conf import settings
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
@@ -101,6 +102,7 @@ class ListingListView(APIView):
 
     def get(self, request):
         # 获取查询参数
+        keyword = request.query_params.get("keyword", "").strip()
         status_filter = request.query_params.get("status", Listing.Status.ACTIVE)
         product_id = request.query_params.get("product_id")
         min_price = request.query_params.get("min_price")
@@ -113,6 +115,14 @@ class ListingListView(APIView):
 
         # 构建查询
         queryset = Listing.objects.filter(status=status_filter)
+
+        # 关键词搜索：商品名称、IP、角色
+        if keyword:
+            queryset = queryset.filter(
+                Q(product__name__icontains=keyword)
+                | Q(product__ip_name__icontains=keyword)
+                | Q(product__character_name__icontains=keyword)
+            )
 
         if product_id:
             queryset = queryset.filter(product_id=product_id)

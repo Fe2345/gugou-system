@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
 import { getGroupDetail, joinGroup, leaveGroup, cancelGroup, type GroupDetailItem } from '@/api/group'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -41,7 +42,7 @@ async function loadDetail() {
       detail.value = res.data
     }
   } catch (e) {
-    console.error('加载拼团详情失败', e)
+    ElMessage.error('加载拼团详情失败')
   } finally {
     loading.value = false
   }
@@ -56,7 +57,7 @@ async function handleJoin() {
       alert('参与成功')
       loadDetail()
     } else {
-      alert(res.message || '参与失败')
+      ElMessage.warning(res.message || '参与失败')
     }
   } catch (e: any) {
     alert(e?.response?.data?.message || '参与失败')
@@ -67,18 +68,26 @@ async function handleJoin() {
 
 async function handleCancel() {
   if (!detail.value) return
-  if (!confirm('确认取消此拼团？取消后所有参与者将退出。')) return
+  try {
+    await ElMessageBox.confirm('取消后所有参与者将退出。', '确认取消此拼团？', {
+      confirmButtonText: '确认取消',
+      cancelButtonText: '再想想',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   actionLoading.value = true
   try {
     const res = await cancelGroup(detail.value.team_id)
     if (res.code === 200) {
-      alert('已取消')
+      ElMessage.success('已取消')
       router.push('/group/my')
     } else {
-      alert(res.message || '取消失败')
+      ElMessage.error(res.message || '取消失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '取消失败')
+    ElMessage.error(e?.response?.data?.message || '取消失败')
   } finally {
     actionLoading.value = false
   }
@@ -86,18 +95,26 @@ async function handleCancel() {
 
 async function handleLeave() {
   if (!detail.value) return
-  if (!confirm('确认退出此拼团？')) return
+  try {
+    await ElMessageBox.confirm('退出后将从该拼团参与者列表中移除。', '确认退出此拼团？', {
+      confirmButtonText: '确认退出',
+      cancelButtonText: '再想想',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   actionLoading.value = true
   try {
     const res = await leaveGroup(detail.value.team_id)
     if (res.code === 200) {
-      alert('已退出拼团')
+      ElMessage.success('已退出拼团')
       loadDetail()
     } else {
-      alert(res.message || '退出失败')
+      ElMessage.error(res.message || '退出失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '退出失败')
+    ElMessage.error(e?.response?.data?.message || '退出失败')
   } finally {
     actionLoading.value = false
   }
@@ -182,6 +199,10 @@ onMounted(() => {
             <button v-if="detail.status === 'recruiting' && !detail.is_expired && !isParticipant && !isCreator" class="primary full" type="button" :disabled="actionLoading" @click="handleJoin">
               {{ actionLoading ? '参与中...' : '参与拼团' }}
             </button>
+            <!-- 已参与提示 -->
+            <span v-if="isParticipant && !isCreator && detail.status === 'recruiting'" class="creator-hint">已参与</span>
+            <!-- 发起人不能参与自己的拼团 -->
+            <span v-if="isCreator && detail.status === 'recruiting'" class="creator-hint">你已是拼团发起人</span>
             <!-- 团长显示取消拼团 -->
             <button v-if="isCreator && detail.status === 'recruiting'" class="danger full" type="button" :disabled="actionLoading" @click="handleCancel">
               {{ actionLoading ? '取消中...' : '取消拼团' }}
@@ -236,6 +257,7 @@ h1 { font-size: 32px; }
 .action-card { padding: 18px; }
 .action-card h3 { font-size: 18px; margin-bottom: 14px; }
 .action-list { display: grid; gap: 10px; }
+.creator-hint { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 0; }
 .primary, .secondary, .danger { min-height: 44px; padding: 0 18px; border-radius: 8px; font-weight: 800; cursor: pointer; font: inherit; }
 .primary { border: 0; color: #fff; background: var(--accent); }
 .primary:hover { background: var(--accent-dark); }

@@ -132,7 +132,7 @@ onMounted(async () => {
     if (firstAsset) {
       selectAsset(firstAsset)
     } else {
-      keyword.value = '玛奇朵'
+      keyword.value = '可莉'
       await handleSearch()
     }
   }

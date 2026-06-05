@@ -250,6 +250,7 @@ class TeamProjectListSerializer(serializers.ModelSerializer):
     creator_id = serializers.CharField(read_only=True)
     creator_name = serializers.SerializerMethodField()
     is_expired = serializers.SerializerMethodField()
+    current_user_joined = serializers.SerializerMethodField()
 
     class Meta:
         model = TeamProject
@@ -257,6 +258,7 @@ class TeamProjectListSerializer(serializers.ModelSerializer):
             "team_id", "product_id", "product_name", "product_price",
             "creator_id", "creator_name", "target_count", "current_count",
             "team_price", "deadline", "status", "is_expired", "created_at",
+            "current_user_joined",
         ]
 
     def get_creator_name(self, obj):
@@ -267,6 +269,15 @@ class TeamProjectListSerializer(serializers.ModelSerializer):
 
     def get_is_expired(self, obj):
         return obj.deadline < timezone.now()
+
+    def get_current_user_joined(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.participants.filter(
+            user=request.user,
+            status=TeamParticipant.Status.JOINED,
+        ).exists()
 
 
 class TeamProjectDetailSerializer(serializers.ModelSerializer):

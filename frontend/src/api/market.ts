@@ -17,10 +17,15 @@ export interface MarketItem {
 }
 
 export function getMarketList(params?: {
+  keyword?: string
   status?: string
   product_id?: string
   min_price?: number
   max_price?: number
+  ip_name?: string
+  character_name?: string
+  category?: string
+  sort?: string
   page?: number
   page_size?: number
 }): Promise<ApiResponse<PaginatedResponse<MarketItem>>> {

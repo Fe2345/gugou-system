@@ -6,6 +6,7 @@ import { useUserStore } from '@/stores/user'
 import { createGroup } from '@/api/group'
 import { getGoodsList } from '@/api/goods'
 import type { GoodsItem } from '@/types/goods'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -28,18 +29,18 @@ async function loadGoods() {
       goodsList.value = res.data.list
     }
   } catch (e) {
-    console.error('加载商品列表失败', e)
+    ElMessage.error('加载商品列表失败', e)
   }
 }
 
 async function handleSubmit() {
   if (!form.value.product_id || !form.value.target_count || !form.value.team_price) {
-    alert('请填写必填项')
+    ElMessage.warning('请填写必填项')
     return
   }
   const targetCount = Number(form.value.target_count)
   if (targetCount < 2 || targetCount > 100) {
-    alert('拼团人数需在 2-100 之间')
+    ElMessage.warning('拼团人数需在 2-100 之间')
     return
   }
   submitting.value = true
@@ -51,13 +52,13 @@ async function handleSubmit() {
       deadline_hours: Number(form.value.deadline_hours) || 24,
     })
     if (res.code === 200) {
-      alert('拼团已发起')
+      ElMessage.success('拼团已发起')
       router.push('/group/my')
     } else {
-      alert(res.message || '发起失败')
+      ElMessage.error(res.message || '发起失败')
     }
   } catch (e: any) {
-    alert(e?.response?.data?.message || '发起失败')
+    ElMessage.error(e?.response?.data?.message || '发起失败')
   } finally {
     submitting.value = false
   }
