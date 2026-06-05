@@ -21,6 +21,21 @@ const filterCategory = ref('')
 const categories = ref<{ value: string; label: string }[]>([])
 const goodsStats = ref({ active: 0, inactive: 0, frozen: 0, total: 0 })
 const totalCount = ref(0)
+const categoryLabels: Record<string, string> = {
+  figure: '手办',
+  badge: '徽章',
+  poster: '海报',
+  acrylic: '亚克力',
+  doll: '玩偶',
+  card: '卡片',
+  other: '其他',
+}
+const feedback = ref({
+  visible: false,
+  title: '',
+  message: '',
+  type: 'success' as 'success' | 'error',
+})
 
 const metrics = computed(() => [
   { label: '已上架商品', value: String(goodsStats.value.active), note: '审核通过后可被用户查看' },
@@ -58,7 +73,7 @@ async function loadGoods() {
 onMounted(async () => {
   await loadGoods()
   const catRes = await getGoodsCategories()
-  categories.value = catRes.data
+  categories.value = catRes.data.map(cat => ({ ...cat, label: categoryLabels[cat.value] || cat.label }))
 })
 
 function handleSearch() { loadGoods() }
@@ -69,6 +84,9 @@ async function handleApprove(id: string) {
   try {
     await approveGoods(id)
     await loadGoods()
+    showFeedback('审核成功', '商品已通过审核并上架，用户将在商品库收到通知。')
+  } catch (e: any) {
+    showFeedback('审核失败', e?.response?.data?.message || '审核操作失败，请稍后重试。', 'error')
   } finally {
     loading.value = false
   }
@@ -92,6 +110,18 @@ async function handleOffline(id: string) {
   } finally {
     loading.value = false
   }
+}
+
+function showFeedback(title: string, message: string, type: 'success' | 'error' = 'success') {
+  feedback.value = { visible: true, title, message, type }
+}
+
+function closeFeedback() {
+  feedback.value.visible = false
+}
+
+function getCategoryLabel(category: string) {
+  return categoryLabels[category] || categories.value.find(cat => cat.value === category)?.label || category
 }
 </script>
 
@@ -154,7 +184,7 @@ async function handleOffline(id: string) {
               </div>
             </td>
             <td class="muted">{{ row.id }}</td>
-            <td>{{ row.category }}</td>
+            <td>{{ getCategoryLabel(row.category) }}</td>
             <td>{{ row.seller || '-' }}</td>
             <td class="price">¥{{ row.referencePrice }}</td>
             <td>{{ row.stock }}</td>
@@ -171,6 +201,16 @@ async function handleOffline(id: string) {
       </table>
     </div>
   </section>
+
+  <div v-if="feedback.visible" class="modal-overlay" @click.self="closeFeedback">
+    <div class="feedback-modal" :class="feedback.type">
+      <button class="modal-close" type="button" @click="closeFeedback">&times;</button>
+      <div class="feedback-icon">{{ feedback.type === 'success' ? '✓' : '!' }}</div>
+      <h2>{{ feedback.title }}</h2>
+      <p>{{ feedback.message }}</p>
+      <button class="primary" type="button" @click="closeFeedback">知道了</button>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -215,6 +255,14 @@ tr:last-child td { border-bottom: 0; }
 .status.frozen { background: #fee2e2; color: #be123c; }
 .status.archived { background: #e5e7eb; color: #6b7280; }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; min-width: 180px; align-items: center; }
+.modal-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,0.42); }
+.feedback-modal { position: relative; width: min(420px, 100%); padding: 34px 30px 28px; border-radius: 14px; text-align: center; background: var(--panel); box-shadow: 0 24px 70px rgba(0,0,0,0.28); }
+.feedback-icon { width: 58px; height: 58px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #16a34a; font-size: 32px; font-weight: 900; }
+.feedback-modal.error .feedback-icon { background: #be123c; }
+.feedback-modal h2 { font-size: 24px; }
+.feedback-modal p { margin: 10px 0 22px; color: var(--muted); line-height: 1.7; }
+.modal-close { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border: 0; border-radius: 8px; color: var(--muted); background: var(--soft); font-size: 22px; cursor: pointer; display: grid; place-items: center; }
+.modal-close:hover { color: #be123c; background: #fee2e2; }
 @media (max-width: 1100px) { .data-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) {
   .data-grid { grid-template-columns: 1fr; }

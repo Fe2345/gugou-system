@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from rest_framework import serializers
 
@@ -15,7 +16,7 @@ class ListingImageSerializer(serializers.Serializer):
 class ListingCreateSerializer(serializers.Serializer):
     product_id = serializers.CharField(max_length=25)
     asset_id = serializers.CharField(max_length=25)
-    price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal("0.01"))
     quantity = serializers.IntegerField(min_value=1, default=1)
     description = serializers.CharField(max_length=500, required=False, allow_blank=True, default="")
     images = ListingImageSerializer(many=True, required=False, default=[])
@@ -29,6 +30,8 @@ class ListingCreateSerializer(serializers.Serializer):
             product = Product.objects.get(product_id=attrs["product_id"])
         except Product.DoesNotExist:
             raise serializers.ValidationError({"product_id": "商品不存在"})
+        if product.status != Product.Status.ACTIVE:
+            raise serializers.ValidationError({"product_id": "商品尚未上架，不能发布到交易市场"})
 
         # 验证资产存在且属于当前用户
         try:
@@ -40,6 +43,9 @@ class ListingCreateSerializer(serializers.Serializer):
         user = self.context["request"].user
         if asset.owner != user:
             raise serializers.ValidationError({"asset_id": "只能使用自己的资产"})
+
+        if asset.product_id != product.product_id:
+            raise serializers.ValidationError({"asset_id": "所选资产与商品不匹配"})
 
         # 验证资产数量足够
         if asset.quantity < attrs["quantity"]:

@@ -62,6 +62,8 @@ class AssetListView(APIView):
 
     def post(self, request):
         """创建资产"""
+        if not request.user or not request.user.is_authenticated:
+            return error(message="请先登录", code=401)
         serializer = AssetCreateSerializer(data=request.data, context={"request": request})
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors))

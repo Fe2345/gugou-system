@@ -127,8 +127,14 @@ onMounted(async () => {
   }
 
   await loadMyAssets()
-  if (!queryKeyword && myAssets.value.length > 0) {
-    selectAsset(myAssets.value[0])
+  if (!queryKeyword) {
+    const firstAsset = myAssets.value[0]
+    if (firstAsset) {
+      selectAsset(firstAsset)
+    } else {
+      keyword.value = '玛奇朵'
+      await handleSearch()
+    }
   }
   const res = await getHotPrices()
   hotPrices.value = res.data

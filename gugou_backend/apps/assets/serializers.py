@@ -20,9 +20,11 @@ class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserAsset
-        fields = ["id", "productId", "productName", "ipName", "characterName",
-                  "category", "mainImage", "quantity", "acquirePrice",
-                  "currentValue", "status", "description", "createdAt", "updatedAt"]
+        fields = [
+            "id", "productId", "productName", "ipName", "characterName",
+            "category", "mainImage", "quantity", "acquirePrice",
+            "currentValue", "status", "description", "createdAt", "updatedAt",
+        ]
 
 
 class AssetCreateSerializer(serializers.Serializer):
@@ -36,14 +38,36 @@ class AssetCreateSerializer(serializers.Serializer):
     acquirePrice = serializers.DecimalField(max_digits=10, decimal_places=2, default=0)
     description = serializers.CharField(required=False, default="", allow_blank=True)
 
-    def validate(self, data):
-        # 品类合法性校验
+    def validate_productId(self, value):
+        if not value:
+            return value
+
         from apps.products.models import Product
+
+        if not Product.objects.filter(product_id=value).exists():
+            raise serializers.ValidationError("商品不存在或已被删除")
+        return value
+
+    def validate_category(self, value):
+        category_map = {
+            "手办": "figure",
+            "徽章": "badge",
+            "海报": "poster",
+            "亚克力": "acrylic",
+            "玩偶": "doll",
+            "卡片": "card",
+            "其他": "other",
+        }
+        return category_map.get(value, value or "other")
+
+    def validate(self, data):
+        from apps.products.models import Product
+
         category = data.get("category", "")
         if category and category not in Product.Category.values:
             raise serializers.ValidationError({"category": f"无效的品类：{category}"})
 
-        # 未选择已有商品时，IP/角色/品类必须填写
+        # 未选择已有商品时，必须提供创建商品需要的基础字段。
         if not data.get("productId"):
             for field, label in [("ipName", "IP名称"), ("characterName", "角色名称"), ("category", "品类")]:
                 if not data.get(field, "").strip():
@@ -58,13 +82,15 @@ class AssetCreateSerializer(serializers.Serializer):
         if product_id:
             product = Product.objects.get(product_id=product_id)
         else:
+            request = self.context.get("request")
             product = Product.objects.create(
                 product_id=generate_product_id(),
                 name=validated_data.get("productName", "未命名商品"),
                 ip_name=validated_data.get("ipName", ""),
                 character_name=validated_data.get("characterName", ""),
                 category=validated_data.get("category", "other"),
-                status="active",
+                status=Product.Status.INACTIVE,
+                created_by=request.user if request and request.user.is_authenticated else None,
             )
 
         acquire_price = validated_data.get("acquirePrice", 0)
