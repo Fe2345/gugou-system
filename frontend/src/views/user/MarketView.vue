@@ -27,8 +27,8 @@ const statusMap: Record<string, string> = {
   removed: '已下架',
 }
 
-// 筛选条件
-const heroKeyword = ref('')
+// 搜索和筛选条件
+const searchQuery = ref('')
 const filters = reactive({
   ip_name: '',
   character_name: '',
@@ -66,16 +66,11 @@ async function loadListings() {
       page_size: 20,
     }
 
-    // 关键词搜索
-    if (heroKeyword.value) {
-      params.keyword = heroKeyword.value
-    }
-
     // 应用价格筛选
     if (filters.price_range && priceRangeMap[filters.price_range]) {
       const range = priceRangeMap[filters.price_range]
-      if (range?.min !== undefined) params.min_price = range.min
-      if (range?.max !== undefined) params.max_price = range.max
+      if (range.min !== undefined) params.min_price = range.min
+      if (range.max !== undefined) params.max_price = range.max
     }
 
     // 应用自定义价格
@@ -118,7 +113,9 @@ async function loadListings() {
   }
 }
 
-function handleHeroSearch() {
+function handleSearch() {
+  // 搜索时将搜索词赋给ip_name进行模糊搜索
+  filters.ip_name = searchQuery.value
   loadListings()
 }
 
@@ -171,8 +168,8 @@ onMounted(() => {
         <p>按谷子、IP、角色、品类等条件浏览在售谷子列表，结合参考价和信誉度辅助交易决策。</p>
       </div>
       <div class="search-area">
-        <form class="search-box" @submit.prevent="handleHeroSearch">
-          <input v-model="heroKeyword" type="search" placeholder="搜索谷子 / IP / 角色 / 品类">
+        <form class="search-box" @submit.prevent="handleSearch">
+          <input v-model="searchQuery" type="search" placeholder="搜索谷子 / IP / 角色 / 品类">
           <button type="submit">搜索</button>
         </form>
         <div class="hero-actions">
@@ -181,10 +178,10 @@ onMounted(() => {
         </div>
         <div class="hot-words">
           <span>热门搜索：</span>
-          <button type="button" @click="heroKeyword = '精灵宝可梦'; handleHeroSearch()">精灵宝可梦</button>
-          <button type="button" @click="heroKeyword = '盲盒'; handleHeroSearch()">盲盒</button>
-          <button type="button" @click="heroKeyword = '亚克力'; handleHeroSearch()">亚克力</button>
-          <button type="button" @click="heroKeyword = '徽章'; handleHeroSearch()">徽章</button>
+          <button type="button">精灵宝可梦</button>
+          <button type="button">盲盒</button>
+          <button type="button">亚克力</button>
+          <button type="button">徽章</button>
         </div>
       </div>
     </section>

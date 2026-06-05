@@ -201,7 +201,7 @@ onMounted(() => {
           <tbody>
             <tr v-for="t in teams" :key="t.team_id">
               <td><button class="link-btn" type="button" @click="viewDetail(t.team_id)">{{ t.team_id }}</button></td>
-              <td>{{ t.product_name }}</td>
+              <td>{{ t.product_name_display }}</td>
               <td>{{ t.creator_name }}</td>
               <td>{{ t.current_count }} / {{ t.target_count }}</td>
               <td class="price">¥{{ Number(t.team_price).toFixed(2) }}</td>
@@ -245,9 +245,9 @@ onMounted(() => {
       <div v-else-if="detailData" class="modal-body">
         <div class="detail-grid">
           <div><span>拼团编号</span><strong>{{ detailData.team_id }}</strong></div>
-          <div><span>商品</span><strong>{{ detailData.product_name }}</strong></div>
+          <div><span>商品</span><strong>{{ detailData.product_name_display }}</strong></div>
           <div><span>发起用户</span><strong>{{ detailData.creator_name }} ({{ detailData.creator_id }})</strong></div>
-          <div><span>商品参考价</span><strong>¥{{ Number(detailData.product_price).toFixed(2) }}</strong></div>
+          <div><span>商品参考价</span><strong>{{ detailData.product_price ? '¥' + Number(detailData.product_price).toFixed(2) : '未设置' }}</strong></div>
           <div><span>团购价</span><strong class="price">¥{{ Number(detailData.team_price).toFixed(2) }}</strong></div>
           <div><span>人数进度</span><strong>{{ detailData.current_count }} / {{ detailData.target_count }}</strong></div>
           <div><span>状态</span><strong><span class="status" :class="statusMap[detailData.status]?.cls">{{ statusMap[detailData.status]?.text }}</span></strong></div>

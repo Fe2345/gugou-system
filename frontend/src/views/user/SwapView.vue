@@ -8,8 +8,8 @@ const router = useRouter()
 const swaps = ref<SwapItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
-const searchKeyword = ref('')
-const filterStatus = ref('active')
+const searchQuery = ref('')
+const statusFilter = ref('')
 
 const statusMap: Record<string, string> = {
   active: '可交易',
@@ -30,15 +30,24 @@ const statusClassMap: Record<string, string> = {
 async function loadSwaps() {
   loading.value = true
   try {
-    const res = await getSwapList({
-      page: 1,
-      page_size: 20,
-      keyword: searchKeyword.value || undefined,
-      status: filterStatus.value || undefined,
-    })
+    const res = await getSwapList({ page: 1, page_size: 50 })
     if (res.code === 200) {
-      swaps.value = res.data.results
-      totalCount.value = res.data.count
+      let results = res.data.results
+      // 前端搜索过滤
+      if (searchQuery.value.trim()) {
+        const q = searchQuery.value.trim().toLowerCase()
+        results = results.filter(s =>
+          s.offered_asset_name.toLowerCase().includes(q) ||
+          s.owner_name.toLowerCase().includes(q) ||
+          s.exchange_id.toLowerCase().includes(q)
+        )
+      }
+      // 状态筛选
+      if (statusFilter.value) {
+        results = results.filter(s => s.status === statusFilter.value)
+      }
+      swaps.value = results
+      totalCount.value = results.length
     }
   } catch (e) {
     console.error('加载换物列表失败', e)
@@ -71,7 +80,7 @@ onMounted(() => {
       </div>
       <div class="hero-tools">
         <form class="search-box" @submit.prevent="handleSearch">
-          <input v-model="searchKeyword" type="search" placeholder="搜索换物编号 / 发起人 / 商品名称">
+          <input v-model="searchQuery" type="search" placeholder="搜索谷子名称 / IP / 角色">
           <button type="submit">搜索</button>
         </form>
         <div class="hero-actions">
@@ -87,9 +96,14 @@ onMounted(() => {
           <p class="eyebrow">筛选条件</p><h2>交换筛选</h2>
         </div>
         <label><span>交换状态</span>
-          <select v-model="filterStatus"><option value="">全部状态</option><option value="active">可交易</option><option value="matched">匹配中</option><option value="completed">已完成</option></select>
+          <select v-model="statusFilter">
+            <option value="">全部状态</option>
+            <option value="active">可交易</option>
+            <option value="matched">匹配中</option>
+            <option value="completed">已完成</option>
+          </select>
         </label>
-        <button class="primary full" type="button" @click="handleSearch">应用筛选</button>
+        <button class="primary full" type="button" @click="loadSwaps">应用筛选</button>
       </aside>
 
       <section class="list-panel">

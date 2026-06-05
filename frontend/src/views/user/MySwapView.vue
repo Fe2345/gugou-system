@@ -6,8 +6,10 @@ import { getMySwaps, cancelSwap, completeSwap, type SwapItem } from '@/api/swap'
 
 const router = useRouter()
 const swaps = ref<SwapItem[]>([])
+const allSwaps = ref<SwapItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
+const searchQuery = ref('')
 
 const statusMap: Record<string, { text: string; cls: string }> = {
   active: { text: '可交易', cls: 'status-active' },
@@ -22,14 +24,31 @@ async function loadSwaps() {
   try {
     const res = await getMySwaps({ page: 1, page_size: 50 })
     if (res.code === 200) {
-      swaps.value = res.data.results
-      totalCount.value = res.data.count
+      allSwaps.value = res.data.results
+      filterSwaps()
     }
   } catch (e) {
     console.error('加载我的换物失败', e)
   } finally {
     loading.value = false
   }
+}
+
+function filterSwaps() {
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.trim().toLowerCase()
+    swaps.value = allSwaps.value.filter(s =>
+      s.offered_asset_name.toLowerCase().includes(q) ||
+      s.exchange_id.toLowerCase().includes(q)
+    )
+  } else {
+    swaps.value = allSwaps.value
+  }
+  totalCount.value = swaps.value.length
+}
+
+function handleSearch() {
+  filterSwaps()
 }
 
 async function handleCancel(item: SwapItem) {
@@ -86,6 +105,13 @@ onMounted(() => {
       </div>
     </section>
 
+    <section class="search-section">
+      <form class="search-box" @submit.prevent="handleSearch">
+        <input v-model="searchQuery" type="search" placeholder="搜索换物名称 / 编号">
+        <button type="submit">搜索</button>
+      </form>
+    </section>
+
     <section class="data-grid">
       <article class="data-card">
         <span>总请求</span><strong>{{ totalCount }}</strong><p>全部换物</p>
@@ -139,6 +165,11 @@ onMounted(() => {
 h1, h2, h3, p { margin: 0; }
 h1 { font-size: 32px; }
 .page-head > div > p:last-child { margin-top: 8px; color: var(--muted); }
+.search-section { margin-bottom: 20px; }
+.search-box { display: flex; gap: 10px; }
+.search-box input { flex: 1; height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 0 14px; font: inherit; background: var(--panel); }
+.search-box button { min-height: 44px; padding: 0 24px; border-radius: 8px; font-weight: 800; cursor: pointer; font: inherit; border: 0; color: #fff; background: var(--accent); }
+.search-box button:hover { background: var(--accent-dark); }
 .data-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
 .data-card { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); padding: 20px; }
 .data-card span { color: var(--muted); font-size: 14px; }

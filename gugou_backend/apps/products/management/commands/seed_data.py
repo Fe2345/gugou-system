@@ -686,14 +686,23 @@ class Command(BaseCommand):
             target_count = random.choice([3, 4, 5])
             team_price = round(float(product.reference_price) * random.uniform(0.70, 0.85), 2)
 
+            # 创建时间在10-20天前，截止时间在1-3天前
+            created_days_ago = random.randint(10, 20)
+            deadline_days_ago = random.randint(1, 3)
+            team_created_at = now - timedelta(days=created_days_ago)
+            team_deadline = now - timedelta(days=deadline_days_ago)
+
             team_id = self._generate_team_id()
             team = TeamProject.objects.create(
                 team_id=team_id, product=product, creator=creator,
                 target_count=target_count, current_count=target_count,
                 team_price=team_price,
-                deadline=now - timedelta(days=random.randint(1, 3)),
+                deadline=team_deadline,
                 status="success",
             )
+            # 更新创建时间（auto_now_add 需要通过 update 来覆盖）
+            TeamProject.objects.filter(team_id=team_id).update(created_at=team_created_at)
+
             # 添加参与者
             participants = [u for u in users if u.user_id != creator.user_id][:target_count - 1]
             for participant in participants:
@@ -713,6 +722,10 @@ class Command(BaseCommand):
             current_count = random.randint(1, target_count - 1)
             team_price = round(float(product.reference_price) * random.uniform(0.70, 0.85), 2)
 
+            # 创建时间在1-7天前，截止时间在未来3-14天
+            created_days_ago = random.randint(1, 7)
+            team_created_at = now - timedelta(days=created_days_ago)
+
             team_id = self._generate_team_id()
             team = TeamProject.objects.create(
                 team_id=team_id, product=product, creator=creator,
@@ -721,6 +734,9 @@ class Command(BaseCommand):
                 deadline=now + timedelta(days=random.randint(3, 14)),
                 status="recruiting",
             )
+            # 更新创建时间
+            TeamProject.objects.filter(team_id=team_id).update(created_at=team_created_at)
+
             # 添加已有参与者
             participants = [u for u in users if u.user_id != creator.user_id][:current_count - 1]
             for participant in participants:
@@ -740,14 +756,23 @@ class Command(BaseCommand):
             current_count = random.randint(2, target_count - 2)
             team_price = round(float(product.reference_price) * random.uniform(0.70, 0.80), 2)
 
+            # 创建时间在10-20天前，截止时间在1-5天前
+            created_days_ago = random.randint(10, 20)
+            deadline_days_ago = random.randint(1, 5)
+            team_created_at = now - timedelta(days=created_days_ago)
+            team_deadline = now - timedelta(days=deadline_days_ago)
+
             team_id = self._generate_team_id()
             team = TeamProject.objects.create(
                 team_id=team_id, product=product, creator=creator,
                 target_count=target_count, current_count=current_count,
                 team_price=team_price,
-                deadline=now - timedelta(days=random.randint(1, 5)),
+                deadline=team_deadline,
                 status="failed",
             )
+            # 更新创建时间
+            TeamProject.objects.filter(team_id=team_id).update(created_at=team_created_at)
+
             participants = [u for u in users if u.user_id != creator.user_id][:current_count - 1]
             for participant in participants:
                 TeamParticipant.objects.create(
@@ -765,14 +790,21 @@ class Command(BaseCommand):
             target_count = random.choice([3, 4, 5])
             team_price = round(float(product.reference_price) * random.uniform(0.72, 0.82), 2)
 
+            # 创建时间在3-10天前，截止时间在未来
+            created_days_ago = random.randint(3, 10)
+            team_created_at = now - timedelta(days=created_days_ago)
+
             team_id = self._generate_team_id()
-            TeamProject.objects.create(
+            team = TeamProject.objects.create(
                 team_id=team_id, product=product, creator=creator,
                 target_count=target_count, current_count=1,
                 team_price=team_price,
                 deadline=now + timedelta(days=random.randint(3, 10)),
                 status="cancelled",
             )
+            # 更新创建时间
+            TeamProject.objects.filter(team_id=team_id).update(created_at=team_created_at)
+
             created_teams += 1
             self.stdout.write(f"  [Team] {creator.nickname}发起拼团 -> 已取消")
 

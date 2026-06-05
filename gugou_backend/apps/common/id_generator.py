@@ -80,6 +80,12 @@ def generate_team_id() -> str:
     return f"T{_today()}{_seq(seq)}"
 
 
+def generate_team_item_id() -> str:
+    """TI + 年月日 + 4位流水号"""
+    seq = next_seq(f"team_item:{_today()}")
+    return f"TI{_today()}{_seq(seq)}"
+
+
 def generate_price_record_id() -> str:
     """PR + 年月日时分秒 + 4位流水号"""
     seq = next_seq(f"price:{_now()}")
