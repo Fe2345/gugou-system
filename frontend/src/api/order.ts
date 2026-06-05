@@ -46,3 +46,11 @@ export function updateOrderAddress(orderId: string, addressId: number): Promise<
 export function returnOrder(orderId: string, reason?: string): Promise<ApiResponse<void>> {
   return request.post(`/orders/${orderId}/return/`, { reason })
 }
+
+export function approveReturn(orderId: string): Promise<ApiResponse<void>> {
+  return request.post(`/orders/${orderId}/return/approve/`)
+}
+
+export function rejectReturn(orderId: string, reason: string): Promise<ApiResponse<void>> {
+  return request.post(`/orders/${orderId}/return/reject/`, { reason })
+}

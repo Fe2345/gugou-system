@@ -7,6 +7,8 @@ from .views import (
     OrderCreateView,
     OrderDetailView,
     OrderListView,
+    OrderReturnApproveView,
+    OrderReturnRejectView,
     OrderReturnView,
     PaymentCreateView,
     PaymentSuccessView,
@@ -20,6 +22,8 @@ urlpatterns = [
     path("<str:order_id>/complete/", OrderCompleteView.as_view(), name="order-complete"),
     path("<str:order_id>/address/", OrderAddressUpdateView.as_view(), name="order-address-update"),
     path("<str:order_id>/return/", OrderReturnView.as_view(), name="order-return"),
+    path("<str:order_id>/return/approve/", OrderReturnApproveView.as_view(), name="order-return-approve"),
+    path("<str:order_id>/return/reject/", OrderReturnRejectView.as_view(), name="order-return-reject"),
     path("<str:order_id>/payment/", PaymentCreateView.as_view(), name="order-payment-create"),
     path("<str:order_id>/payment/<str:payment_id>/success/", PaymentSuccessView.as_view(), name="order-payment-success"),
 ]

@@ -3,7 +3,7 @@ import logging
 from django.db.models import Q
 from rest_framework.views import APIView
 
-from apps.common.permissions import IsAuthenticated
+from apps.common.permissions import IsAuthenticated, IsAdmin
 from apps.common.response import error, flatten_errors, paginated, success
 from .models import Order, PaymentRecord
 from .serializers import (
@@ -12,6 +12,8 @@ from .serializers import (
     OrderCreateSerializer,
     OrderDetailSerializer,
     OrderListSerializer,
+    OrderReturnApproveSerializer,
+    OrderReturnRejectSerializer,
     OrderReturnSerializer,
     OrderUpdateAddressSerializer,
     PaymentCreateSerializer,
@@ -199,10 +201,54 @@ class OrderReturnView(APIView):
         try:
             serializer.save()
         except Exception as e:
-            logger.exception("Order return failed: %s", str(e))
+            logger.exception("Order return application failed: %s", str(e))
             return error(message=f"Operation failed: {str(e)}", code=500)
 
-        return success(message="Return succeeded, credit score deducted")
+        return success(message="Return application submitted, awaiting admin review")
+
+
+class OrderReturnApproveView(APIView):
+    permission_classes = [IsAdmin]
+
+    def post(self, request, order_id):
+        try:
+            order = Order.objects.get(order_id=order_id)
+        except Order.DoesNotExist:
+            return error(message="Order does not exist", code=404)
+
+        serializer = OrderReturnApproveSerializer(order, data={}, context={"request": request})
+        if not serializer.is_valid():
+            return error(message=flatten_errors(serializer.errors), code=400)
+
+        try:
+            serializer.save()
+        except Exception as e:
+            logger.exception("Order return approval failed: %s", str(e))
+            return error(message=f"Operation failed: {str(e)}", code=500)
+
+        return success(message="Return approved, order refunded")
+
+
+class OrderReturnRejectView(APIView):
+    permission_classes = [IsAdmin]
+
+    def post(self, request, order_id):
+        try:
+            order = Order.objects.get(order_id=order_id)
+        except Order.DoesNotExist:
+            return error(message="Order does not exist", code=404)
+
+        serializer = OrderReturnRejectSerializer(order, data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            return error(message=flatten_errors(serializer.errors), code=400)
+
+        try:
+            serializer.save()
+        except Exception as e:
+            logger.exception("Order return rejection failed: %s", str(e))
+            return error(message=f"Operation failed: {str(e)}", code=500)
+
+        return success(message="Return rejected")
 
 
 class OrderCancelView(APIView):

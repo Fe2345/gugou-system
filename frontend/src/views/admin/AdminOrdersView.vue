@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import type { OrderItem } from '@/types/order'
-import { getOrderList } from '@/api/order'
+import { getOrderList, approveReturn, rejectReturn } from '@/api/order'
+import { ElMessage, ElMessageBox } from 'element-plus'
 defineOptions({ name: 'AdminOrdersView' })
 
 const orders = ref<OrderItem[]>([])
@@ -17,6 +18,7 @@ const statusMap: Record<string, string> = {
   completed: '已完成',
   cancelled: '已取消',
   closed: '已关闭',
+  pending_return: '待审核退货',
   refunded: '已退款',
 }
 
@@ -27,6 +29,7 @@ const statusClassMap: Record<string, string> = {
   completed: 'done',
   cancelled: 'done',
   closed: 'done',
+  pending_return: 'alert',
   refunded: 'alert',
 }
 
@@ -52,6 +55,52 @@ async function loadOrders() {
 
 function handleSearch() { loadOrders() }
 function handleFilter() { loadOrders() }
+
+async function handleApprove(orderId: string) {
+  try {
+    await ElMessageBox.confirm('确认通过此退货申请？通过后将执行退款并扣除买家信用分。', '通过退货', {
+      confirmButtonText: '确认通过',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
+  try {
+    const res = await approveReturn(orderId)
+    if (res.code === 200) {
+      ElMessage.success('退货已通过，订单已退款')
+      loadOrders()
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || '操作失败')
+  }
+}
+
+async function handleReject(orderId: string) {
+  let reason = ''
+  try {
+    const result = await ElMessageBox.prompt('请输入驳回原因。', '驳回退货', {
+      confirmButtonText: '确认驳回',
+      cancelButtonText: '取消',
+      inputPlaceholder: '请输入驳回原因',
+      inputValidator: value => !!value?.trim() || '请填写驳回原因',
+      type: 'warning',
+    })
+    reason = result.value
+  } catch {
+    return
+  }
+  try {
+    const res = await rejectReturn(orderId, reason)
+    if (res.code === 200) {
+      ElMessage.success('退货已驳回')
+      loadOrders()
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || '操作失败')
+  }
+}
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '-'
@@ -95,6 +144,7 @@ onMounted(() => {
       <option value="paid">已支付</option>
       <option value="completed">已完成</option>
       <option value="cancelled">已取消</option>
+      <option value="pending_return">待审核退货</option>
       <option value="refunded">已退款</option>
     </select>
     <button class="primary" type="button" :disabled="loading" @click="loadOrders">{{ loading ? '加载中...' : '刷新订单' }}</button>
@@ -109,7 +159,7 @@ onMounted(() => {
       <div v-if="loading" class="loading-state">加载中...</div>
       <div v-else class="table-wrap">
         <table>
-          <thead><tr><th>订单编号</th><th>买家</th><th>卖家</th><th>商品</th><th>金额</th><th>状态</th><th>下单时间</th></tr></thead>
+          <thead><tr><th>订单编号</th><th>买家</th><th>卖家</th><th>商品</th><th>金额</th><th>状态</th><th>下单时间</th><th>操作</th></tr></thead>
           <tbody>
             <tr v-for="o in orders" :key="o.order_id">
               <td>{{ o.order_id }}</td>
@@ -119,6 +169,13 @@ onMounted(() => {
               <td class="price">¥{{ Number(o.amount).toFixed(2) }}</td>
               <td><span class="status" :class="statusClassMap[o.status]">{{ statusMap[o.status] }}</span></td>
               <td>{{ formatDate(o.created_at) }}</td>
+              <td>
+                <template v-if="o.status === 'pending_return'">
+                  <button class="primary small" type="button" @click="handleApprove(o.order_id)">通过</button>
+                  <button class="danger small" type="button" @click="handleReject(o.order_id)">驳回</button>
+                </template>
+                <span v-else class="muted">-</span>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -154,7 +211,11 @@ h1, h2, h3, p { margin: 0; } h1 { font-size: 32px; }
 select { height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; font: inherit; background: var(--soft); min-width: 120px; }
 .primary { height: 42px; padding: 0 18px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 800; cursor: pointer; font: inherit; }
 .primary:hover { background: var(--accent-dark); }
+.primary.small, .danger.small { height: 30px; padding: 0 10px; font-size: 12px; margin-right: 6px; }
+.danger { border: 0; border-radius: 8px; background: #be123c; color: #fff; font-weight: 800; cursor: pointer; font: inherit; }
+.danger:hover { background: #9f1239; }
 .secondary { height: 42px; padding: 0 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font-weight: 700; cursor: pointer; font: inherit; }
+.muted { color: var(--muted); font-size: 13px; }
 
 .content-row { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.7fr); gap: 18px; align-items: start; }
 .table-panel { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); overflow: hidden; }
