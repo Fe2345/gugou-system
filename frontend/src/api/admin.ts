@@ -10,6 +10,23 @@ function delay(ms = 500) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+// ─── 管理员仪表盘类型 ───
+
+export interface DashboardStats {
+  user_count: number
+  product_count: number
+  order_count: number
+  pending_count: number
+  new_users_week: number
+  orders_today: number
+}
+
+// ─── 管理员仪表盘 API ───
+
+export async function getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
+  return request.get('/admin/dashboard/')
+}
+
 // ─── 管理员用户类型 ───
 export interface AdminUser {
   id: string
