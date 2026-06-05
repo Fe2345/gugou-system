@@ -14,6 +14,7 @@ export interface GroupItem {
   deadline: string
   status: 'recruiting' | 'success' | 'failed' | 'cancelled'
   is_expired: boolean
+  current_user_joined: boolean
   created_at: string
 }
 
@@ -31,6 +32,7 @@ export interface GroupParticipantItem {
 }
 
 export function getGroupList(params?: {
+  keyword?: string
   status?: string
   product_id?: string
   page?: number

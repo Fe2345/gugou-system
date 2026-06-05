@@ -51,7 +51,7 @@ async function loadOrders() {
       orders.value = res.data.results
     }
   } catch (e) {
-    console.error('加载订单失败', e)
+    ElMessage.error('加载订单失败', e)
   } finally {
     loading.value = false
   }

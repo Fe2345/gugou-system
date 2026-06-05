@@ -41,9 +41,26 @@ class ExchangeRequestListView(APIView):
     def get(self, request):
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
+        keyword = request.query_params.get("keyword", "").strip()
         status_filter = request.query_params.get("status", ExchangeRequest.Status.ACTIVE)
 
-        queryset = ExchangeRequest.objects.filter(status=status_filter).order_by("-created_at")
+        queryset = ExchangeRequest.objects.select_related(
+            "owner", "offered_asset__product"
+        ).all()
+
+        # 关键词搜索：编号、发起用户昵称、换出资产商品名
+        if keyword:
+            queryset = queryset.filter(
+                Q(exchange_id__icontains=keyword)
+                | Q(owner__nickname__icontains=keyword)
+                | Q(offered_asset__product__name__icontains=keyword)
+            )
+
+        # 状态筛选
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        queryset = queryset.order_by("-created_at")
 
         from django.core.paginator import Paginator
         paginator = Paginator(queryset, page_size)

@@ -28,6 +28,7 @@ const statusMap: Record<string, string> = {
 }
 
 // 筛选条件
+const heroKeyword = ref('')
 const filters = reactive({
   ip_name: '',
   character_name: '',
@@ -63,6 +64,11 @@ async function loadListings() {
     const params: any = {
       page: 1,
       page_size: 20,
+    }
+
+    // 关键词搜索
+    if (heroKeyword.value) {
+      params.keyword = heroKeyword.value
     }
 
     // 应用价格筛选
@@ -110,6 +116,10 @@ async function loadListings() {
   } finally {
     loading.value = false
   }
+}
+
+function handleHeroSearch() {
+  loadListings()
 }
 
 function applyFilters() {
@@ -161,9 +171,9 @@ onMounted(() => {
         <p>按谷子、IP、角色、品类等条件浏览在售谷子列表，结合参考价和信誉度辅助交易决策。</p>
       </div>
       <div class="search-area">
-        <form class="search-box" @submit.prevent>
-          <input type="search" placeholder="搜索谷子 / IP / 角色 / 品类">
-          <button type="button">搜索</button>
+        <form class="search-box" @submit.prevent="handleHeroSearch">
+          <input v-model="heroKeyword" type="search" placeholder="搜索谷子 / IP / 角色 / 品类">
+          <button type="submit">搜索</button>
         </form>
         <div class="hero-actions">
           <button class="primary" type="button" @click="router.push('/market/publish')">发布在售谷子</button>
@@ -171,10 +181,10 @@ onMounted(() => {
         </div>
         <div class="hot-words">
           <span>热门搜索：</span>
-          <button type="button">精灵宝可梦</button>
-          <button type="button">盲盒</button>
-          <button type="button">亚克力</button>
-          <button type="button">徽章</button>
+          <button type="button" @click="heroKeyword = '精灵宝可梦'; handleHeroSearch()">精灵宝可梦</button>
+          <button type="button" @click="heroKeyword = '盲盒'; handleHeroSearch()">盲盒</button>
+          <button type="button" @click="heroKeyword = '亚克力'; handleHeroSearch()">亚克力</button>
+          <button type="button" @click="heroKeyword = '徽章'; handleHeroSearch()">徽章</button>
         </div>
       </div>
     </section>
