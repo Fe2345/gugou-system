@@ -9,8 +9,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const router = useRouter()
 const userStore = useUserStore()
 const groups = ref<GroupItem[]>([])
+const allGroups = ref<GroupItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
+const searchQuery = ref('')
 
 const currentUserId = computed(() => userStore.userInfo?.id || '')
 
@@ -26,14 +28,32 @@ async function loadGroups() {
   try {
     const res = await getMyGroups({ page: 1, page_size: 50 })
     if (res.code === 200) {
-      groups.value = res.data.results
-      totalCount.value = res.data.count
+      allGroups.value = res.data.results
+      filterGroups()
     }
   } catch (e) {
     console.error('加载我的拼团失败', e)
   } finally {
     loading.value = false
   }
+}
+
+function filterGroups() {
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.trim().toLowerCase()
+    groups.value = allGroups.value.filter(g =>
+      g.product_name_display.toLowerCase().includes(q) ||
+      g.creator_name.toLowerCase().includes(q) ||
+      g.team_id.toLowerCase().includes(q)
+    )
+  } else {
+    groups.value = allGroups.value
+  }
+  totalCount.value = groups.value.length
+}
+
+function handleSearch() {
+  filterGroups()
 }
 
 async function handleCancel(item: GroupItem) {
@@ -111,6 +131,13 @@ onMounted(() => {
       </div>
     </section>
 
+    <section class="search-section">
+      <form class="search-box" @submit.prevent="handleSearch">
+        <input v-model="searchQuery" type="search" placeholder="搜索拼团名称 / 发起人 / 编号">
+        <button type="submit">搜索</button>
+      </form>
+    </section>
+
     <section class="data-grid">
       <article class="data-card">
         <span>总拼团</span><strong>{{ totalCount }}</strong><p>全部拼团</p>
@@ -137,7 +164,7 @@ onMounted(() => {
         <div class="card-main">
           <div>
             <p class="code">拼团 {{ item.team_id }}</p>
-            <h3>{{ item.product_name }}</h3>
+            <h3>{{ item.product_name_display }}</h3>
             <div class="tags">
               <span>发起人：{{ item.creator_name }}</span>
               <span>团购价：¥{{ item.team_price }}/人</span>
@@ -178,6 +205,11 @@ onMounted(() => {
 h1, h2, h3, p { margin: 0; }
 h1 { font-size: 32px; }
 .page-head > div > p:last-child { margin-top: 8px; color: var(--muted); }
+.search-section { margin-bottom: 20px; }
+.search-box { display: flex; gap: 10px; }
+.search-box input { flex: 1; height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 0 14px; font: inherit; background: var(--panel); }
+.search-box button { min-height: 44px; padding: 0 24px; border-radius: 8px; font-weight: 800; cursor: pointer; font: inherit; border: 0; color: #fff; background: var(--accent); }
+.search-box button:hover { background: var(--accent-dark); }
 .data-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
 .data-card { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); padding: 20px; }
 .data-card span { color: var(--muted); font-size: 14px; }

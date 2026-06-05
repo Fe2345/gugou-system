@@ -271,34 +271,38 @@ class OrderCompleteSerializer(serializers.Serializer):
                 note="Buyer confirmed receipt, order completed",
             )
 
-            unit_price = order.amount / order.quantity if order.quantity > 0 else order.amount
-            PriceRecord.objects.create(
-                price_record_id=generate_price_record_id(),
-                product=order.product,
-                price=unit_price,
-                source=PriceRecord.Source.ORDER,
-                recorded_at=order.completed_at,
-            )
-
-            listing = order.listing
-            if listing.quantity == 0:
-                listing.status = Listing.Status.SOLD
-                listing.save()
-
-            if listing.asset:
-                asset = listing.asset
-                asset.status = UserAsset.Status.SOLD
-                asset.save()
-
-                AssetFlow.objects.create(
-                    flow_id=generate_asset_flow_id(),
-                    asset=asset,
-                    from_user=order.seller,
-                    to_user=order.buyer,
-                    flow_type=AssetFlow.FlowType.SELL,
-                    related_order=order.order_id,
-                    note=f"Order {order.order_id} completed, asset sold",
+            # 只有普通交易订单才记录价格（拼团订单不影响价格分析）
+            if not order.team:
+                unit_price = order.amount / order.quantity if order.quantity > 0 else order.amount
+                PriceRecord.objects.create(
+                    price_record_id=generate_price_record_id(),
+                    product=order.product,
+                    price=unit_price,
+                    source=PriceRecord.Source.ORDER,
+                    recorded_at=order.completed_at,
                 )
+
+            # 只有普通交易订单才处理listing和asset
+            listing = order.listing
+            if listing:
+                if listing.quantity == 0:
+                    listing.status = Listing.Status.SOLD
+                    listing.save()
+
+                if listing.asset:
+                    asset = listing.asset
+                    asset.status = UserAsset.Status.SOLD
+                    asset.save()
+
+                    AssetFlow.objects.create(
+                        flow_id=generate_asset_flow_id(),
+                        asset=asset,
+                        from_user=order.seller,
+                        to_user=order.buyer,
+                        flow_type=AssetFlow.FlowType.SELL,
+                        related_order=order.order_id,
+                        note=f"Order {order.order_id} completed, asset sold",
+                    )
 
             create_credit_record(
                 user=order.buyer,
@@ -375,26 +379,37 @@ class OrderReturnApproveSerializer(serializers.Serializer):
                 status=PaymentRecord.Status.REFUNDED
             )
 
+            # 只有普通交易订单才处理listing和asset
             listing = order.listing
-            listing.quantity += order.quantity
-            if listing.status in [Listing.Status.LOCKED, Listing.Status.SOLD]:
-                listing.status = Listing.Status.ACTIVE
-            listing.save()
+            if listing:
+                listing.quantity += order.quantity
+                if listing.status in [Listing.Status.LOCKED, Listing.Status.SOLD]:
+                    listing.status = Listing.Status.ACTIVE
+                listing.save()
 
-            if listing.asset and listing.asset.status == UserAsset.Status.SELLING:
-                asset = listing.asset
-                asset.status = UserAsset.Status.HOLDING
-                asset.save()
+                if listing.asset and listing.asset.status == UserAsset.Status.SELLING:
+                    asset = listing.asset
+                    asset.status = UserAsset.Status.HOLDING
+                    asset.save()
 
-                AssetFlow.objects.create(
-                    flow_id=generate_asset_flow_id(),
-                    asset=asset,
-                    from_user=None,
-                    to_user=order.seller,
-                    flow_type=AssetFlow.FlowType.UNLOCK,
-                    related_order=order.order_id,
-                    note=f"Order {order.order_id} returned, asset unlocked",
-                )
+                    AssetFlow.objects.create(
+                        flow_id=generate_asset_flow_id(),
+                        asset=asset,
+                        from_user=None,
+                        to_user=order.seller,
+                        flow_type=AssetFlow.FlowType.UNLOCK,
+                        related_order=order.order_id,
+                        note=f"Order {order.order_id} returned, asset unlocked",
+                    )
+
+            # 如果是拼团订单，更新参团者状态为已退款
+            if order.team:
+                from apps.teams.models import TeamParticipant
+                TeamParticipant.objects.filter(
+                    team=order.team,
+                    user=order.buyer,
+                    status=TeamParticipant.Status.JOINED,
+                ).update(status=TeamParticipant.Status.REFUNDED)
 
             OrderStatusLog.objects.create(
                 log_id=build_order_log_id(order, "A"),
@@ -497,26 +512,37 @@ class OrderCancelSerializer(serializers.Serializer):
             order.status = Order.Status.CANCELLED
             order.save(update_fields=["status", "updated_at"])
 
+            # 只有普通交易订单才处理listing和asset
             listing = order.listing
-            listing.quantity += order.quantity
-            if listing.status == Listing.Status.LOCKED:
-                listing.status = Listing.Status.ACTIVE
-            listing.save()
+            if listing:
+                listing.quantity += order.quantity
+                if listing.status == Listing.Status.LOCKED:
+                    listing.status = Listing.Status.ACTIVE
+                listing.save()
 
-            if listing.asset and listing.asset.status == UserAsset.Status.SELLING:
-                asset = listing.asset
-                asset.status = UserAsset.Status.HOLDING
-                asset.save()
+                if listing.asset and listing.asset.status == UserAsset.Status.SELLING:
+                    asset = listing.asset
+                    asset.status = UserAsset.Status.HOLDING
+                    asset.save()
 
-                AssetFlow.objects.create(
-                    flow_id=generate_asset_flow_id(),
-                    asset=asset,
-                    from_user=None,
-                    to_user=order.seller,
-                    flow_type=AssetFlow.FlowType.UNLOCK,
-                    related_order=order.order_id,
-                    note=f"Order {order.order_id} cancelled, asset unlocked",
-                )
+                    AssetFlow.objects.create(
+                        flow_id=generate_asset_flow_id(),
+                        asset=asset,
+                        from_user=None,
+                        to_user=order.seller,
+                        flow_type=AssetFlow.FlowType.UNLOCK,
+                        related_order=order.order_id,
+                        note=f"Order {order.order_id} cancelled, asset unlocked",
+                    )
+
+            # 如果是拼团订单，更新参团者状态
+            if order.team:
+                from apps.teams.models import TeamParticipant
+                TeamParticipant.objects.filter(
+                    team=order.team,
+                    user=order.buyer,
+                    status=TeamParticipant.Status.JOINED,
+                ).update(status=TeamParticipant.Status.CANCELLED)
 
             OrderStatusLog.objects.create(
                 log_id=build_order_log_id(order, "X"),
@@ -544,8 +570,16 @@ class OrderListSerializer(serializers.ModelSerializer):
     buyer_name = serializers.CharField(source="buyer.nickname", read_only=True)
     seller_id = serializers.CharField(source="seller.user_id", read_only=True)
     seller_name = serializers.CharField(source="seller.nickname", read_only=True)
-    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_name = serializers.SerializerMethodField()
     shipping_address_id = serializers.IntegerField(source="shipping_address.id", read_only=True, default=None)
+    team_id = serializers.CharField(source="team.team_id", read_only=True, default=None)
+
+    def get_product_name(self, obj):
+        if obj.product:
+            return obj.product.name
+        if obj.team:
+            return obj.team.product_name
+        return ""
 
     class Meta:
         model = Order
@@ -553,7 +587,7 @@ class OrderListSerializer(serializers.ModelSerializer):
             "order_id", "buyer_id", "buyer_name", "seller_id", "seller_name",
             "product_id", "product_name", "quantity", "amount", "status",
             "paid_at", "completed_at", "created_at", "shipping_address_id",
-            "receiver_name", "receiver_phone", "shipping_address_text",
+            "receiver_name", "receiver_phone", "shipping_address_text", "team_id",
         ]
 
 
@@ -562,8 +596,16 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     buyer_name = serializers.CharField(source="buyer.nickname", read_only=True)
     seller_id = serializers.CharField(source="seller.user_id", read_only=True)
     seller_name = serializers.CharField(source="seller.nickname", read_only=True)
-    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_name = serializers.SerializerMethodField()
     shipping_address_id = serializers.IntegerField(source="shipping_address.id", read_only=True, default=None)
+    team_id = serializers.CharField(source="team.team_id", read_only=True, default=None)
+
+    def get_product_name(self, obj):
+        if obj.product:
+            return obj.product.name
+        if obj.team:
+            return obj.team.product_name
+        return ""
     payments = serializers.SerializerMethodField()
     status_logs = serializers.SerializerMethodField()
 
@@ -574,7 +616,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             "listing_id", "product_id", "product_name", "quantity", "amount",
             "status", "paid_at", "completed_at", "created_at", "updated_at",
             "shipping_address_id", "receiver_name", "receiver_phone",
-            "shipping_address_text", "payments", "status_logs",
+            "shipping_address_text", "team_id", "payments", "status_logs",
         ]
 
     def get_payments(self, obj):

@@ -34,12 +34,24 @@ class Order(BaseModel):
         on_delete=models.PROTECT,
         related_name="orders",
         verbose_name="listing",
+        null=True,
+        blank=True,
+    )
+    team = models.ForeignKey(
+        "teams.TeamProject",
+        on_delete=models.SET_NULL,
+        related_name="orders",
+        verbose_name="team project",
+        null=True,
+        blank=True,
     )
     product = models.ForeignKey(
         "products.Product",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name="orders",
         verbose_name="product",
+        null=True,
+        blank=True,
     )
     quantity = models.PositiveIntegerField("quantity", default=1)
     amount = models.DecimalField("amount", max_digits=10, decimal_places=2)

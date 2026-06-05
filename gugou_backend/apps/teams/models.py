@@ -14,10 +14,13 @@ class TeamProject(BaseModel):
     team_id = models.CharField("拼团编号", max_length=25, primary_key=True)
     product = models.ForeignKey(
         "products.Product",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name="team_projects",
-        verbose_name="拼团商品",
+        verbose_name="关联商品",
+        null=True,
+        blank=True,
     )
+    product_name = models.CharField("拼团商品名称", max_length=100, default="")
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -60,6 +63,14 @@ class TeamParticipant(BaseModel):
     )
     status = models.CharField("参与状态", max_length=20, choices=Status.choices, default=Status.JOINED)
     joined_at = models.DateTimeField("参与时间", auto_now_add=True)
+    selected_item = models.ForeignKey(
+        "TeamItem",
+        on_delete=models.SET_NULL,
+        related_name="selected_by_participants",
+        verbose_name="选中小商品",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = "team_participant"
@@ -71,3 +82,35 @@ class TeamParticipant(BaseModel):
 
     def __str__(self):
         return f"{self.participant_id}"
+
+
+class TeamItem(BaseModel):
+    """拼团内的小商品选项，每个选项只能被一个参与者选择"""
+
+    item_id = models.CharField("选项编号", max_length=30, primary_key=True)
+    team = models.ForeignKey(
+        TeamProject,
+        on_delete=models.CASCADE,
+        related_name="items",
+        verbose_name="关联拼团",
+    )
+    name = models.CharField("选项名称", max_length=100)
+    selected_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="selected_team_items",
+        verbose_name="选中用户",
+    )
+    selected_at = models.DateTimeField("选中时间", null=True, blank=True)
+    sort_order = models.IntegerField("排序", default=0)
+
+    class Meta:
+        db_table = "team_item"
+        verbose_name = "拼团小商品选项"
+        verbose_name_plural = verbose_name
+        ordering = ["sort_order"]
+
+    def __str__(self):
+        return f"{self.item_id} {self.name}"

@@ -1,55 +1,67 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
 import { createGroup } from '@/api/group'
-import { getGoodsList } from '@/api/goods'
-import type { GoodsItem } from '@/types/goods'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const userStore = useUserStore()
 const creditScore = computed(() => userStore.userInfo?.creditScore ?? 100)
 const canJoinTeam = computed(() => creditScore.value >= 40)
-const goodsList = ref<GoodsItem[]>([])
 const submitting = ref(false)
 
 const form = ref({
-  product_id: '',
-  target_count: '',
+  product_name: '',
   team_price: '',
   deadline_hours: '24',
 })
 
-async function loadGoods() {
-  try {
-    const res = await getGoodsList({ page: 1, pageSize: 100 })
-    if (res.code === 200) {
-      goodsList.value = res.data.list
-    }
-  } catch (e) {
-    ElMessage.error('加载商品列表失败', e)
-  }
-}
+// 小商品选项列表
+const itemOptions = ref<string[]>(['', ''])
+const newItemName = ref('')
 
-async function handleSubmit() {
-  if (!form.value.product_id || !form.value.target_count || !form.value.team_price) {
-    ElMessage.warning('请填写必填项')
+function addItem() {
+  const name = newItemName.value.trim()
+  if (!name) {
+    ElMessage.warning('请输入小商品名称')
     return
   }
-  const targetCount = Number(form.value.target_count)
-  if (targetCount < 2 || targetCount > 100) {
-    ElMessage.warning('拼团人数需在 2-100 之间')
+  if (itemOptions.value.includes(name)) {
+    ElMessage.warning('该小商品已存在')
+    return
+  }
+  itemOptions.value.push(name)
+  newItemName.value = ''
+}
+
+function removeItem(index: number) {
+  itemOptions.value.splice(index, 1)
+}
+
+const validItems = computed(() => itemOptions.value.filter(name => name.trim() !== ''))
+
+async function handleSubmit() {
+  if (!form.value.product_name.trim()) {
+    ElMessage.warning('请填写拼团商品名称')
+    return
+  }
+  if (!form.value.team_price) {
+    ElMessage.warning('请填写团购价')
+    return
+  }
+  if (validItems.value.length < 2) {
+    ElMessage.warning('请至少添加 2 个小商品选项')
     return
   }
   submitting.value = true
   try {
     const res = await createGroup({
-      product_id: form.value.product_id,
-      target_count: targetCount,
+      product_name: form.value.product_name.trim(),
       team_price: Number(form.value.team_price),
       deadline_hours: Number(form.value.deadline_hours) || 24,
+      items: validItems.value,
     })
     if (res.code === 200) {
       ElMessage.success('拼团已发起')
@@ -63,10 +75,6 @@ async function handleSubmit() {
     submitting.value = false
   }
 }
-
-onMounted(() => {
-  loadGoods()
-})
 </script>
 
 <template>
@@ -76,7 +84,7 @@ onMounted(() => {
       <div>
         <p class="eyebrow">拼团市场</p>
         <h1>发起拼团</h1>
-        <p>选择商品并设置拼团人数、团购价和截止时间</p>
+        <p>填写拼团商品名称，添加小商品选项，设置拼团人数、团购价和截止时间</p>
       </div>
       <button class="secondary" type="button" @click="router.push('/group')">返回拼团</button>
     </section>
@@ -88,21 +96,44 @@ onMounted(() => {
     <section class="form-panel">
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
-          <label>选择商品 <span class="required">*</span></label>
-          <select v-model="form.product_id" required>
-            <option value="">请选择商品</option>
-            <option v-for="g in goodsList" :key="g.id" :value="g.id">{{ g.name }}</option>
-          </select>
+          <label>拼团商品名称 <span class="required">*</span></label>
+          <input v-model="form.product_name" type="text" maxlength="100" placeholder="例如：拉布布盲盒、初音未来徽章套装" required>
+          <p class="hint">填写你想拼团的商品名称，不必从商品库中选择</p>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>目标人数 <span class="required">*</span></label>
-            <input v-model="form.target_count" type="number" min="2" max="100" placeholder="2-100" required>
+
+        <div class="form-group">
+          <label>小商品选项 <span class="required">* 至少 2 个</span></label>
+          <p class="hint" style="margin-bottom: 10px">添加该拼团商品中包含的具体选项，参与者可以从中选择想要的款式</p>
+
+          <div class="items-list">
+            <div v-for="(item, index) in itemOptions" :key="index" class="item-row">
+              <input
+                v-model="itemOptions[index]"
+                type="text"
+                maxlength="100"
+                :placeholder="`选项 ${index + 1}，例如：酷炫彩色拉布布`"
+              >
+              <button v-if="itemOptions.length > 2" class="icon-btn danger-icon" type="button" @click="removeItem(index)" title="删除">✕</button>
+            </div>
           </div>
-          <div class="form-group">
-            <label>团购价 (元/人) <span class="required">*</span></label>
-            <input v-model="form.team_price" type="number" min="0.01" step="0.01" placeholder="每人价格" required>
+
+          <div class="add-item-row">
+            <input
+              v-model="newItemName"
+              type="text"
+              maxlength="100"
+              placeholder="输入新的小商品名称"
+              @keyup.enter.prevent="addItem"
+            >
+            <button class="secondary" type="button" @click="addItem">添加</button>
           </div>
+          <p class="hint">已添加 {{ validItems.length }} 个小商品选项</p>
+        </div>
+
+        <div class="form-group">
+          <label>团购价 (元/人) <span class="required">*</span></label>
+          <input v-model="form.team_price" type="number" min="0.01" step="0.01" placeholder="每人价格" required>
+          <p class="hint">拼团人数自动等于小商品选项数量（当前 {{ validItems.length }} 人）</p>
         </div>
         <div class="form-group">
           <label>截止时间 (小时)</label>
@@ -139,4 +170,14 @@ input, select { width: 100%; height: 44px; border: 1px solid var(--line); border
 .primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .secondary { border: 1px solid var(--line); color: var(--accent); background: #fff; }
 .credit-warning { padding: 14px 18px; border-radius: 8px; background: #fdecea; border: 1px solid #f0b8b3; color: #be123c; font-weight: 600; margin-bottom: 16px; }
+
+.items-list { display: grid; gap: 8px; margin-bottom: 12px; }
+.item-row { display: flex; gap: 8px; align-items: center; }
+.item-row input { flex: 1; }
+.icon-btn { width: 44px; height: 44px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 16px; display: grid; place-items: center; flex-shrink: 0; }
+.danger-icon { color: #be123c; border-color: #f0b8b3; }
+.danger-icon:hover { background: #fdecea; }
+.add-item-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.add-item-row input { flex: 1; }
+.add-item-row .secondary { white-space: nowrap; min-height: 44px; }
 </style>

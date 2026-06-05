@@ -7,7 +7,9 @@ import { getMyListings, cancelListing, type MarketItem } from '@/api/market'
 
 const router = useRouter()
 const listings = ref<MarketItem[]>([])
+const allListings = ref<MarketItem[]>([])
 const loading = ref(false)
+const searchQuery = ref('')
 const myStats = ref({
   total: 0,
   active: 0,
@@ -28,16 +30,33 @@ async function loadListings() {
   try {
     const res = await getMyListings({ page: 1, page_size: 50 })
     if (res.code === 200) {
-      listings.value = res.data.results
+      allListings.value = res.data.results
       if (res.data.stats) {
         myStats.value = res.data.stats
       }
+      filterListings()
     }
   } catch (e) {
     console.error('加载我的挂单失败', e)
   } finally {
     loading.value = false
   }
+}
+
+function filterListings() {
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.trim().toLowerCase()
+    listings.value = allListings.value.filter(l =>
+      l.product_name.toLowerCase().includes(q) ||
+      l.listing_id.toLowerCase().includes(q)
+    )
+  } else {
+    listings.value = allListings.value
+  }
+}
+
+function handleSearch() {
+  filterListings()
 }
 
 async function handleCancel(item: MarketItem) {
@@ -85,6 +104,13 @@ onMounted(() => {
         <button class="secondary" type="button" @click="router.push('/market')">返回市场</button>
         <button class="primary" type="button" @click="router.push('/market/publish')">发布新谷子</button>
       </div>
+    </section>
+
+    <section class="search-section">
+      <form class="search-box" @submit.prevent="handleSearch">
+        <input v-model="searchQuery" type="search" placeholder="搜索商品名称 / 挂单编号">
+        <button type="submit">搜索</button>
+      </form>
     </section>
 
     <section class="data-grid">
@@ -140,6 +166,11 @@ onMounted(() => {
 h1, h2, h3, p { margin: 0; }
 h1 { font-size: 32px; }
 .page-head > div > p:last-child { margin-top: 8px; color: var(--muted); }
+.search-section { margin-bottom: 20px; }
+.search-box { display: flex; gap: 10px; }
+.search-box input { flex: 1; height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 0 14px; font: inherit; background: var(--panel); }
+.search-box button { min-height: 44px; padding: 0 24px; border-radius: 8px; font-weight: 800; cursor: pointer; font: inherit; border: 0; color: #fff; background: var(--accent); }
+.search-box button:hover { background: var(--accent-dark); }
 .data-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
 .data-card { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); padding: 20px; }
 .data-card span { color: var(--muted); font-size: 14px; }
