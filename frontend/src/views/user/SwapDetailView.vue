@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { getSwapDetail, matchSwap, acceptMatch, rejectMatch, completeSwap, cancelSwap, type SwapDetailItem, type SwapMatchItem } from '@/api/swap'
 import { getAssetsList } from '@/api/assets'
+import { useUserStore } from '@/stores/user'
 import type { AssetItem } from '@/types/assets'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 const detail = ref<SwapDetailItem | null>(null)
 const loading = ref(false)
 const actionLoading = ref(false)
 const showMatchDialog = ref(false)
 const selectedAssetId = ref('')
 const assetsList = ref<AssetItem[]>([])
+
+const currentUserId = computed(() => userStore.userInfo?.id || '')
 
 const statusMap: Record<string, { text: string; cls: string }> = {
   active: { text: '可交易', cls: 'status-active' },
@@ -232,8 +236,8 @@ onMounted(() => {
                 </div>
                 <span :class="['match-status', matchStatusMap[match.status]?.cls]">{{ matchStatusMap[match.status]?.text }}</span>
               </div>
-              <div v-if="match.status === 'pending'" class="match-actions">
-                <button class="primary sm" type="button" :disabled="actionLoading" @click="handleAccept(match)">接受</button>
+              <div v-if="match.status === 'pending' && (currentUserId === detail.owner_id || currentUserId === match.applicant_id)" class="match-actions">
+                <button v-if="currentUserId === detail.owner_id" class="primary sm" type="button" :disabled="actionLoading" @click="handleAccept(match)">接受</button>
                 <button class="danger sm" type="button" :disabled="actionLoading" @click="handleReject(match)">拒绝</button>
               </div>
               <p class="match-time">{{ formatDate(match.created_at) }}</p>
@@ -260,7 +264,6 @@ onMounted(() => {
           <div class="action-list">
             <button v-if="detail.status === 'active'" class="primary full" type="button" @click="openMatchDialog">发起匹配</button>
             <button v-if="detail.status === 'matched'" class="primary full" type="button" :disabled="actionLoading" @click="handleComplete">确认完成</button>
-            <button v-if="detail.status === 'active' || detail.status === 'matched'" class="danger full" type="button" :disabled="actionLoading" @click="handleCancel">取消换物</button>
             <button class="secondary full" type="button" @click="router.push('/swap')">返回列表</button>
           </div>
         </section>
