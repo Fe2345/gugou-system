@@ -1,12 +1,10 @@
 import logging
 
 from django.db.models import Q
-from rest_framework import status
-from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
 from apps.common.permissions import IsAuthenticated
-from apps.common.response import error, flatten_errors, success, paginated
+from apps.common.response import error, flatten_errors, paginated, success
 from .models import Order, PaymentRecord
 from .serializers import (
     OrderCancelSerializer,
@@ -14,6 +12,8 @@ from .serializers import (
     OrderCreateSerializer,
     OrderDetailSerializer,
     OrderListSerializer,
+    OrderReturnSerializer,
+    OrderUpdateAddressSerializer,
     PaymentCreateSerializer,
     PaymentSuccessSerializer,
 )
@@ -29,8 +29,7 @@ class OrderCreateView(APIView):
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors), code=400)
         order = serializer.save()
-        data = OrderDetailSerializer(order).data
-        return success(data=data, message="订单创建成功")
+        return success(data=OrderDetailSerializer(order).data, message="Order created")
 
 
 class OrderDetailView(APIView):
@@ -40,14 +39,12 @@ class OrderDetailView(APIView):
         try:
             order = Order.objects.get(order_id=order_id)
         except Order.DoesNotExist:
-            return error(message="订单不存在", code=404)
+            return error(message="Order does not exist", code=404)
 
-        # 验证权限：只有买家和卖家可以查看
         if request.user not in (order.buyer, order.seller):
-            return error(message="无权查看此订单", code=403)
+            return error(message="No permission to view this order", code=403)
 
-        data = OrderDetailSerializer(order).data
-        return success(data=data)
+        return success(data=OrderDetailSerializer(order).data)
 
 
 class OrderListView(APIView):
@@ -56,11 +53,10 @@ class OrderListView(APIView):
     def get(self, request):
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
-        role = request.query_params.get("role", "buyer")  # buyer 或 seller
+        role = request.query_params.get("role", "buyer")
         status_filter = request.query_params.get("status")
         keyword = request.query_params.get("keyword", "").strip()
 
-        # 管理员可查看全部订单
         if request.user.role == "admin":
             queryset = Order.objects.all()
         elif role == "seller":
@@ -68,7 +64,6 @@ class OrderListView(APIView):
         else:
             queryset = Order.objects.filter(buyer=request.user)
 
-        # 关键词搜索
         if keyword:
             queryset = queryset.filter(
                 Q(order_id__icontains=keyword)
@@ -76,22 +71,19 @@ class OrderListView(APIView):
                 | Q(product__name__icontains=keyword)
             )
 
-        # 按状态筛选
         if status_filter:
-            queryset = queryset.filter(status=status_filter)
+            statuses = [item.strip() for item in status_filter.split(",") if item.strip()]
+            queryset = queryset.filter(status__in=statuses)
 
-        # 排序
         queryset = queryset.order_by("-created_at")
 
-        # 分页
         from django.core.paginator import Paginator
+
         paginator = Paginator(queryset, page_size)
         page_obj = paginator.get_page(page)
 
         serializer = OrderListSerializer(page_obj, many=True)
-        data = paginated(page_obj, serializer, page_size)
-
-        return success(data=data)
+        return success(data=paginated(page_obj, serializer, page_size))
 
 
 class PaymentCreateView(APIView):
@@ -101,17 +93,16 @@ class PaymentCreateView(APIView):
         try:
             order = Order.objects.get(order_id=order_id)
         except Order.DoesNotExist:
-            return error(message="订单不存在", code=404)
+            return error(message="Order does not exist", code=404)
 
-        # 验证权限：只有买家可以支付
         if request.user != order.buyer:
-            return error(message="无权支付此订单", code=403)
+            return error(message="No permission to pay this order", code=403)
 
         serializer = PaymentCreateSerializer(order, data=request.data, context={"request": request})
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors), code=400)
         payment = serializer.save()
-        return success(data={"payment_id": payment.payment_id}, message="支付创建成功")
+        return success(data={"payment_id": payment.payment_id}, message="Payment created")
 
 
 class PaymentSuccessView(APIView):
@@ -121,28 +112,27 @@ class PaymentSuccessView(APIView):
         try:
             order = Order.objects.get(order_id=order_id)
         except Order.DoesNotExist:
-            return error(message="订单不存在", code=404)
+            return error(message="Order does not exist", code=404)
 
         try:
             payment = PaymentRecord.objects.get(payment_id=payment_id, order=order)
         except PaymentRecord.DoesNotExist:
-            return error(message="支付记录不存在", code=404)
+            return error(message="Payment record does not exist", code=404)
 
-        # 验证权限：只有买家可以确认支付成功
         if request.user != order.buyer:
-            return error(message="无权操作此支付", code=403)
+            return error(message="No permission to operate this payment", code=403)
 
-        serializer = PaymentSuccessSerializer(payment, data={})
+        serializer = PaymentSuccessSerializer(payment, data=request.data, context={"request": request})
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors), code=400)
 
         try:
             serializer.save()
         except Exception as e:
-            logger.exception("支付确认操作失败: %s", str(e))
-            return error(message=f"操作失败: {str(e)}", code=500)
+            logger.exception("Payment confirmation failed: %s", str(e))
+            return error(message=f"Operation failed: {str(e)}", code=500)
 
-        return success(message="支付成功")
+        return success(message="Payment succeeded, order is waiting for receipt")
 
 
 class OrderCompleteView(APIView):
@@ -152,11 +142,10 @@ class OrderCompleteView(APIView):
         try:
             order = Order.objects.get(order_id=order_id)
         except Order.DoesNotExist:
-            return error(message="订单不存在", code=404)
+            return error(message="Order does not exist", code=404)
 
-        # 验证权限：只有买家可以确认完成
         if request.user != order.buyer:
-            return error(message="无权操作此订单", code=403)
+            return error(message="No permission to operate this order", code=403)
 
         serializer = OrderCompleteSerializer(order, data={})
         if not serializer.is_valid():
@@ -165,10 +154,55 @@ class OrderCompleteView(APIView):
         try:
             serializer.save()
         except Exception as e:
-            logger.exception("订单完成操作失败: %s", str(e))
-            return error(message=f"操作失败: {str(e)}", code=500)
+            logger.exception("Order receipt confirmation failed: %s", str(e))
+            return error(message=f"Operation failed: {str(e)}", code=500)
 
-        return success(message="订单已完成")
+        return success(message="Order receipt confirmed")
+
+
+class OrderAddressUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+        try:
+            order = Order.objects.get(order_id=order_id)
+        except Order.DoesNotExist:
+            return error(message="Order does not exist", code=404)
+
+        if request.user != order.buyer:
+            return error(message="No permission to operate this order", code=403)
+
+        serializer = OrderUpdateAddressSerializer(order, data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            return error(message=flatten_errors(serializer.errors), code=400)
+
+        serializer.save()
+        return success(data=OrderDetailSerializer(order).data, message="Shipping address updated")
+
+
+class OrderReturnView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+        try:
+            order = Order.objects.get(order_id=order_id)
+        except Order.DoesNotExist:
+            return error(message="Order does not exist", code=404)
+
+        if request.user != order.buyer:
+            return error(message="No permission to operate this order", code=403)
+
+        serializer = OrderReturnSerializer(order, data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            return error(message=flatten_errors(serializer.errors), code=400)
+
+        try:
+            serializer.save()
+        except Exception as e:
+            logger.exception("Order return failed: %s", str(e))
+            return error(message=f"Operation failed: {str(e)}", code=500)
+
+        return success(message="Return succeeded, credit score deducted")
 
 
 class OrderCancelView(APIView):
@@ -178,11 +212,10 @@ class OrderCancelView(APIView):
         try:
             order = Order.objects.get(order_id=order_id)
         except Order.DoesNotExist:
-            return error(message="订单不存在", code=404)
+            return error(message="Order does not exist", code=404)
 
-        # 验证权限：买家和卖家都可以取消
         if request.user not in (order.buyer, order.seller):
-            return error(message="无权操作此订单", code=403)
+            return error(message="No permission to operate this order", code=403)
 
         serializer = OrderCancelSerializer(order, data=request.data, context={"request": request})
         if not serializer.is_valid():
@@ -191,7 +224,7 @@ class OrderCancelView(APIView):
         try:
             serializer.save()
         except Exception as e:
-            logger.exception("订单取消操作失败: %s", str(e))
-            return error(message=f"操作失败: {str(e)}", code=500)
+            logger.exception("Order cancellation failed: %s", str(e))
+            return error(message=f"Operation failed: {str(e)}", code=500)
 
-        return success(message="订单已取消")
+        return success(message="Order cancelled")

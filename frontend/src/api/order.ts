@@ -35,6 +35,14 @@ export function createPayment(id: string, pay_method?: string): Promise<ApiRespo
   return request.post(`/orders/${id}/payment/`, { pay_method })
 }
 
-export function confirmPayment(orderId: string, paymentId: string): Promise<ApiResponse<void>> {
-  return request.post(`/orders/${orderId}/payment/${paymentId}/success/`)
+export function confirmPayment(orderId: string, paymentId: string, addressId: number): Promise<ApiResponse<void>> {
+  return request.post(`/orders/${orderId}/payment/${paymentId}/success/`, { address_id: addressId })
+}
+
+export function updateOrderAddress(orderId: string, addressId: number): Promise<ApiResponse<OrderItem>> {
+  return request.post(`/orders/${orderId}/address/`, { address_id: addressId })
+}
+
+export function returnOrder(orderId: string, reason?: string): Promise<ApiResponse<void>> {
+  return request.post(`/orders/${orderId}/return/`, { reason })
 }

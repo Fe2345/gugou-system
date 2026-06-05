@@ -1,7 +1,5 @@
 import logging
-from datetime import timedelta
 
-from django.db.models import Count, Q
 from django.utils import timezone
 
 from apps.common.id_generator import generate_credit_record_id
@@ -9,40 +7,40 @@ from .models import CreditRecord
 
 logger = logging.getLogger("gugou")
 
-# ==================== 信用分常量 ====================
-INITIAL_SCORE = 100       # 初始信用分
-MAX_SCORE = 100           # 满分上限
-MIN_SCORE = 0             # 最低下限
-RECOVERY_CAP = 80         # 月度恢复上限（恢复后不超过此分数）
+# Credit score constants
+INITIAL_SCORE = 100
+MAX_SCORE = 100
+MIN_SCORE = 0
+RECOVERY_CAP = 80
 
-# ==================== 信用等级阈值 ====================
-LEVEL_EXCELLENT = 80      # 良好用户（无限制）
-LEVEL_AVERAGE = 60        # 一般用户（部分限制）
-LEVEL_POOR = 40           # 较差用户（严格限制）
-# < 40: 极差用户（禁止所有交易）
+# Credit levels
+LEVEL_EXCELLENT = 80
+LEVEL_AVERAGE = 60
+LEVEL_POOR = 40
 
-# ==================== 加分规则 ====================
-CREDIT_ORDER_BUYER_COMPLETE = 2       # 买家确认收货
-CREDIT_ORDER_SELLER_COMPLETE = 2      # 卖家完成订单
-CREDIT_EXCHANGE_COMPLETE = 2          # 换物完成（双方各）
-CREDIT_TEAM_SUCCESS = 1               # 拼团成功参与
-CREDIT_MONTHLY_RECOVERY = 2           # 月度恢复
+# Positive rules
+CREDIT_ORDER_BUYER_COMPLETE = 2
+CREDIT_ORDER_SELLER_COMPLETE = 2
+CREDIT_EXCHANGE_COMPLETE = 2
+CREDIT_TEAM_SUCCESS = 1
+CREDIT_MONTHLY_RECOVERY = 2
 
-# ==================== 扣分规则 ====================
-CREDIT_ORDER_BUYER_CANCEL_PAID = -3        # 买家已付款后取消
-CREDIT_ORDER_BUYER_TIMEOUT = -2            # 买家超时未付款
-CREDIT_ORDER_SELLER_CANCEL_LOCKED = -3     # 卖家取消已锁定订单
-CREDIT_EXCHANGE_CANCEL_AFTER_MATCH = -5    # 换物匹配后取消
-CREDIT_TEAM_EXIT_AFTER_SUCCESS = -3        # 拼团成功后退出
+# Negative rules
+CREDIT_ORDER_BUYER_CANCEL_PAID = -3
+CREDIT_ORDER_BUYER_RETURN = -2
+CREDIT_ORDER_BUYER_TIMEOUT = -2
+CREDIT_ORDER_SELLER_CANCEL_LOCKED = -3
+CREDIT_EXCHANGE_CANCEL_AFTER_MATCH = -5
+CREDIT_TEAM_EXIT_AFTER_SUCCESS = -3
 
-# ==================== 每日限制 ====================
-DAILY_ORDER_LIMIT_POOR = 1       # 较差用户每日下单上限
-DAILY_ORDER_LIMIT_AVERAGE = 3    # 一般用户每日下单上限
-MAX_LISTING_COUNT_AVERAGE = 5    # 一般用户最大发布商品数
+# Daily limits
+DAILY_ORDER_LIMIT_POOR = 1
+DAILY_ORDER_LIMIT_AVERAGE = 3
+MAX_LISTING_COUNT_AVERAGE = 5
 
 
 def create_credit_record(user, change_value, reason, related_order=None):
-    """创建信用变动记录并同步更新用户信用分。"""
+    """Create a credit record and update the user's credit score."""
     credit_record_id = generate_credit_record_id()
 
     credit_record = CreditRecord.objects.create(
@@ -58,14 +56,13 @@ def create_credit_record(user, change_value, reason, related_order=None):
     user.credit_score = new_score
     user.save(update_fields=["credit_score"])
 
-    # 信用分低于阈值时自动冻结账户
     if new_score < LEVEL_POOR and user.status == "normal":
         user.status = "frozen"
         user.save(update_fields=["status"])
-        logger.warning("用户 %s 信用分过低(%d)，账户已自动冻结", user.user_id, new_score)
+        logger.warning("User %s credit score is too low (%d), account frozen", user.user_id, new_score)
 
     logger.info(
-        "用户 %s 信用变动: %s, 原因: %s, 当前信用分: %s",
+        "User %s credit changed: %s, reason: %s, current score: %s",
         user.user_id,
         f"{change_value:+d}",
         reason,
@@ -76,73 +73,71 @@ def create_credit_record(user, change_value, reason, related_order=None):
 
 
 def get_credit_level(score):
-    """返回信用等级标识。"""
+    """Return the credit level name."""
     if score >= LEVEL_EXCELLENT:
-        return "良好用户"
-    elif score >= LEVEL_AVERAGE:
-        return "一般用户"
-    elif score >= LEVEL_POOR:
-        return "较差用户"
-    else:
-        return "极差用户"
+        return "excellent"
+    if score >= LEVEL_AVERAGE:
+        return "average"
+    if score >= LEVEL_POOR:
+        return "poor"
+    return "blocked"
 
 
 def get_trading_restrictions(score):
-    """返回当前信用分对应的交易限制描述。"""
+    """Return trading restrictions for the current credit score."""
     if score >= LEVEL_EXCELLENT:
-        return {"level": "良好用户", "can_trade": True, "restrictions": []}
-    elif score >= LEVEL_AVERAGE:
+        return {"level": "excellent", "can_trade": True, "restrictions": []}
+    if score >= LEVEL_AVERAGE:
         return {
-            "level": "一般用户",
+            "level": "average",
             "can_trade": True,
             "restrictions": [
-                f"每日最多下单 {DAILY_ORDER_LIMIT_AVERAGE} 次",
-                f"最多同时发布 {MAX_LISTING_COUNT_AVERAGE} 个商品",
+                f"Daily order limit: {DAILY_ORDER_LIMIT_AVERAGE}",
+                f"Active listing limit: {MAX_LISTING_COUNT_AVERAGE}",
             ],
         }
-    elif score >= LEVEL_POOR:
+    if score >= LEVEL_POOR:
         return {
-            "level": "较差用户",
+            "level": "poor",
             "can_trade": True,
             "restrictions": [
-                f"每日最多下单 {DAILY_ORDER_LIMIT_POOR} 次",
-                "不能发布商品",
-                "不能发起换物请求",
+                f"Daily order limit: {DAILY_ORDER_LIMIT_POOR}",
+                "Cannot publish products",
+                "Cannot start exchange requests",
             ],
         }
-    else:
-        return {
-            "level": "极差用户",
-            "can_trade": False,
-            "restrictions": ["信用分过低，禁止所有交易，请联系管理员"],
-        }
+    return {
+        "level": "blocked",
+        "can_trade": False,
+        "restrictions": ["Credit score is too low. Trading is disabled."],
+    }
 
 
 def check_trading_permission(user):
-    """检查用户是否有交易权限。返回 (allowed, message)。"""
+    """Check whether the user can trade. Returns (allowed, message)."""
     if user.role == "admin":
         return True, ""
 
     score = user.credit_score
 
     if score < LEVEL_POOR:
-        return False, "信用分过低，禁止所有交易，请联系管理员"
+        return False, "Credit score is too low. Trading is disabled."
 
     if user.status != "normal":
-        return False, "账户状态异常，请联系管理员"
+        return False, "Account status is abnormal. Please contact an administrator."
 
     return True, ""
 
 
 def check_daily_order_limit(user):
-    """检查用户今日下单次数是否超限。返回 (allowed, message)。"""
+    """Check whether today's order count exceeds the credit-based limit."""
     if user.role == "admin":
         return True, ""
 
     score = user.credit_score
 
     if score < LEVEL_POOR:
-        return False, "信用分过低，禁止下单"
+        return False, "Credit score is too low. Orders are disabled."
 
     if score < LEVEL_AVERAGE:
         limit = DAILY_ORDER_LIMIT_POOR
@@ -152,6 +147,7 @@ def check_daily_order_limit(user):
         return True, ""
 
     from apps.orders.models import Order
+
     today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
     today_count = Order.objects.filter(
         buyer=user,
@@ -161,65 +157,66 @@ def check_daily_order_limit(user):
     ).count()
 
     if today_count >= limit:
-        return False, f"信用等级限制：每日最多下单 {limit} 次"
+        return False, f"Credit level limit: maximum {limit} orders per day."
 
     return True, ""
 
 
 def check_listing_permission(user):
-    """检查用户是否有发布商品权限。返回 (allowed, message)。"""
+    """Check whether the user can publish listings. Returns (allowed, message)."""
     if user.role == "admin":
         return True, ""
 
     score = user.credit_score
 
     if score < LEVEL_POOR:
-        return False, "信用分过低，禁止发布商品"
+        return False, "Credit score is too low. Publishing products is disabled."
     if score < LEVEL_AVERAGE:
-        return False, "信用分不足，不能发布商品（需60分以上）"
+        return False, "Credit score is not enough to publish products. At least 60 is required."
 
     if score < LEVEL_EXCELLENT:
         from apps.market.models import Listing
+
         active_count = Listing.objects.filter(
             seller=user,
             status__in=[Listing.Status.ACTIVE, Listing.Status.LOCKED],
         ).count()
         if active_count >= MAX_LISTING_COUNT_AVERAGE:
-            return False, f"信用等级限制：最多同时发布 {MAX_LISTING_COUNT_AVERAGE} 个商品"
+            return False, f"Credit level limit: maximum {MAX_LISTING_COUNT_AVERAGE} active listings."
 
     return True, ""
 
 
 def check_exchange_permission(user):
-    """检查用户是否有发起换物权限。返回 (allowed, message)。"""
+    """Check whether the user can start exchange requests. Returns (allowed, message)."""
     if user.role == "admin":
         return True, ""
 
     score = user.credit_score
 
     if score < LEVEL_POOR:
-        return False, "信用分过低，禁止换物交易"
+        return False, "Credit score is too low. Exchange is disabled."
     if score < LEVEL_AVERAGE:
-        return False, "信用分不足，不能发起换物（需60分以上）"
+        return False, "Credit score is not enough to start exchanges. At least 60 is required."
 
     return True, ""
 
 
 def check_team_permission(user):
-    """检查用户是否有参与拼团权限。返回 (allowed, message)。"""
+    """Check whether the user can join team purchases. Returns (allowed, message)."""
     if user.role == "admin":
         return True, ""
 
     score = user.credit_score
 
     if score < LEVEL_POOR:
-        return False, "信用分过低，禁止参与拼团"
+        return False, "Credit score is too low. Team purchases are disabled."
 
     return True, ""
 
 
 def monthly_credit_recovery():
-    """月度信用恢复：信用分 < 80 的用户自动 +2 分（上限80分）。"""
+    """Monthly recovery: users below 80 recover +2 points, capped at 80."""
     from apps.accounts.models import User
 
     users = User.objects.filter(
@@ -241,16 +238,15 @@ def monthly_credit_recovery():
         create_credit_record(
             user=user,
             change_value=recovery,
-            reason="月度信用恢复",
+            reason="Monthly credit recovery",
         )
 
-        # 如果恢复后信用分 >= 40 且账户是冻结状态，自动解冻
         if user.credit_score >= LEVEL_POOR and user.status == "frozen":
             user.status = "normal"
             user.save(update_fields=["status"])
-            logger.info("用户 %s 信用分恢复至 %d，账户已自动解冻", user.user_id, user.credit_score)
+            logger.info("User %s recovered to %d, account unfrozen", user.user_id, user.credit_score)
 
         count += 1
 
-    logger.info("月度信用恢复完成，影响 %d 名用户", count)
+    logger.info("Monthly credit recovery completed, affected users: %d", count)
     return count
