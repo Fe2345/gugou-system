@@ -50,6 +50,7 @@ const statusMap: Record<string, { text: string; cls: string }> = {
   completed: { text: '已完成', cls: 'status-done' },
   cancelled: { text: '已取消', cls: 'status-cancelled' },
   closed: { text: '已关闭', cls: 'status-cancelled' },
+  pending_return: { text: '退货审核中', cls: 'status-pending' },
   refunded: { text: '已退货', cls: 'status-cancelled' },
 }
 
@@ -228,7 +229,7 @@ async function handleReturn() {
   try {
     const res = await returnOrder(order.value.order_id, reason)
     if (res.code === 200) {
-      ElMessage.success('退货成功，已扣除 2 分信用分')
+      ElMessage.success('退货申请已提交，等待管理员审核')
       loadOrder()
     }
   } catch (e: any) {
@@ -338,6 +339,7 @@ onMounted(() => {
             <button v-if="order.status === 'receiving'" class="danger full" type="button" :disabled="actionLoading" @click="handleReturn">
               退货
             </button>
+            <span v-if="order.status === 'pending_return'" class="creator-hint">退货审核中，请耐心等待管理员处理</span>
             <button v-if="order.status === 'pending_payment'" class="danger full" type="button" :disabled="actionLoading" @click="handleCancel">
               {{ actionLoading ? '处理中...' : '取消订单' }}
             </button>
@@ -446,6 +448,7 @@ h1 { font-size: 32px; }
 .action-card { padding: 18px; }
 .action-card h3 { font-size: 18px; margin-bottom: 14px; }
 .action-list { display: grid; gap: 10px; }
+.creator-hint { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 0; }
 .primary, .secondary, .danger { min-height: 44px; padding: 0 18px; border-radius: 8px; font-weight: 800; cursor: pointer; font: inherit; }
 .primary { border: 0; color: #fff; background: var(--accent); }
 .primary:hover { background: var(--accent-dark); }

@@ -13,6 +13,7 @@ class Order(BaseModel):
         COMPLETED = "completed", "Completed"
         CANCELLED = "cancelled", "Cancelled"
         CLOSED = "closed", "Closed"
+        PENDING_RETURN = "pending_return", "Pending return"
         REFUNDED = "refunded", "Refunded"
 
     order_id = models.CharField("order id", max_length=25, primary_key=True)

@@ -328,12 +328,43 @@ class OrderReturnSerializer(serializers.Serializer):
 
     def save(self):
         from django.db import transaction
+
+        order = self.instance
+        reason = self.validated_data.get("reason", "")
+        operator = self.context["request"].user
+        old_status = order.status
+
+        with transaction.atomic():
+            order.status = Order.Status.PENDING_RETURN
+            order.save(update_fields=["status", "updated_at"])
+
+            OrderStatusLog.objects.create(
+                log_id=build_order_log_id(order, "R"),
+                order=order,
+                from_status=old_status,
+                to_status=Order.Status.PENDING_RETURN,
+                operator=operator,
+                note=reason or "Buyer applied for return",
+            )
+
+        logger.info("Order %s pending return review", order.order_id)
+        return order
+
+
+class OrderReturnApproveSerializer(serializers.Serializer):
+    def validate(self, attrs):
+        order = self.instance
+        if order.status != Order.Status.PENDING_RETURN:
+            raise serializers.ValidationError("Only pending return orders can be approved")
+        return attrs
+
+    def save(self):
+        from django.db import transaction
         from apps.assets.models import AssetFlow, UserAsset
         from apps.common.id_generator import generate_asset_flow_id
         from apps.credits.services import CREDIT_ORDER_BUYER_RETURN, create_credit_record
 
         order = self.instance
-        reason = self.validated_data.get("reason", "")
         operator = self.context["request"].user
 
         with transaction.atomic():
@@ -366,12 +397,12 @@ class OrderReturnSerializer(serializers.Serializer):
                 )
 
             OrderStatusLog.objects.create(
-                log_id=build_order_log_id(order, "R"),
+                log_id=build_order_log_id(order, "A"),
                 order=order,
-                from_status=Order.Status.RECEIVING,
+                from_status=Order.Status.PENDING_RETURN,
                 to_status=Order.Status.REFUNDED,
                 operator=operator,
-                note=reason or "Buyer returned goods",
+                note="Admin approved return, order refunded",
             )
 
             create_credit_record(
@@ -381,7 +412,64 @@ class OrderReturnSerializer(serializers.Serializer):
                 related_order=order,
             )
 
-        logger.info("Order %s returned", order.order_id)
+            # admin operation log
+            from apps.operations.models import AdminOperationLog
+            from apps.common.id_generator import generate_op_log_id
+            AdminOperationLog.objects.create(
+                op_log_id=generate_op_log_id(),
+                admin=operator,
+                module="订单管理",
+                action="通过退货",
+                target_id=order.order_id,
+                detail=f"管理员通过退货申请，订单 {order.order_id} 已退款",
+            )
+
+        logger.info("Order %s return approved", order.order_id)
+        return order
+
+
+class OrderReturnRejectSerializer(serializers.Serializer):
+    reason = serializers.CharField(max_length=200, required=False, allow_blank=True, default="")
+
+    def validate(self, attrs):
+        order = self.instance
+        if order.status != Order.Status.PENDING_RETURN:
+            raise serializers.ValidationError("Only pending return orders can be rejected")
+        return attrs
+
+    def save(self):
+        from django.db import transaction
+
+        order = self.instance
+        reason = self.validated_data.get("reason", "")
+        operator = self.context["request"].user
+
+        with transaction.atomic():
+            order.status = Order.Status.RECEIVING
+            order.save(update_fields=["status", "updated_at"])
+
+            OrderStatusLog.objects.create(
+                log_id=build_order_log_id(order, "J"),
+                order=order,
+                from_status=Order.Status.PENDING_RETURN,
+                to_status=Order.Status.RECEIVING,
+                operator=operator,
+                note=reason or "Admin rejected return application",
+            )
+
+            # admin operation log
+            from apps.operations.models import AdminOperationLog
+            from apps.common.id_generator import generate_op_log_id
+            AdminOperationLog.objects.create(
+                op_log_id=generate_op_log_id(),
+                admin=operator,
+                module="订单管理",
+                action="驳回退货",
+                target_id=order.order_id,
+                detail=f"管理员驳回退货申请，原因：{reason}" if reason else f"管理员驳回退货申请",
+            )
+
+        logger.info("Order %s return rejected", order.order_id)
         return order
 
 
