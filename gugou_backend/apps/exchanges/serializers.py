@@ -94,8 +94,8 @@ class ExchangeMatchCreateSerializer(serializers.Serializer):
         if exchange.owner == user:
             raise serializers.ValidationError("不能匹配自己的换物请求")
 
-        # 验证换物请求状态
-        if exchange.status != ExchangeRequest.Status.ACTIVE:
+        # 验证换物请求状态（允许在发布中或匹配中状态下提交匹配申请）
+        if exchange.status not in (ExchangeRequest.Status.ACTIVE, ExchangeRequest.Status.MATCHED):
             raise serializers.ValidationError("该换物请求已不可匹配")
 
         # 验证资产存在且属于当前用户
@@ -133,6 +133,20 @@ class ExchangeMatchCreateSerializer(serializers.Serializer):
             applicant=user,
             applicant_asset=asset,
             status=ExchangeMatch.Status.PENDING,
+        )
+
+        # 更新换物请求状态为匹配中
+        exchange.status = ExchangeRequest.Status.MATCHED
+        exchange.save()
+
+        # 记录状态变更日志
+        ExchangeStatusLog.objects.create(
+            log_id=f"LOG{exchange.exchange_id}_MATCHING",
+            exchange=exchange,
+            from_status=ExchangeRequest.Status.ACTIVE,
+            to_status=ExchangeRequest.Status.MATCHED,
+            operator=user,
+            note=f"提交匹配申请 {match_id}",
         )
 
         logger.info("用户 %s 提交匹配 %s 到换物请求 %s", user.user_id, match_id, exchange.exchange_id)
