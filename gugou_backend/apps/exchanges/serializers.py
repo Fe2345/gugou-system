@@ -349,7 +349,7 @@ class ExchangeCancelSerializer(serializers.Serializer):
 
 class ExchangeRequestListSerializer(serializers.ModelSerializer):
     owner_id = serializers.CharField(source="owner.user_id", read_only=True)
-    owner_name = serializers.CharField(source="owner.nickname", read_only=True)
+    owner_name = serializers.SerializerMethodField()
     offered_asset_name = serializers.CharField(source="offered_asset.product.name", read_only=True)
 
     class Meta:
@@ -359,10 +359,13 @@ class ExchangeRequestListSerializer(serializers.ModelSerializer):
             "offered_asset_name", "target_condition", "status", "created_at",
         ]
 
+    def get_owner_name(self, obj):
+        return obj.owner.nickname or obj.owner.phone
+
 
 class ExchangeRequestDetailSerializer(serializers.ModelSerializer):
     owner_id = serializers.CharField(source="owner.user_id", read_only=True)
-    owner_name = serializers.CharField(source="owner.nickname", read_only=True)
+    owner_name = serializers.SerializerMethodField()
     offered_asset_name = serializers.CharField(source="offered_asset.product.name", read_only=True)
     matches = serializers.SerializerMethodField()
     status_logs = serializers.SerializerMethodField()
@@ -375,6 +378,9 @@ class ExchangeRequestDetailSerializer(serializers.ModelSerializer):
             "status", "created_at", "updated_at", "matches", "status_logs",
         ]
 
+    def get_owner_name(self, obj):
+        return obj.owner.nickname or obj.owner.phone
+
     def get_matches(self, obj):
         matches = obj.matches.all().order_by("-created_at")
         return ExchangeMatchSerializer(matches, many=True).data
@@ -386,7 +392,7 @@ class ExchangeRequestDetailSerializer(serializers.ModelSerializer):
 
 class ExchangeMatchSerializer(serializers.ModelSerializer):
     applicant_id = serializers.CharField(source="applicant.user_id", read_only=True)
-    applicant_name = serializers.CharField(source="applicant.nickname", read_only=True)
+    applicant_name = serializers.SerializerMethodField()
     applicant_asset_name = serializers.CharField(source="applicant_asset.product.name", read_only=True)
 
     class Meta:
@@ -396,10 +402,13 @@ class ExchangeMatchSerializer(serializers.ModelSerializer):
             "applicant_asset_name", "status", "created_at",
         ]
 
+    def get_applicant_name(self, obj):
+        return obj.applicant.nickname or obj.applicant.phone
+
 
 class ExchangeStatusLogSerializer(serializers.ModelSerializer):
     operator_id = serializers.CharField(source="operator.user_id", read_only=True)
-    operator_name = serializers.CharField(source="operator.nickname", read_only=True)
+    operator_name = serializers.SerializerMethodField()
 
     class Meta:
         model = ExchangeStatusLog
@@ -407,3 +416,6 @@ class ExchangeStatusLogSerializer(serializers.ModelSerializer):
             "log_id", "from_status", "to_status", "operator_id",
             "operator_name", "note", "created_at",
         ]
+
+    def get_operator_name(self, obj):
+        return obj.operator.nickname or obj.operator.phone
