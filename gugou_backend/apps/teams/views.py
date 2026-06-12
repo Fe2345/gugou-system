@@ -1,7 +1,7 @@
 import logging
 
 from django.db import models
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -73,6 +73,12 @@ class TeamProjectListView(APIView):
 
         serializer = TeamProjectListSerializer(page_obj, many=True, context={"request": request})
         data = paginated(page_obj, serializer, page_size)
+
+        # 各状态计数（基于当前筛选条件）
+        status_counts = {}
+        for status_val, _ in TeamProject.Status.choices:
+            status_counts[status_val] = queryset.filter(status=status_val).count()
+        data["status_counts"] = status_counts
 
         return success(data=data)
 
@@ -160,6 +166,7 @@ class MyTeamProjectListView(APIView):
     def get(self, request):
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
+        keyword = request.query_params.get("keyword", "").strip()
 
         # 获取用户参与的拼团
         from .models import TeamParticipant
@@ -172,12 +179,26 @@ class MyTeamProjectListView(APIView):
             models.Q(creator=request.user) | models.Q(team_id__in=participant_team_ids)
         ).distinct().order_by("-created_at")
 
+        # 关键词搜索
+        if keyword:
+            queryset = queryset.filter(
+                Q(team_id__icontains=keyword)
+                | Q(product_name__icontains=keyword)
+                | Q(creator__nickname__icontains=keyword)
+            )
+
         from django.core.paginator import Paginator
         paginator = Paginator(queryset, page_size)
         page_obj = paginator.get_page(page)
 
         serializer = TeamProjectListSerializer(page_obj, many=True)
         data = paginated(page_obj, serializer, page_size)
+
+        # 各状态计数
+        status_counts = {}
+        for status_val, _ in TeamProject.Status.choices:
+            status_counts[status_val] = queryset.filter(status=status_val).count()
+        data["status_counts"] = status_counts
 
         return success(data=data)
 
@@ -413,6 +434,12 @@ class AdminTeamListView(APIView):
 
         serializer = TeamProjectListSerializer(page_obj, many=True)
         data = paginated(page_obj, serializer, page_size)
+
+        # 各状态计数
+        status_counts = {}
+        for status_val, _ in TeamProject.Status.choices:
+            status_counts[status_val] = queryset.filter(status=status_val).count()
+        data["status_counts"] = status_counts
 
         return success(data=data)
 
