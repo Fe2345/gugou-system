@@ -146,7 +146,11 @@ class TeamProjectJoinSerializer(serializers.Serializer):
         participant = TeamParticipant.objects.filter(team=team, user=user).first()
         if participant:
             if participant.status == TeamParticipant.Status.JOINED:
-                raise serializers.ValidationError("您已经参加了该拼团，不能重复参加")
+                if participant.selected_item_id is None:
+                    # 发起者创建时未选小商品，允许在此选择
+                    attrs["creator_first_select"] = participant
+                else:
+                    raise serializers.ValidationError("您已经参加了该拼团，不能重复参加")
             elif participant.status == TeamParticipant.Status.CANCELLED:
                 # 已退出的用户允许重新参加
                 attrs["rejoin_participant"] = participant
@@ -187,15 +191,20 @@ class TeamProjectJoinSerializer(serializers.Serializer):
         address = validated_data.get("address")
 
         with db_transaction.atomic():
-            # 检查是否是重新加入
+            # 检查是否是重新加入或发起者首次选择小商品
             rejoin_participant = validated_data.pop("rejoin_participant", None)
+            creator_first_select = validated_data.pop("creator_first_select", None)
+            existing_participant = rejoin_participant or creator_first_select
 
-            if rejoin_participant:
-                rejoin_participant.status = TeamParticipant.Status.JOINED
-                rejoin_participant.selected_item = item
-                rejoin_participant.save()
-                participant = rejoin_participant
-                logger.info("用户 %s 重新加入拼团 %s", user.user_id, team.team_id)
+            if existing_participant:
+                existing_participant.status = TeamParticipant.Status.JOINED
+                existing_participant.selected_item = item
+                existing_participant.save()
+                participant = existing_participant
+                if rejoin_participant:
+                    logger.info("用户 %s 重新加入拼团 %s", user.user_id, team.team_id)
+                else:
+                    logger.info("发起者 %s 选择小商品 %s（拼团 %s）", user.user_id, item.name, team.team_id)
             else:
                 participant_id = f"P{generate_team_id()[1:]}"
                 participant = TeamParticipant.objects.create(
@@ -211,8 +220,9 @@ class TeamProjectJoinSerializer(serializers.Serializer):
             item.selected_at = timezone.now()
             item.save()
 
-            # 更新当前人数
-            team.current_count += 1
+            # 更新当前人数（发起者首次选择小商品时不增加，因为创建时已计为1人）
+            if not creator_first_select:
+                team.current_count += 1
 
             # 检查是否达到目标人数
             if team.current_count >= team.target_count:

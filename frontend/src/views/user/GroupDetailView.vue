@@ -49,6 +49,11 @@ const isParticipant = computed(() => {
   if (!detail.value?.participants) return false
   return detail.value.participants.some(p => p.user_id === currentUserId.value && p.status === 'joined')
 })
+const creatorNeedsSelect = computed(() => {
+  if (!isCreator.value || !isParticipant.value || !detail.value?.participants) return false
+  const myParticipant = detail.value.participants.find(p => p.user_id === currentUserId.value && p.status === 'joined')
+  return !!myParticipant && !myParticipant.selected_item_id
+})
 
 const selectedAddress = computed(() => addresses.value.find(a => a.id === selectedAddressId.value) || null)
 
@@ -139,7 +144,7 @@ function resetAddressForm() {
 async function handleItemClick(item: TeamItemOption) {
   if (item.is_selected) return
   if (!detail.value || detail.value.status !== 'recruiting' || detail.value.is_expired) return
-  if (isParticipant.value || isCreator.value) return
+  if (isParticipant.value && !creatorNeedsSelect.value) return
 
   pendingItemId.value = item.item_id
   useNewAddress.value = addresses.value.length === 0
@@ -373,18 +378,19 @@ onMounted(() => { loadDetail() })
         <!-- 小商品选项卡片 -->
         <div v-if="detail.items && detail.items.length > 0" class="items-section">
           <h3>选择你想要的小商品 ({{ detail.items.filter(i => i.is_selected).length }} / {{ detail.items.length }} 已选)</h3>
-          <p v-if="detail.status === 'recruiting' && !detail.is_expired && !isParticipant && !isCreator" class="items-hint">点击灰色可选卡片即可参与拼团</p>
+          <p v-if="detail.status === 'recruiting' && !detail.is_expired && creatorNeedsSelect" class="items-hint">请选择你想要的小商品</p>
+          <p v-else-if="detail.status === 'recruiting' && !detail.is_expired && !isParticipant && !isCreator" class="items-hint">点击灰色可选卡片即可参与拼团</p>
           <div class="items-grid">
             <div
               v-for="item in detail.items"
               :key="item.item_id"
-              :class="['item-card', { 'item-taken': item.is_selected, 'item-available': !item.is_selected && detail.status === 'recruiting' && !isParticipant && !isCreator && !detail.is_expired }]"
+              :class="['item-card', { 'item-taken': item.is_selected, 'item-available': !item.is_selected && detail.status === 'recruiting' && ((!isParticipant && !isCreator) || creatorNeedsSelect) && !detail.is_expired }]"
               @click="handleItemClick(item)"
             >
               <div class="item-card-body">
                 <span class="item-name">{{ item.name }}</span>
                 <span v-if="item.is_selected" class="item-badge taken">已被选</span>
-                <span v-else-if="detail.status === 'recruiting' && !isParticipant && !isCreator && !detail.is_expired" class="item-badge available">可选</span>
+                <span v-else-if="detail.status === 'recruiting' && ((!isParticipant && !isCreator) || creatorNeedsSelect) && !detail.is_expired" class="item-badge available">可选</span>
                 <span v-else class="item-badge unavailable">不可选</span>
               </div>
               <div v-if="item.is_selected && item.selected_user_name" class="item-card-footer">
@@ -425,7 +431,8 @@ onMounted(() => { loadDetail() })
           <h3>操作</h3>
           <div class="action-list">
             <span v-if="isParticipant && !isCreator && detail.status === 'recruiting'" class="hint-text">已参与</span>
-            <span v-if="isCreator && detail.status === 'recruiting'" class="hint-text">你已是拼团发起人</span>
+            <span v-if="isCreator && detail.status === 'recruiting' && creatorNeedsSelect" class="hint-text">请先选择你想要的小商品</span>
+            <span v-else-if="isCreator && detail.status === 'recruiting'" class="hint-text">你已是拼团发起人</span>
             <button v-if="isCreator && detail.status === 'recruiting'" class="danger full" type="button" :disabled="actionLoading" @click="handleCancel">
               {{ actionLoading ? '取消中...' : '取消拼团' }}
             </button>
