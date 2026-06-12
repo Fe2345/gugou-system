@@ -288,7 +288,6 @@ onMounted(() => {
         <p class="eyebrow">订单管理</p>
         <h1>订单详情</h1>
       </div>
-      <button class="secondary" type="button" @click="router.push('/my-orders')">返回订单列表</button>
     </section>
 
     <div v-if="loading" class="empty-state"><strong>加载中...</strong></div>
