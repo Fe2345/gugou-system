@@ -9,10 +9,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const router = useRouter()
 const userStore = useUserStore()
 const groups = ref<GroupItem[]>([])
-const allGroups = ref<GroupItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
 const searchQuery = ref('')
+const statusCounts = ref<Record<string, number>>({})
 
 const currentUserId = computed(() => userStore.userInfo?.id || '')
 
@@ -26,10 +26,17 @@ const statusMap: Record<string, { text: string; cls: string }> = {
 async function loadGroups() {
   loading.value = true
   try {
-    const res = await getMyGroups({ page: 1, page_size: 50 })
+    const params: any = { page: 1, page_size: 50 }
+    if (searchQuery.value.trim()) {
+      params.keyword = searchQuery.value.trim()
+    }
+    const res = await getMyGroups(params)
     if (res.code === 200) {
-      allGroups.value = res.data.results
-      filterGroups()
+      groups.value = res.data.results
+      totalCount.value = res.data.count
+      if (res.data.status_counts) {
+        statusCounts.value = res.data.status_counts
+      }
     }
   } catch (e) {
     console.error('加载我的拼团失败', e)
@@ -38,22 +45,8 @@ async function loadGroups() {
   }
 }
 
-function filterGroups() {
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.trim().toLowerCase()
-    groups.value = allGroups.value.filter(g =>
-      g.product_name_display.toLowerCase().includes(q) ||
-      g.creator_name.toLowerCase().includes(q) ||
-      g.team_id.toLowerCase().includes(q)
-    )
-  } else {
-    groups.value = allGroups.value
-  }
-  totalCount.value = groups.value.length
-}
-
 function handleSearch() {
-  filterGroups()
+  loadGroups()
 }
 
 async function handleCancel(item: GroupItem) {
@@ -143,13 +136,13 @@ onMounted(() => {
         <span>总拼团</span><strong>{{ totalCount }}</strong><p>全部拼团</p>
       </article>
       <article class="data-card">
-        <span>招募中</span><strong>{{ groups.filter(g => g.status === 'recruiting').length }}</strong><p>进行中</p>
+        <span>招募中</span><strong>{{ statusCounts['recruiting'] ?? 0 }}</strong><p>进行中</p>
       </article>
       <article class="data-card">
-        <span>已成团</span><strong>{{ groups.filter(g => g.status === 'success').length }}</strong><p>拼团成功</p>
+        <span>已成团</span><strong>{{ statusCounts['success'] ?? 0 }}</strong><p>拼团成功</p>
       </article>
       <article class="data-card">
-        <span>已失败</span><strong>{{ groups.filter(g => g.status === 'failed').length }}</strong><p>未达成</p>
+        <span>已失败</span><strong>{{ statusCounts['failed'] ?? 0 }}</strong><p>未达成</p>
       </article>
     </section>
 

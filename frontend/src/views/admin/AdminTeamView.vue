@@ -10,6 +10,7 @@ defineOptions({ name: 'AdminTeamView' })
 const teams = ref<GroupItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
+const statusCounts = ref<Record<string, number>>({})
 const page = ref(1)
 const pageSize = ref(10)
 
@@ -60,6 +61,9 @@ async function loadTeams() {
     if (res.code === 200) {
       teams.value = res.data.results
       totalCount.value = res.data.count
+      if (res.data.status_counts) {
+        statusCounts.value = res.data.status_counts
+      }
     }
   } catch (e) {
     console.error('加载拼团项目失败', e)
@@ -163,13 +167,13 @@ onMounted(() => {
       <span>总项目数</span><strong>{{ totalCount }}</strong><p>全部拼团项目</p>
     </article>
     <article class="data-card">
-      <span>招募中</span><strong>{{ teams.filter(t => t.status === 'recruiting').length }}</strong><p>需关注截止时间</p>
+      <span>招募中</span><strong>{{ statusCounts['recruiting'] ?? 0 }}</strong><p>需关注截止时间</p>
     </article>
     <article class="data-card">
-      <span>已成团</span><strong>{{ teams.filter(t => t.status === 'success').length }}</strong><p>已成功</p>
+      <span>已成团</span><strong>{{ statusCounts['success'] ?? 0 }}</strong><p>已成功</p>
     </article>
     <article class="data-card">
-      <span>已失败</span><strong>{{ teams.filter(t => t.status === 'failed').length }}</strong><p>需做原因分析</p>
+      <span>已失败</span><strong>{{ statusCounts['failed'] ?? 0 }}</strong><p>需做原因分析</p>
     </article>
   </section>
 
