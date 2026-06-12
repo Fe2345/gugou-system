@@ -9,6 +9,7 @@ const groups = ref<GroupItem[]>([])
 const loading = ref(false)
 const totalCount = ref(0)
 const statusFilter = ref('')
+const statusCounts = ref<Record<string, number>>({})
 
 const statusMap: Record<string, string> = {
   recruiting: '拼团中',
@@ -30,6 +31,7 @@ const statusOptions = [
   { value: 'recruiting', label: '拼团中' },
   { value: 'success', label: '已成团' },
   { value: 'failed', label: '已失败' },
+  { value: 'cancelled', label: '已取消' },
 ]
 
 async function loadGroups() {
@@ -39,20 +41,16 @@ async function loadGroups() {
     if (statusFilter.value) {
       params.status = statusFilter.value
     }
+    if (searchQuery.value.trim()) {
+      params.keyword = searchQuery.value.trim()
+    }
     const res = await getGroupList(params)
     if (res.code === 200) {
-      let results = res.data.results
-      // 前端搜索过滤
-      if (searchQuery.value.trim()) {
-        const q = searchQuery.value.trim().toLowerCase()
-        results = results.filter(g =>
-          g.product_name_display.toLowerCase().includes(q) ||
-          g.creator_name.toLowerCase().includes(q) ||
-          g.team_id.toLowerCase().includes(q)
-        )
+      groups.value = res.data.results
+      totalCount.value = res.data.count
+      if (res.data.status_counts) {
+        statusCounts.value = res.data.status_counts
       }
-      groups.value = results
-      totalCount.value = results.length
     }
   } catch (e) {
     console.error('加载拼团列表失败', e)
@@ -100,7 +98,7 @@ onMounted(() => {
       </div>
       <div class="hero-tools">
         <form class="search-box" @submit.prevent="handleSearch">
-          <input v-model="searchQuery" type="search" placeholder="搜索谷子名称 / IP / 角色">
+          <input v-model="searchQuery" type="search" placeholder="搜索拼团名称 / 发起人 / 编号">
           <button type="submit">搜索</button>
         </form>
         <div class="hero-actions">
@@ -180,6 +178,9 @@ onMounted(() => {
           <div class="section-head"><p class="eyebrow">我的拼团</p><h2>状态统计</h2></div>
           <div class="state-grid">
             <div><span>总拼团数</span><strong>{{ totalCount }}</strong></div>
+            <div><span>拼团中</span><strong>{{ statusCounts['recruiting'] ?? 0 }}</strong></div>
+            <div><span>已成团</span><strong>{{ statusCounts['success'] ?? 0 }}</strong></div>
+            <div><span>已失败</span><strong>{{ statusCounts['failed'] ?? 0 }}</strong></div>
           </div>
           <button class="primary full" type="button" @click="router.push('/group/my')">查看全部拼团记录</button>
         </section>

@@ -60,6 +60,7 @@ export function getGroupDetail(id: string): Promise<ApiResponse<GroupDetailItem>
 }
 
 export function getMyGroups(params?: {
+  keyword?: string
   page?: number
   page_size?: number
 }): Promise<ApiResponse<PaginatedResponse<GroupItem>>> {

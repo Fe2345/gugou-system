@@ -15,4 +15,5 @@ export interface PaginatedResponse<T> {
     sold: number
     cancelled: number
   }
+  status_counts?: Record<string, number>
 }
