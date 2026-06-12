@@ -14,16 +14,17 @@ app.use(router)
 
 async function validateAuth() {
   const userStore = useUserStore()
-  if (!userStore.access) {
-    return
-  }
-
   try {
+    if (!userStore.access) {
+      return
+    }
     const res = await getUserInfo()
     userStore.setUserInfo(res.data)
   } catch {
     // 获取用户信息失败，清除 token 保持状态一致
     userStore.logout()
+  } finally {
+    userStore.finishAuthInitialization()
   }
 }
 

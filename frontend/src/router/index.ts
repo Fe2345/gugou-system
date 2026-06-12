@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { getRouteGuardAction } from './authGuard'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -162,55 +163,27 @@ const router = createRouter({
   ],
 })
 
-// 白名单：不需要登录的页面
-const publicPaths = ['/', '/login', '/admin/login']
-
-router.beforeEach((to, from, next) => {
-  // 管理员登录页：已登录且是管理员则直接进入后台
-  if (to.path === '/admin/login') {
-    const userStore = useUserStore()
-    if (userStore.isLoggedIn && userStore.isAdmin) {
-      next('/admin')
-      return
-    }
-    next()
-    return
-  }
-
-  // 管理后台路由：需要登录且角色为 admin
-  if (to.path.startsWith('/admin')) {
-    const userStore = useUserStore()
-    if (!userStore.isLoggedIn) {
-      next('/admin/login')
-      return
-    }
-    if (!userStore.isAdmin) {
-      next('/')
-      return
-    }
-    next()
-    return
-  }
-
-  // 管理员不允许访问用户端页面
-  {
-    const userStore = useUserStore()
-    if (userStore.isLoggedIn && userStore.isAdmin) {
-      next('/admin')
-      return
-    }
-  }
-
-  // 公开页面直接放行
-  if (publicPaths.includes(to.path)) {
-    next()
-    return
-  }
-
-  // 需要登录的页面检查登录态
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
-  if (!userStore.isLoggedIn) {
-    next('/login')
+  let action = getRouteGuardAction({
+    toPath: to.path,
+    isLoggedIn: userStore.isLoggedIn,
+    isAdmin: userStore.isAdmin,
+    authInitialized: userStore.authInitialized,
+  })
+
+  if (action.type === 'waitAuth') {
+    await userStore.waitForAuthInitialized()
+    action = getRouteGuardAction({
+      toPath: to.path,
+      isLoggedIn: userStore.isLoggedIn,
+      isAdmin: userStore.isAdmin,
+      authInitialized: userStore.authInitialized,
+    })
+  }
+
+  if (action.type === 'redirect') {
+    next(action.to)
     return
   }
 
