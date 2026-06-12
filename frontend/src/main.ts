@@ -22,7 +22,8 @@ async function validateAuth() {
     const res = await getUserInfo()
     userStore.setUserInfo(res.data)
   } catch {
-    // Token invalid or refresh failed — store is already cleaned by 401 interceptor
+    // 获取用户信息失败，清除 token 保持状态一致
+    userStore.logout()
   }
 }
 
