@@ -135,6 +135,10 @@ class ExchangeMatchCreateSerializer(serializers.Serializer):
             status=ExchangeMatch.Status.PENDING,
         )
 
+        # 锁定申请人资产
+        asset.quantity -= 1
+        asset.save()
+
         # 更新换物请求状态为匹配中
         exchange.status = ExchangeRequest.Status.MATCHED
         exchange.save()
@@ -215,6 +219,8 @@ class ExchangeCompleteSerializer(serializers.Serializer):
         return attrs
 
     def save(self):
+        from apps.assets.models import AssetFlow
+        from apps.common.id_generator import generate_asset_flow_id
         from apps.credits.services import create_credit_record
 
         exchange = self.instance
@@ -240,6 +246,26 @@ class ExchangeCompleteSerializer(serializers.Serializer):
         applicant_asset.owner = exchange.owner
         applicant_asset.quantity += 1
         applicant_asset.save()
+
+        # 记录资产流转
+        AssetFlow.objects.create(
+            flow_id=generate_asset_flow_id(),
+            asset=owner_asset,
+            from_user=exchange.owner,
+            to_user=match.applicant,
+            flow_type=AssetFlow.FlowType.EXCHANGE_OUT,
+            related_exchange=exchange.exchange_id,
+            note=f"Exchange {exchange.exchange_id} completed, asset exchanged out",
+        )
+        AssetFlow.objects.create(
+            flow_id=generate_asset_flow_id(),
+            asset=applicant_asset,
+            from_user=match.applicant,
+            to_user=exchange.owner,
+            flow_type=AssetFlow.FlowType.EXCHANGE_IN,
+            related_exchange=exchange.exchange_id,
+            note=f"Exchange {exchange.exchange_id} completed, asset exchanged in",
+        )
 
         # 记录状态变更日志
         ExchangeStatusLog.objects.create(

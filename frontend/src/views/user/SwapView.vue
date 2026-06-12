@@ -78,7 +78,6 @@ onMounted(() => {
         </form>
         <div class="hero-actions">
           <button class="primary" type="button" @click="router.push('/swap/publish')">发布交换</button>
-          <button class="secondary" type="button" @click="router.push('/swap/my')">我的交换</button>
         </div>
       </div>
     </section>
@@ -143,15 +142,6 @@ onMounted(() => {
         </article>
       </section>
 
-      <aside class="right-panel" aria-label="我的交换状态">
-        <section class="state-card">
-          <div class="section-head"><p class="eyebrow">我的交换</p><h2>状态统计</h2></div>
-          <div class="state-grid">
-            <div><span>总交换数</span><strong>{{ totalCount }}</strong></div>
-          </div>
-          <button class="primary full" type="button" @click="router.push('/swap/my')">查看全部交换记录</button>
-        </section>
-      </aside>
     </section>
   </main>
 </template>
@@ -178,8 +168,8 @@ input, select { width: 100%; height: 44px; border: 1px solid var(--line); border
 .primary:hover, .search-box button:hover { background: var(--accent-dark); }
 .secondary { border: 1px solid var(--line); color: var(--accent); background: #fff; }
 .hero-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.swap-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr) 280px; gap: 20px; margin-top: 20px; }
-.filter-panel, .list-panel, .state-card, .swap-card { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); }
+.swap-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px; margin-top: 20px; }
+.filter-panel, .list-panel, .swap-card { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); }
 .filter-panel { align-self: start; display: grid; gap: 14px; padding: 20px; }
 .section-head { margin-bottom: 14px; }
 .section-head .eyebrow { color: var(--accent); }
@@ -206,18 +196,11 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
 .status-done { color: #1f7a4d; background: #e8f7ef; }
 .status-cancelled { color: #6b7280; background: #f3f4f6; }
 .card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 120px)); gap: 10px; }
-.right-panel { align-self: start; display: grid; gap: 16px; }
-.state-card { padding: 18px; }
-.state-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
-.state-grid div { padding: 12px; border-radius: 8px; background: var(--soft); }
-.state-grid span { display: block; color: var(--muted); font-size: 13px; }
-.state-grid strong { display: block; margin-top: 8px; font-size: 22px; }
 .empty-state { min-height: 200px; display: grid; place-items: center; text-align: center; border: 1px dashed #bfd0d5; border-radius: 10px; color: var(--muted); background: var(--soft); }
 .empty-state strong { display: block; margin-bottom: 8px; color: var(--ink); font-size: 18px; }
 
 @media (max-width: 1120px) {
   .swap-layout { grid-template-columns: 240px minmax(0, 1fr); }
-  .right-panel { grid-column: 1 / -1; }
 }
 @media (max-width: 860px) {
   .hero, .swap-layout, .compare { grid-template-columns: 1fr; }
@@ -227,7 +210,7 @@ label { display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
   .page { width: min(100% - 20px, 1240px); }
   .hero, .list-panel { padding: 20px; }
   h1 { font-size: 30px; }
-  .search-box, .hero-actions, .card-bottom, .card-actions, .state-grid { grid-template-columns: 1fr; }
+  .search-box, .hero-actions, .card-bottom, .card-actions { grid-template-columns: 1fr; }
   .card-meta { align-items: flex-start; flex-direction: column; }
 }
 </style>
