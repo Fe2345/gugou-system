@@ -12,14 +12,6 @@ class TeamProject(BaseModel):
         CANCELLED = "cancelled", "已取消"
 
     team_id = models.CharField("拼团编号", max_length=25, primary_key=True)
-    product = models.ForeignKey(
-        "products.Product",
-        on_delete=models.SET_NULL,
-        related_name="team_projects",
-        verbose_name="关联商品",
-        null=True,
-        blank=True,
-    )
     product_name = models.CharField("拼团商品名称", max_length=100, default="")
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -28,7 +20,7 @@ class TeamProject(BaseModel):
         verbose_name="发起用户",
     )
     target_count = models.PositiveIntegerField("目标人数")
-    current_count = models.PositiveIntegerField("当前人数", default=1)
+    current_count = models.PositiveIntegerField("当前人数", default=0)
     team_price = models.DecimalField("团购价格", max_digits=10, decimal_places=2)
     deadline = models.DateTimeField("截止时间")
     status = models.CharField("拼团状态", max_length=20, choices=Status.choices, default=Status.RECRUITING)
@@ -93,6 +85,14 @@ class TeamItem(BaseModel):
         on_delete=models.CASCADE,
         related_name="items",
         verbose_name="关联拼团",
+    )
+    product = models.ForeignKey(
+        "products.Product",
+        on_delete=models.PROTECT,
+        related_name="team_items",
+        verbose_name="关联商品",
+        null=True,
+        blank=True,
     )
     name = models.CharField("选项名称", max_length=100)
     selected_by = models.ForeignKey(

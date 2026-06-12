@@ -24,7 +24,7 @@ class ProductSerializer(serializers.ModelSerializer):
         from apps.assets.models import UserAsset
         from apps.market.models import Listing
         from apps.orders.models import Order
-        from apps.teams.models import TeamProject
+        from apps.teams.models import TeamItem
 
         if UserAsset.objects.filter(product=obj).exists():
             return True
@@ -32,7 +32,7 @@ class ProductSerializer(serializers.ModelSerializer):
             return True
         if Order.objects.filter(product=obj).exclude(status="cancelled").exists():
             return True
-        if TeamProject.objects.filter(product=obj).exists():
+        if TeamItem.objects.filter(product=obj).exists():
             return True
         return False
 

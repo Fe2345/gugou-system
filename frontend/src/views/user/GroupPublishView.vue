@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
 import { useUserStore } from '@/stores/user'
 import { createGroup } from '@/api/group'
-import { ElMessage } from 'element-plus'
+import { getGoodsList } from '@/api/goods'
+import { ElMessage, ElSelect, ElOption } from 'element-plus'
+import type { GoodsItem } from '@/types/goods'
 
 const router = useRouter()
 const userStore = useUserStore()
 const creditScore = computed(() => userStore.userInfo?.creditScore ?? 100)
 const canJoinTeam = computed(() => creditScore.value >= 40)
 const submitting = ref(false)
+const products = ref<GoodsItem[]>([])
 
 const form = ref({
   product_name: '',
@@ -18,40 +21,60 @@ const form = ref({
   deadline_hours: '24',
 })
 
-// 小商品选项列表
-const itemOptions = ref<string[]>(['', ''])
-const newItemName = ref('')
+// 小商品选项列表（存储选中的 product_id）
+const itemProductIds = ref<string[]>([])
+const searchQuery = ref('')
 
-function addItem() {
-  const name = newItemName.value.trim()
-  if (!name) {
-    ElMessage.warning('请输入小商品名称')
+onMounted(async () => {
+  await loadProducts()
+})
+
+async function loadProducts(keyword?: string) {
+  try {
+    const params: Record<string, any> = { pageSize: 200 }
+    if (keyword) params.keyword = keyword
+    const res = await getGoodsList(params)
+    if (res.code === 200) {
+      products.value = res.data.list || []
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function addItem(productId: string) {
+  if (itemProductIds.value.includes(productId)) {
+    ElMessage.warning('该小商品已添加')
     return
   }
-  if (itemOptions.value.includes(name)) {
-    ElMessage.warning('该小商品已存在')
-    return
+  itemProductIds.value.push(productId)
+  const p = products.value.find(x => x.id === productId)
+  if (p) {
+    ElMessage.success(`已添加小商品：${p.name}`)
   }
-  itemOptions.value.push(name)
-  newItemName.value = ''
+  searchQuery.value = ''
 }
 
 function removeItem(index: number) {
-  itemOptions.value.splice(index, 1)
+  itemProductIds.value.splice(index, 1)
 }
 
-const validItems = computed(() => itemOptions.value.filter(name => name.trim() !== ''))
+const itemProducts = computed(() =>
+  itemProductIds.value
+    .map(id => products.value.find(p => p.id === id))
+    .filter((p): p is GoodsItem => !!p)
+)
 
 async function handleSubmit() {
   if (!form.value.product_name.trim()) {
-    ElMessage.warning('请填写拼团商品名称')
+    ElMessage.warning('请填写拼团名称')
     return
   }
   if (!form.value.team_price) {
     ElMessage.warning('请填写团购价')
     return
   }
-  if (validItems.value.length < 2) {
+  if (itemProductIds.value.length < 2) {
     ElMessage.warning('请至少添加 2 个小商品选项')
     return
   }
@@ -61,7 +84,7 @@ async function handleSubmit() {
       product_name: form.value.product_name.trim(),
       team_price: Number(form.value.team_price),
       deadline_hours: Number(form.value.deadline_hours) || 24,
-      items: validItems.value,
+      items: itemProductIds.value,
     })
     if (res.code === 200) {
       ElMessage.success('拼团已发起')
@@ -84,7 +107,7 @@ async function handleSubmit() {
       <div>
         <p class="eyebrow">拼团市场</p>
         <h1>发起拼团</h1>
-        <p>填写拼团商品名称，添加小商品选项，设置拼团人数、团购价和截止时间</p>
+        <p>填写拼团名称，添加小商品选项，设置团购价和截止时间</p>
       </div>
       <button class="secondary" type="button" @click="router.push('/group')">返回拼团</button>
     </section>
@@ -96,44 +119,49 @@ async function handleSubmit() {
     <section class="form-panel">
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
-          <label>拼团商品名称 <span class="required">*</span></label>
-          <input v-model="form.product_name" type="text" maxlength="100" placeholder="例如：拉布布盲盒、初音未来徽章套装" required>
-          <p class="hint">填写你想拼团的商品名称，不必从商品库中选择</p>
+          <label>拼团名称 <span class="required">*</span></label>
+          <input v-model="form.product_name" type="text" maxlength="100" placeholder="例如：拉布布盲盒团、初音未来徽章套装" required>
+          <p class="hint">填写你想要的拼团展示名称</p>
         </div>
 
         <div class="form-group">
           <label>小商品选项 <span class="required">* 至少 2 个</span></label>
-          <p class="hint" style="margin-bottom: 10px">添加该拼团商品中包含的具体选项，参与者可以从中选择想要的款式</p>
+          <p class="hint" style="margin-bottom: 10px">从商品库中选择该拼团包含的具体商品选项，参与者可从中选择想要的款式</p>
 
           <div class="items-list">
-            <div v-for="(item, index) in itemOptions" :key="index" class="item-row">
-              <input
-                v-model="itemOptions[index]"
-                type="text"
-                maxlength="100"
-                :placeholder="`选项 ${index + 1}，例如：酷炫彩色拉布布`"
-              >
-              <button v-if="itemOptions.length > 2" class="icon-btn danger-icon" type="button" @click="removeItem(index)" title="删除">✕</button>
+            <div v-for="(item, index) in itemProducts" :key="item.id" class="item-row">
+              <span class="item-tag">{{ item.name }}{{ item.ipName ? '（' + item.ipName + '）' : '' }}</span>
+              <button class="icon-btn danger-icon" type="button" @click="removeItem(index)" title="删除">✕</button>
             </div>
           </div>
 
           <div class="add-item-row">
-            <input
-              v-model="newItemName"
-              type="text"
-              maxlength="100"
-              placeholder="输入新的小商品名称"
-              @keyup.enter.prevent="addItem"
+            <ElSelect
+              v-model="searchQuery"
+              filterable
+              remote
+              :remote-method="loadProducts"
+              placeholder="搜索并选择小商品"
+              style="flex:1"
+              no-data-text="无匹配商品"
+              @change="(val: string) => { if (val) { addItem(val); searchQuery = ''; } }"
             >
-            <button class="secondary" type="button" @click="addItem">添加</button>
+              <ElOption
+                v-for="p in products"
+                :key="p.id"
+                :label="`${p.name}${p.ipName ? '（' + p.ipName + '）' : ''}`"
+                :value="p.id"
+                :disabled="itemProductIds.includes(p.id)"
+              />
+            </ElSelect>
           </div>
-          <p class="hint">已添加 {{ validItems.length }} 个小商品选项</p>
+          <p class="hint">已添加 {{ itemProducts.length }} 个小商品选项</p>
         </div>
 
         <div class="form-group">
           <label>团购价 (元/人) <span class="required">*</span></label>
           <input v-model="form.team_price" type="number" min="0.01" step="0.01" placeholder="每人价格" required>
-          <p class="hint">拼团人数自动等于小商品选项数量（当前 {{ validItems.length }} 人）</p>
+          <p class="hint">拼团人数自动等于小商品选项数量（当前 {{ itemProducts.length }} 人）</p>
         </div>
         <div class="form-group">
           <label>截止时间 (小时)</label>
@@ -174,6 +202,7 @@ input, select { width: 100%; height: 44px; border: 1px solid var(--line); border
 .items-list { display: grid; gap: 8px; margin-bottom: 12px; }
 .item-row { display: flex; gap: 8px; align-items: center; }
 .item-row input { flex: 1; }
+.item-tag { flex: 1; padding: 0 14px; height: 44px; display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); font-size: 14px; }
 .icon-btn { width: 44px; height: 44px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 16px; display: grid; place-items: center; flex-shrink: 0; }
 .danger-icon { color: #be123c; border-color: #f0b8b3; }
 .danger-icon:hover { background: #fdecea; }

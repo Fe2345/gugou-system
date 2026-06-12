@@ -38,13 +38,14 @@ class TeamProjectCreateSerializer(serializers.Serializer):
     team_price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal("0.01"))
     deadline_hours = serializers.IntegerField(min_value=1, max_value=72, default=24)
     items = serializers.ListField(
-        child=serializers.CharField(max_length=100),
+        child=serializers.CharField(max_length=13),
         min_length=2,
         max_length=50,
     )
 
     def validate(self, attrs):
         from apps.credits.services import check_team_permission
+        from apps.products.models import Product
 
         user = self.context["request"].user
 
@@ -53,20 +54,21 @@ class TeamProjectCreateSerializer(serializers.Serializer):
         if not allowed:
             raise serializers.ValidationError({"credit": msg})
 
-        # 验证小商品选项不能重复
-        items = attrs["items"]
-        cleaned = [name.strip() for name in items if name.strip()]
-        if len(cleaned) < 2:
-            raise serializers.ValidationError({"items": "至少需要 2 个小商品选项"})
-        if len(cleaned) != len(set(cleaned)):
-            raise serializers.ValidationError({"items": "小商品选项名称不能重复"})
-        attrs["items"] = cleaned
+        # 验证小商品选项（每个必须对应商品库中的商品）
+        item_ids = attrs["items"]
+        item_ids_set = set(item_ids)
+        if len(item_ids) != len(item_ids_set):
+            raise serializers.ValidationError({"items": "小商品选项不能重复"})
+        products = list(Product.objects.filter(product_id__in=item_ids, status=Product.Status.ACTIVE))
+        if len(products) != len(item_ids):
+            raise serializers.ValidationError({"items": "部分小商品选项不存在或未上架"})
+        attrs["item_products"] = products
 
         return attrs
 
     def create(self, validated_data):
         user = self.context["request"].user
-        items_data = validated_data.pop("items")
+        item_products = validated_data.pop("item_products")
 
         # 生成拼团编号
         team_id = generate_team_id()
@@ -75,43 +77,34 @@ class TeamProjectCreateSerializer(serializers.Serializer):
         deadline = timezone.now() + timedelta(hours=validated_data["deadline_hours"])
 
         # 目标人数 = 小商品数量（每个小商品对应一个人）
-        target_count = len(items_data)
+        target_count = len(item_products)
 
-        # 创建拼团项目（不再关联商品库）
+        # 创建拼团项目，当前人数为 0（发起人需额外选择小商品参与）
         team = TeamProject.objects.create(
             team_id=team_id,
-            product=None,
             product_name=validated_data["product_name"],
             creator=user,
             target_count=target_count,
-            current_count=1,
+            current_count=0,
             team_price=validated_data["team_price"],
             deadline=deadline,
             status=TeamProject.Status.RECRUITING,
         )
 
-        # 批量创建小商品选项
+        # 批量创建小商品选项，关联对应的商品库商品
         team_items = []
-        for idx, name in enumerate(items_data):
+        for idx, p in enumerate(item_products):
             team_items.append(TeamItem(
                 item_id=generate_team_item_id(),
                 team=team,
-                name=name,
+                product=p,
+                name=p.name,
                 sort_order=idx,
             ))
         TeamItem.objects.bulk_create(team_items)
 
-        # 创建者自动参与（不选择小商品）
-        participant_id = f"P{generate_team_id()[1:]}"
-        TeamParticipant.objects.create(
-            participant_id=participant_id,
-            team=team,
-            user=user,
-            status=TeamParticipant.Status.JOINED,
-        )
-
         logger.info("用户 %s 创建拼团 %s，商品：%s，共 %d 个小商品选项",
-                     user.user_id, team_id, validated_data["product_name"], len(items_data))
+                     user.user_id, team_id, validated_data["product_name"], len(item_products))
         return team
 
 
@@ -146,16 +139,19 @@ class TeamProjectJoinSerializer(serializers.Serializer):
         participant = TeamParticipant.objects.filter(team=team, user=user).first()
         if participant:
             if participant.status == TeamParticipant.Status.JOINED:
-                if participant.selected_item_id is None:
-                    # 发起者创建时未选小商品，允许在此选择
-                    attrs["creator_first_select"] = participant
-                else:
-                    raise serializers.ValidationError("您已经参加了该拼团，不能重复参加")
+                raise serializers.ValidationError("您已经参加了该拼团，不能重复参加")
             elif participant.status == TeamParticipant.Status.CANCELLED:
                 # 已退出的用户允许重新参加
                 attrs["rejoin_participant"] = participant
             else:
                 raise serializers.ValidationError("您的参与状态异常，无法参加")
+
+        # 验证发起人是否已加入：只有发起人加入后，其他人才可加入
+        creator_joined = TeamParticipant.objects.filter(
+            team=team, user=team.creator, status=TeamParticipant.Status.JOINED
+        ).exists()
+        if not creator_joined and user.user_id != team.creator_id:
+            raise serializers.ValidationError("发起人尚未参与，请等待发起人先选择小商品")
 
         # 验证小商品选项
         try:
@@ -191,20 +187,15 @@ class TeamProjectJoinSerializer(serializers.Serializer):
         address = validated_data.get("address")
 
         with db_transaction.atomic():
-            # 检查是否是重新加入或发起者首次选择小商品
+            # 检查是否是重新加入
             rejoin_participant = validated_data.pop("rejoin_participant", None)
-            creator_first_select = validated_data.pop("creator_first_select", None)
-            existing_participant = rejoin_participant or creator_first_select
 
-            if existing_participant:
-                existing_participant.status = TeamParticipant.Status.JOINED
-                existing_participant.selected_item = item
-                existing_participant.save()
-                participant = existing_participant
-                if rejoin_participant:
-                    logger.info("用户 %s 重新加入拼团 %s", user.user_id, team.team_id)
-                else:
-                    logger.info("发起者 %s 选择小商品 %s（拼团 %s）", user.user_id, item.name, team.team_id)
+            if rejoin_participant:
+                rejoin_participant.status = TeamParticipant.Status.JOINED
+                rejoin_participant.selected_item = item
+                rejoin_participant.save()
+                participant = rejoin_participant
+                logger.info("用户 %s 重新加入拼团 %s", user.user_id, team.team_id)
             else:
                 participant_id = f"P{generate_team_id()[1:]}"
                 participant = TeamParticipant.objects.create(
@@ -220,9 +211,8 @@ class TeamProjectJoinSerializer(serializers.Serializer):
             item.selected_at = timezone.now()
             item.save()
 
-            # 更新当前人数（发起者首次选择小商品时不增加，因为创建时已计为1人）
-            if not creator_first_select:
-                team.current_count += 1
+            # 更新当前人数
+            team.current_count += 1
 
             # 检查是否达到目标人数
             if team.current_count >= team.target_count:
@@ -236,13 +226,15 @@ class TeamProjectJoinSerializer(serializers.Serializer):
                 participants = TeamParticipant.objects.filter(team=team, status=TeamParticipant.Status.JOINED)
                 for p in participants:
                     order_id = generate_order_id()
+                    # 使用参与者选中的小商品对应的商品作为订单商品
+                    item_product = p.selected_item.product
                     order_kwargs = dict(
                         order_id=order_id,
                         buyer=p.user,
                         seller=team.creator,
                         listing=None,
                         team=team,
-                        product=team.product,
+                        product=item_product,
                         quantity=1,
                         amount=team.team_price,
                         status=Order.Status.PENDING_PAYMENT,
@@ -405,7 +397,6 @@ class TeamProjectFailSerializer(serializers.Serializer):
 
 class TeamProjectListSerializer(serializers.ModelSerializer):
     product_name_display = serializers.SerializerMethodField()
-    product_price = serializers.SerializerMethodField()
     creator_id = serializers.CharField(read_only=True)
     creator_name = serializers.SerializerMethodField()
     is_expired = serializers.SerializerMethodField()
@@ -416,20 +407,14 @@ class TeamProjectListSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamProject
         fields = [
-            "team_id", "product_name", "product_name_display", "product_price",
+            "team_id", "product_name", "product_name_display",
             "creator_id", "creator_name", "target_count", "current_count",
             "team_price", "deadline", "status", "is_expired", "created_at",
             "current_user_joined", "items_count", "items_selected_count",
         ]
 
     def get_product_name_display(self, obj):
-        """优先展示自定义名称"""
         return obj.product_name
-
-    def get_product_price(self, obj):
-        if obj.product:
-            return obj.product.reference_price
-        return None
 
     def get_creator_name(self, obj):
         try:
@@ -458,7 +443,6 @@ class TeamProjectListSerializer(serializers.ModelSerializer):
 
 class TeamProjectDetailSerializer(serializers.ModelSerializer):
     product_name_display = serializers.SerializerMethodField()
-    product_price = serializers.SerializerMethodField()
     creator_id = serializers.CharField(read_only=True)
     creator_name = serializers.SerializerMethodField()
     participants = serializers.SerializerMethodField()
@@ -468,7 +452,7 @@ class TeamProjectDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamProject
         fields = [
-            "team_id", "product_name", "product_name_display", "product_price",
+            "team_id", "product_name", "product_name_display",
             "creator_id", "creator_name", "target_count", "current_count",
             "team_price", "deadline", "status", "is_expired", "created_at",
             "updated_at", "participants", "items",
@@ -476,11 +460,6 @@ class TeamProjectDetailSerializer(serializers.ModelSerializer):
 
     def get_product_name_display(self, obj):
         return obj.product_name
-
-    def get_product_price(self, obj):
-        if obj.product:
-            return obj.product.reference_price
-        return None
 
     def get_creator_name(self, obj):
         try:
