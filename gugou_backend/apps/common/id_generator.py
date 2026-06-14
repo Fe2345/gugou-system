@@ -80,7 +80,37 @@ def generate_team_id() -> str:
     return f"T{_today()}{_seq(seq)}"
 
 
+def generate_team_item_id() -> str:
+    """TI + 年月日 + 4位流水号"""
+    seq = next_seq(f"team_item:{_today()}")
+    return f"TI{_today()}{_seq(seq)}"
+
+
 def generate_price_record_id() -> str:
     """PR + 年月日时分秒 + 4位流水号"""
     seq = next_seq(f"price:{_now()}")
     return f"PR{_now()}{_seq(seq)}"
+
+
+def generate_credit_record_id() -> str:
+    """CR + 年月日 + 4位流水号"""
+    seq = next_seq(f"credit:{_today()}")
+    return f"CR{_today()}{_seq(seq)}"
+
+
+def generate_op_log_id() -> str:
+    """OL + 年月日时分秒 + 4位递增号"""
+    seq = next_seq(f"oplog:{_now()}")
+    return f"OL{_now()}{_seq(seq)}"
+
+
+def generate_system_log_id() -> str:
+    """SL + 年月日时分秒 + 4位递增号"""
+    seq = next_seq(f"syslog:{_now()}")
+    return f"SL{_now()}{_seq(seq)}"
+
+
+def generate_asset_flow_id() -> str:
+    """AF + 年月日时分秒 + 4位递增号"""
+    seq = next_seq(f"assetflow:{_now()}")
+    return f"AF{_now()}{_seq(seq)}"

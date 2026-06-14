@@ -37,6 +37,7 @@ class User(AbstractBaseUser, BaseModel):
     is_active = models.BooleanField("是否活跃", default=True)
     credit_score = models.IntegerField("信用分", default=100)
     status = models.CharField("账户状态", max_length=10, choices=Status.choices, default=Status.NORMAL)
+    token_revoked_at = models.DateTimeField("Token 吊销时间", null=True, blank=True, default=None)
 
     objects = UserManager()
 

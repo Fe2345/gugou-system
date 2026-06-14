@@ -8,7 +8,7 @@ const route = useRoute()
 const userStore = useUserStore()
 
 const navItems = [
-  { label: '产品库', to: '/goods' },
+  { label: '商品库', to: '/goods' },
   { label: '交易市场', to: '/market' },
   { label: '我的资产', to: '/assets' },
   { label: '价格分析', to: '/price' },

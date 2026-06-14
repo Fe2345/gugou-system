@@ -11,8 +11,8 @@ export interface AssetItem {
   currentValue: number
   status: 'holding' | 'selling' | 'exchanging' | 'sold' | 'invalid'
   description: string
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
 }
 
 export interface AssetForm {

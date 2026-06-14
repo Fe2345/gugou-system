@@ -2,7 +2,7 @@ import logging
 
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.common.id_generator import generate_user_id
 from .models import User, UserProfile
@@ -42,18 +42,24 @@ class LoginSerializer(serializers.Serializer):
         account = attrs["account"]
         password = attrs["password"]
 
+        # 先检查账号是否存在
+        from apps.accounts.models import User
+        if not User.objects.filter(phone=account).exists():
+            raise serializers.ValidationError("账户不存在")
+
         user = authenticate(request=self.context.get("request"), username=account, password=password)
         if user is None:
             logger.warning("登录失败: account=%s", account)
-            raise serializers.ValidationError("账号或密码错误")
+            raise serializers.ValidationError("密码错误")
 
-        if user.status in (User.Status.FROZEN, User.Status.DISABLED, User.Status.DELETED):
+        if user.status in (User.Status.DISABLED, User.Status.DELETED):
             logger.warning("登录被拒: %s status=%s", user.user_id, user.status)
-            raise serializers.ValidationError("账户已被冻结或停用，请联系管理员")
+            raise serializers.ValidationError("账户已被停用或注销，请联系管理员")
 
-        token, _ = Token.objects.get_or_create(user=user)
+        refresh = RefreshToken.for_user(user)
         logger.info("用户登录: %s", user.user_id)
-        attrs["token"] = token.key
+        attrs["access"] = str(refresh.access_token)
+        attrs["refresh"] = str(refresh)
         attrs["user"] = user
         return attrs
 
@@ -103,6 +109,19 @@ class UserSerializer(serializers.ModelSerializer):
     def get_contact(self, obj):
         profile = getattr(obj, "profile", None)
         return profile.contact if profile else ""
+
+
+class AdminUserSerializer(serializers.Serializer):
+    id = serializers.CharField(source="user_id")
+    name = serializers.SerializerMethodField()
+    phone = serializers.CharField()
+    assets = serializers.IntegerField(source="total_assets", default=0)
+    credit = serializers.IntegerField(source="credit_score")
+    registered = serializers.CharField(source="created_at")
+    status = serializers.CharField()
+
+    def get_name(self, obj):
+        return obj.nickname or obj.phone
 
 
 class ChangePasswordSerializer(serializers.Serializer):

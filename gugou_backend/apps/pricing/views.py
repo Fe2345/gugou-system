@@ -5,8 +5,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
 from apps.common.response import success, error
+from apps.common.permissions import IsAuthenticated
 from apps.pricing.models import PriceRecord
 from apps.products.models import Product
+from apps.assets.models import UserAsset
 
 
 def _build_price_item(product, days):
@@ -101,7 +103,7 @@ class PriceHotView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        product_ids = (
+        product_ids = list(
             PriceRecord.objects.values_list("product_id", flat=True)
             .distinct()[:8]
         )
@@ -111,6 +113,30 @@ class PriceHotView(APIView):
         for product in products:
             item = _build_price_item(product, 30)
             if item:
+                items.append(item)
+
+        return success(data=items)
+
+
+class MyAssetPricesView(APIView):
+    """当前用户资产的价格走势"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        range_str = request.query_params.get("range", "30d").strip()
+        days_map = {"7d": 7, "30d": 30, "90d": 90}
+        days = days_map.get(range_str, 30)
+
+        assets = UserAsset.objects.filter(
+            owner=request.user, status="holding"
+        ).select_related("product")
+
+        items = []
+        for asset in assets:
+            item = _build_price_item(asset.product, days)
+            if item:
+                item["quantity"] = asset.quantity
+                item["acquirePrice"] = float(asset.acquire_price) if asset.acquire_price else None
                 items.append(item)
 
         return success(data=items)

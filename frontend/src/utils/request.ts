@@ -9,37 +9,105 @@ const request: AxiosInstance = axios.create({
   timeout: 10000,
 })
 
-// 请求拦截器：注入 Token
+let isRefreshing = false
+let pendingRequests: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = []
+
+function onRefreshSuccess(newToken: string) {
+  pendingRequests.forEach(({ resolve }) => resolve(newToken))
+  pendingRequests = []
+}
+
+function onRefreshFailure(err: unknown) {
+  pendingRequests.forEach(({ reject }) => reject(err))
+  pendingRequests = []
+}
+
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    if (config.url === '/auth/refresh/') {
+      return config
+    }
     const userStore = useUserStore()
-    if (userStore.token) {
-      config.headers.Authorization = `Token ${userStore.token}`
+    if (userStore.access) {
+      config.headers.Authorization = `Bearer ${userStore.access}`
     }
     return config
   },
   (error) => {
     return Promise.reject(error)
-  }
+  },
 )
 
-// 响应拦截器：统一错误处理
 request.interceptors.response.use(
   (response: AxiosResponse) => {
     return response.data
   },
-  (error) => {
+  async (error) => {
     const appStore = useAppStore()
+    const userStore = useUserStore()
+    const originalRequest = error.config
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (originalRequest.url === '/auth/refresh/') {
+        userStore.logout()
+        router.push('/login')
+        appStore.showError('登录已过期，请重新登录')
+        return Promise.reject(error)
+      }
+
+      if (!userStore.refresh) {
+        userStore.logout()
+        router.push('/login')
+        appStore.showError('登录已过期，请重新登录')
+        return Promise.reject(error)
+      }
+
+      originalRequest._retry = true
+
+      if (isRefreshing) {
+        return new Promise<string>((resolve, reject) => {
+          pendingRequests.push({ resolve, reject })
+        }).then((newToken) => {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`
+          return request(originalRequest)
+        })
+      }
+
+      isRefreshing = true
+
+      try {
+        const resp = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL || '/api'}/auth/refresh/`,
+          { refresh: userStore.refresh },
+        )
+
+        const newAccess = resp.data.data.access
+        const newRefresh = resp.data.data.refresh
+
+        if (newRefresh) {
+          userStore.setTokens(newAccess, newRefresh)
+        } else {
+          userStore.setAccess(newAccess)
+        }
+
+        onRefreshSuccess(newAccess)
+
+        originalRequest.headers.Authorization = `Bearer ${newAccess}`
+        return request(originalRequest)
+      } catch (refreshError) {
+        onRefreshFailure(refreshError)
+        userStore.logout()
+        router.push('/login')
+        appStore.showError('登录已过期，请重新登录')
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
+      }
+    }
 
     if (error.response) {
       const { status, data } = error.response
       switch (status) {
-        case 401:
-          const userStore = useUserStore()
-          userStore.logout()
-          router.push('/login')
-          appStore.showError('登录已过期，请重新登录')
-          break
         case 403:
           appStore.showError('没有权限执行此操作')
           break
@@ -59,7 +127,7 @@ request.interceptors.response.use(
     }
 
     return Promise.reject(error)
-  }
+  },
 )
 
 export default request

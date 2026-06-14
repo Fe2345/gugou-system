@@ -41,11 +41,17 @@ def flatten_errors(errors) -> str:
     return str(errors)
 
 
-def paginated(paginator, serializer) -> dict:
-    """组装分页响应 data 部分，配合 DRF PageNumberPagination 使用。"""
+def paginated(page_obj, serializer, page_size=None) -> dict:
+    """组装分页响应 data 部分，配合 Django Paginator 使用。
+
+    Args:
+        page_obj: Paginator.get_page() 返回的 Page 对象
+        serializer: 序列化器实例
+        page_size: 每页数量
+    """
     return {
-        "count": paginator.page.paginator.count,
-        "page": paginator.page.number,
-        "page_size": paginator.get_page_size(paginator.request),
+        "count": page_obj.paginator.count,
+        "page": page_obj.number,
+        "page_size": page_size or page_obj.paginator.per_page,
         "results": serializer.data,
     }

@@ -11,7 +11,9 @@ class AssetListView(APIView):
 
     def get(self, request):
         """获取资产列表，支持 keyword/status/category/sortBy 筛选"""
-        queryset = UserAsset.objects.select_related("product").all().order_by("-created_at")
+        queryset = UserAsset.objects.select_related("product").order_by("-created_at")
+        if request.user and request.user.is_authenticated:
+            queryset = queryset.filter(owner=request.user)
 
         keyword = request.query_params.get("keyword", "").strip()
         if keyword:
@@ -60,6 +62,8 @@ class AssetListView(APIView):
 
     def post(self, request):
         """创建资产"""
+        if not request.user or not request.user.is_authenticated:
+            return error(message="请先登录", code=401)
         serializer = AssetCreateSerializer(data=request.data, context={"request": request})
         if not serializer.is_valid():
             return error(message=flatten_errors(serializer.errors))
@@ -100,6 +104,32 @@ class AssetDetailView(APIView):
         asset = self.get_object(asset_id)
         if not asset:
             return error(message="资产不存在", code=404)
+
+        # 检查是否有活跃的换物请求引用此资产
+        from apps.exchanges.models import ExchangeRequest, ExchangeMatch
+        active_exchanges = ExchangeRequest.objects.filter(
+            offered_asset=asset,
+            status__in=["active", "matched"]
+        ).exists()
+        if active_exchanges:
+            return error(message="该资产正在换物中，无法删除", code=400)
+
+        active_matches = ExchangeMatch.objects.filter(
+            applicant_asset=asset,
+            status__in=["pending", "accepted"]
+        ).exists()
+        if active_matches:
+            return error(message="该资产正在换物匹配中，无法删除", code=400)
+
+        # 检查是否有活跃的挂单
+        from apps.market.models import Listing
+        active_listings = Listing.objects.filter(
+            asset=asset,
+            status="active"
+        ).exists()
+        if active_listings:
+            return error(message="该资产正在市场挂单中，无法删除", code=400)
+
         asset.delete()
         return success(message="删除成功")
 
@@ -118,12 +148,41 @@ class AssetOperateView(APIView):
         except UserAsset.DoesNotExist:
             return error(message="资产不存在", code=404)
 
+        # 检查资产是否已被订单锁定
+        from apps.market.models import Listing
+        from apps.orders.models import Order
+
+        # 检查是否有活跃的挂单关联此资产
+        active_listing = Listing.objects.filter(
+            asset=asset,
+            status__in=[Listing.Status.ACTIVE, Listing.Status.LOCKED]
+        ).first()
+
+        if active_listing:
+            # 检查是否有未完成的订单
+            active_order = Order.objects.filter(
+                listing=active_listing,
+                status__in=[Order.Status.PENDING_PAYMENT, Order.Status.PAID]
+            ).exists()
+
+            if active_order:
+                return error(message="该资产已被订单锁定，无法进行操作", code=400)
+
         op_type = serializer.validated_data["type"]
         status_map = {
             "list": UserAsset.Status.SELLING,
             "delist": UserAsset.Status.HOLDING,
             "sold": UserAsset.Status.SOLD,
         }
+
+        # 验证操作合法性
+        if op_type == "list" and asset.status != UserAsset.Status.HOLDING:
+            return error(message="只有持有中的资产才能上架", code=400)
+        elif op_type == "delist" and asset.status != UserAsset.Status.SELLING:
+            return error(message="只有出售中的资产才能下架", code=400)
+        elif op_type == "sold" and asset.status != UserAsset.Status.SELLING:
+            return error(message="只有出售中的资产才能标记为已售出", code=400)
+
         asset.status = status_map[op_type]
         asset.save()
         return success(message="操作成功")

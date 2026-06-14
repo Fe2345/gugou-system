@@ -10,13 +10,31 @@ class ProductSerializer(serializers.ModelSerializer):
     ipName = serializers.CharField(source="ip_name", read_only=True)
     characterName = serializers.CharField(source="character_name", read_only=True)
     referencePrice = serializers.DecimalField(source="reference_price", max_digits=10, decimal_places=2, read_only=True)
-    mainImage = serializers.CharField(source="main_image", read_only=True)
+    mainImage = serializers.ImageField(source="main_image", read_only=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+    isInUse = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = ["id", "name", "ipName", "characterName", "category",
-                  "referencePrice", "mainImage", "description", "status", "createdAt"]
+                  "referencePrice", "mainImage", "description", "status", "createdAt", "isInUse"]
+
+    def get_isInUse(self, obj):
+        """检查商品是否被其他模块使用"""
+        from apps.assets.models import UserAsset
+        from apps.market.models import Listing
+        from apps.orders.models import Order
+        from apps.teams.models import TeamItem
+
+        if UserAsset.objects.filter(product=obj).exists():
+            return True
+        if Listing.objects.filter(product=obj, status__in=["active", "locked"]).exists():
+            return True
+        if Order.objects.filter(product=obj).exclude(status="cancelled").exists():
+            return True
+        if TeamItem.objects.filter(product=obj).exists():
+            return True
+        return False
 
 
 class ProductCreateSerializer(serializers.Serializer):
@@ -26,10 +44,11 @@ class ProductCreateSerializer(serializers.Serializer):
     characterName = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     category = serializers.CharField(max_length=20)
     referencePrice = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
-    mainImage = serializers.CharField(required=False, default="", allow_blank=True)
+    mainImage = serializers.ImageField(required=False)
     description = serializers.CharField(required=False, default="", allow_blank=True)
 
     def create(self, validated_data):
+        request = self.context.get("request")
         product = Product(
             product_id=generate_product_id(),
             name=validated_data["name"],
@@ -39,8 +58,8 @@ class ProductCreateSerializer(serializers.Serializer):
             reference_price=validated_data.get("referencePrice", 0),
             main_image=validated_data.get("mainImage", ""),
             description=validated_data.get("description", ""),
+            status=Product.Status.INACTIVE,
         )
-        request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:
             product.created_by = request.user
         product.save()
@@ -54,11 +73,13 @@ class ProductUpdateSerializer(serializers.Serializer):
     characterName = serializers.CharField(max_length=50, required=False, allow_blank=True)
     category = serializers.CharField(max_length=20, required=False)
     referencePrice = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
-    mainImage = serializers.CharField(required=False, allow_blank=True)
+    mainImage = serializers.ImageField(required=False, allow_null=True)
     description = serializers.CharField(required=False, allow_blank=True)
     status = serializers.ChoiceField(choices=Product.Status.choices, required=False)
 
     def update(self, instance, validated_data):
+        if "mainImage" in validated_data and validated_data["mainImage"] is None:
+            validated_data.pop("mainImage")
         field_map = {
             "name": "name",
             "ipName": "ip_name",
@@ -74,3 +95,28 @@ class ProductUpdateSerializer(serializers.Serializer):
                 setattr(instance, snake, validated_data[camel])
         instance.save()
         return instance
+
+
+class AdminGoodsSerializer(serializers.ModelSerializer):
+    """管理员商品列表序列化器"""
+    id = serializers.CharField(source="product_id", read_only=True)
+    ipName = serializers.CharField(source="ip_name", read_only=True)
+    characterName = serializers.CharField(source="character_name", read_only=True)
+    referencePrice = serializers.DecimalField(source="reference_price", max_digits=10, decimal_places=2, read_only=True)
+    mainImage = serializers.ImageField(source="main_image", read_only=True)
+    createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+    submittedAt = serializers.DateTimeField(source="created_at", read_only=True)
+    stock = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta:
+        model = Product
+        fields = [
+            "id", "name", "ipName", "characterName", "category",
+            "referencePrice", "mainImage", "description", "status",
+            "createdAt", "submittedAt", "stock",
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["seller"] = instance.created_by.user_id if instance.created_by else ""
+        return data

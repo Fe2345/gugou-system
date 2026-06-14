@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import TopBar from '@/layouts/TopBar.vue'
-import { queryPrice, getHotPrices } from '@/api/pricing'
+import { queryPrice, getHotPrices, getMyAssetPrices } from '@/api/pricing'
+import { useUserStore } from '@/stores/user'
 import type { PriceItem } from '@/types/pricing'
 
+const userStore = useUserStore()
+const route = useRoute()
 const keyword = ref('')
 const range = ref<'7d' | '30d' | '90d'>('30d')
 const loading = ref(false)
 const item = ref<PriceItem | null>(null)
 const hotPrices = ref<PriceItem[]>([])
+const myAssets = ref<(PriceItem & { quantity: number; acquirePrice: number | null })[]>([])
+const selectedAssetId = ref<string | null>(null)
 
 const categoryMap: Record<string, string> = {
   figure: '手办', badge: '徽章', poster: '海报/色纸', acrylic: '亚克力',
@@ -73,20 +79,63 @@ const conclusionTexts = computed(() => {
 })
 
 async function handleSearch() {
+  if (!keyword.value.trim()) return
   loading.value = true
-  const res = await queryPrice({ keyword: keyword.value || '玛奇朵', range: range.value })
+  selectedAssetId.value = null
+  const res = await queryPrice({ keyword: keyword.value, range: range.value })
   item.value = res.data
   loading.value = false
 }
 
+async function loadMyAssets() {
+  if (!userStore.isLoggedIn) return
+  try {
+    const res = await getMyAssetPrices(range.value)
+    myAssets.value = res.data || []
+  } catch {
+    myAssets.value = []
+  }
+}
+
+function selectAsset(asset: PriceItem) {
+  selectedAssetId.value = asset.id
+  item.value = asset
+}
+
 function setRange(r: '7d' | '30d' | '90d') {
   range.value = r
+  loadMyAssets()
+  if (selectedAssetId.value) {
+    const asset = myAssets.value.find(a => a.id === selectedAssetId.value)
+    if (asset) {
+      getMyAssetPrices(r).then(res => {
+        const updated = (res.data || []).find(a => a.id === selectedAssetId.value)
+        if (updated) item.value = updated
+      })
+      return
+    }
+  }
   handleSearch()
 }
 
 onMounted(async () => {
-  keyword.value = '玛奇朵'
-  await handleSearch()
+  // 从 URL 参数读取关键词并自动搜索
+  const queryKeyword = route.query.keyword as string
+  if (queryKeyword) {
+    keyword.value = queryKeyword
+    await handleSearch()
+  }
+
+  await loadMyAssets()
+  if (!queryKeyword) {
+    const firstAsset = myAssets.value[0]
+    if (firstAsset) {
+      selectAsset(firstAsset)
+    } else {
+      keyword.value = '可莉'
+      await handleSearch()
+    }
+  }
   const res = await getHotPrices()
   hotPrices.value = res.data
 })
@@ -128,10 +177,35 @@ onMounted(async () => {
         <article :class="changeClass"><span>涨跌幅</span><strong>{{ item.changePercent > 0 ? '+' : '' }}{{ item.changePercent }}%</strong></article>
       </div>
     </section>
-    <section class="summary-panel" v-else-if="!loading">
+    <section class="summary-panel" v-else-if="keyword.trim() && !loading">
       <div class="product-info">
         <p class="eyebrow">当前谷子</p>
         <h2>未找到匹配结果</h2>
+      </div>
+    </section>
+
+    <section class="my-assets-panel" v-if="userStore.isLoggedIn && myAssets.length > 0">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">资产价格分析</p>
+          <h2>我的资产价格分析</h2>
+        </div>
+        <div class="range-tabs" aria-label="时间范围">
+          <button type="button" :class="{ active: range === '7d' }" @click="setRange('7d')">近7天</button>
+          <button type="button" :class="{ active: range === '30d' }" @click="setRange('30d')">近30天</button>
+          <button type="button" :class="{ active: range === '90d' }" @click="setRange('90d')">近90天</button>
+        </div>
+      </div>
+      <div class="asset-grid">
+        <article v-for="a in myAssets" :key="a.id" class="asset-card" :class="{ active: selectedAssetId === a.id }" @click="selectAsset(a)">
+          <h3>{{ a.name }}</h3>
+          <p class="asset-meta">{{ a.ipName }} · {{ categoryLabel(a.category) }} · x{{ a.quantity }}</p>
+          <div class="asset-bottom">
+            <strong>¥{{ a.currentPrice }}</strong>
+            <span :class="{ up: a.changePercent > 0, down: a.changePercent < 0 }">{{ a.changePercent > 0 ? '+' : '' }}{{ a.changePercent }}%</span>
+          </div>
+          <p class="asset-cost" v-if="a.acquirePrice">购入价 ¥{{ a.acquirePrice }}</p>
+        </article>
       </div>
     </section>
 
@@ -268,6 +342,23 @@ h2 { font-size: 26px; }
 .hot-panel { margin-top: 20px; padding: 24px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); }
 .hot-panel .eyebrow { color: var(--accent); }
 .hot-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.my-assets-panel { margin-top: 20px; padding: 24px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); }
+.my-assets-panel .eyebrow { color: var(--accent); }
+.my-assets-panel .range-tabs { display: flex; gap: 6px; }
+.my-assets-panel .range-tabs button { border: 1px solid var(--line); border-radius: 8px; padding: 6px 14px; color: var(--muted); background: var(--soft); cursor: pointer; font: inherit; font-size: 13px; }
+.my-assets-panel .range-tabs button.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+.asset-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.asset-card { padding: 16px; border: 2px solid var(--line); border-radius: 10px; background: var(--soft); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
+.asset-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+.asset-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.asset-card h3 { font-size: 15px; margin: 0; }
+.asset-meta { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+.asset-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.asset-bottom strong { font-size: 20px; }
+.asset-bottom span { font-size: 13px; font-weight: 800; }
+.asset-bottom .up { color: #1f7a4d; }
+.asset-bottom .down { color: #c0392b; }
+.asset-cost { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
 .hot-card { padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); cursor: pointer; transition: box-shadow 0.2s; }
 .hot-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
 .hot-card h3 { font-size: 16px; }
@@ -288,10 +379,12 @@ th { color: var(--muted); background: var(--soft); }
 @media (max-width: 1080px) {
   .query-panel, .bottom-layout { grid-template-columns: 1fr; }
   .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .asset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
   .product-info, .section-head { align-items: flex-start; flex-direction: column; }
   .query-form, .metric-grid, .hot-grid { grid-template-columns: 1fr; }
+  .asset-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .page { width: min(100% - 20px, 1240px); }

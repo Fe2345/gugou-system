@@ -1,20 +1,47 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import { login as loginApi } from '@/api/user'
 
 defineOptions({ name: 'AdminLoginView' })
 
 const router = useRouter()
-const adminId = ref('')
+const userStore = useUserStore()
+const adminPhone = ref('')
 const adminPassword = ref('')
 const showError = ref(false)
+const errorMsg = ref('')
+const loading = ref(false)
 
-function handleLogin() {
-  if (adminId.value === 'admin' && adminPassword.value === '123456') {
-    router.push('/admin')
-  } else {
+async function handleLogin() {
+  showError.value = false
+  loading.value = true
+  try {
+    const res = await loginApi({ account: adminPhone.value, password: adminPassword.value })
+    if (res.code === 200 && res.data) {
+      // 检查是否是管理员角色
+      if (res.data.user.role !== 'admin') {
+        errorMsg.value = '该账号不是管理员账号'
+        showError.value = true
+        setTimeout(() => { showError.value = false }, 3000)
+        return
+      }
+      // 存储 token 和用户信息
+      userStore.setTokens(res.data.access, res.data.refresh)
+      userStore.setUserInfo(res.data.user)
+      router.push('/admin')
+    } else {
+      errorMsg.value = res.message || '登录失败'
+      showError.value = true
+      setTimeout(() => { showError.value = false }, 3000)
+    }
+  } catch (e: any) {
+    errorMsg.value = e?.response?.data?.message || '登录失败，请检查账号密码'
     showError.value = true
-    setTimeout(() => { showError.value = false }, 2000)
+    setTimeout(() => { showError.value = false }, 3000)
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -53,21 +80,21 @@ function handleLogin() {
         <div class="login-subtitle">GUGOU Goods Asset</div>
       </div>
 
-      <div v-if="showError" class="error-msg">身份验证失败，请重新检查凭据</div>
+      <div v-if="showError" class="error-msg">{{ errorMsg }}</div>
 
       <form @submit.prevent="handleLogin">
         <div class="input-group">
-          <input v-model="adminId" type="text" placeholder="管理员工号 / UID" required />
+          <input v-model="adminPhone" type="text" placeholder="管理员手机号" required />
         </div>
         <div class="input-group">
-          <input v-model="adminPassword" type="password" placeholder="访问秘钥" required />
+          <input v-model="adminPassword" type="password" placeholder="登录密码" required />
         </div>
-        <button type="submit">进入系统</button>
+        <button type="submit" :disabled="loading">{{ loading ? '登录中...' : '进入系统' }}</button>
       </form>
 
       <div class="links">
         <a href="#">申请权限</a>
-        <a href="#">丢失秘钥?</a>
+        <button type="button" @click="router.push('/login')">用户登录</button>
       </div>
     </div>
   </div>
@@ -243,14 +270,18 @@ button[type="submit"]:hover {
   width: 100%;
 }
 
-.links a {
+.links a, .links button {
   color: #94a3b8;
   text-decoration: none;
   font-size: 13px;
   transition: color 0.3s;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
 }
 
-.links a:hover {
+.links a:hover, .links button:hover {
   color: #00f2fe;
 }
 

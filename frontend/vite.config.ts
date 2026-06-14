@@ -6,17 +6,18 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  const envDir = fileURLToPath(new URL('../', import.meta.url))
+  const env = loadEnv(mode, envDir, 'VITE_')
 
   return {
-    envDir: '../',
+    envDir,
     plugins: [
       vue(),
       vueDevTools(),
     ],
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url))
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
     server: {
@@ -26,19 +27,16 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.VITE_BACKEND_URL || 'http://127.0.0.1:8001',
           changeOrigin: true,
-          configure: (proxy) => {
-            proxy.on('proxyReq', (proxyReq) => {
-              // Django APPEND_SLASH 要求 POST URL 以 / 结尾，在 proxy 层补上
-              if (proxyReq.path && !proxyReq.path.includes('?') && !proxyReq.path.endsWith('/')) {
-                proxyReq.path += '/'
-              } else if (proxyReq.path) {
-                const q = proxyReq.path.indexOf('?')
-                if (q > 0 && !proxyReq.path.substring(0, q).endsWith('/')) {
-                  proxyReq.path = proxyReq.path.substring(0, q) + '/' + proxyReq.path.substring(q)
-                }
-              }
-            })
+          rewrite: (path) => {
+            const queryIndex = path.indexOf('?')
+            const pathname = queryIndex >= 0 ? path.slice(0, queryIndex) : path
+            const query = queryIndex >= 0 ? path.slice(queryIndex) : ''
+            return pathname.endsWith('/') ? path : `${pathname}/${query}`
           },
+        },
+        '/media': {
+          target: env.VITE_BACKEND_URL || 'http://127.0.0.1:8001',
+          changeOrigin: true,
         },
       },
     },
