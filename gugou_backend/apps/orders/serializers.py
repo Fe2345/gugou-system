@@ -247,7 +247,7 @@ class OrderCompleteSerializer(serializers.Serializer):
         from django.db import transaction
         from django.utils import timezone
         from apps.assets.models import AssetFlow, UserAsset
-        from apps.common.id_generator import generate_asset_flow_id, generate_price_record_id
+        from apps.common.id_generator import generate_asset_flow_id, generate_asset_id, generate_price_record_id
         from apps.credits.services import (
             CREDIT_ORDER_BUYER_COMPLETE,
             CREDIT_ORDER_SELLER_COMPLETE,
@@ -303,6 +303,30 @@ class OrderCompleteSerializer(serializers.Serializer):
                         related_order=order.order_id,
                         note=f"Order {order.order_id} completed, asset sold",
                     )
+
+            # 只有普通交易订单才创建买家资产（拼团订单无独立商品）
+            if order.product:
+                buyer_asset = UserAsset.objects.create(
+                    asset_id=generate_asset_id(),
+                    owner=order.buyer,
+                    product=order.product,
+                    quantity=order.quantity,
+                    acquire_price=order.amount,
+                    acquired_at=timezone.now(),
+                    current_value=order.product.reference_price if order.product.reference_price else order.amount,
+                    status=UserAsset.Status.HOLDING,
+                    source="order",
+                    description=f"Order {order.order_id} completed",
+                )
+
+                AssetFlow.objects.create(
+                    flow_id=generate_asset_flow_id(),
+                    asset=buyer_asset,
+                    to_user=order.buyer,
+                    flow_type=AssetFlow.FlowType.ACQUIRE,
+                    related_order=order.order_id,
+                    note=f"Order {order.order_id} completed, asset acquired",
+                )
 
             create_credit_record(
                 user=order.buyer,

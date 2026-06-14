@@ -251,7 +251,6 @@ onMounted(() => {
           <div><span>拼团编号</span><strong>{{ detailData.team_id }}</strong></div>
           <div><span>商品</span><strong>{{ detailData.product_name_display }}</strong></div>
           <div><span>发起用户</span><strong>{{ detailData.creator_name }} ({{ detailData.creator_id }})</strong></div>
-          <div><span>商品参考价</span><strong>{{ detailData.product_price ? '¥' + Number(detailData.product_price).toFixed(2) : '未设置' }}</strong></div>
           <div><span>团购价</span><strong class="price">¥{{ Number(detailData.team_price).toFixed(2) }}</strong></div>
           <div><span>人数进度</span><strong>{{ detailData.current_count }} / {{ detailData.target_count }}</strong></div>
           <div><span>状态</span><strong><span class="status" :class="statusMap[detailData.status]?.cls">{{ statusMap[detailData.status]?.text }}</span></strong></div>

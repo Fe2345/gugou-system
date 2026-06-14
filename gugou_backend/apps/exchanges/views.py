@@ -428,6 +428,28 @@ class AdminExchangeCompleteView(APIView):
         applicant_asset.quantity += 1
         applicant_asset.save()
 
+        # 记录资产流转
+        from apps.assets.models import AssetFlow
+        from apps.common.id_generator import generate_asset_flow_id
+        AssetFlow.objects.create(
+            flow_id=generate_asset_flow_id(),
+            asset=owner_asset,
+            from_user=exchange.owner,
+            to_user=match.applicant,
+            flow_type=AssetFlow.FlowType.EXCHANGE_OUT,
+            related_exchange=exchange_id,
+            note=f"Exchange {exchange_id} completed, asset exchanged out",
+        )
+        AssetFlow.objects.create(
+            flow_id=generate_asset_flow_id(),
+            asset=applicant_asset,
+            from_user=match.applicant,
+            to_user=exchange.owner,
+            flow_type=AssetFlow.FlowType.EXCHANGE_IN,
+            related_exchange=exchange_id,
+            note=f"Exchange {exchange_id} completed, asset exchanged in",
+        )
+
         # 更新状态
         exchange.status = ExchangeRequest.Status.COMPLETED
         exchange.save()

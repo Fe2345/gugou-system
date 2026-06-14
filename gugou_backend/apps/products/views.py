@@ -106,7 +106,7 @@ class ProductDetailView(APIView):
         from apps.assets.models import UserAsset
         from apps.market.models import Listing
         from apps.orders.models import Order
-        from apps.teams.models import TeamProject
+        from apps.teams.models import TeamItem
 
         if UserAsset.objects.filter(product=product).exists():
             return True, "该商品已被用户持有为资产，无法操作"
@@ -114,7 +114,7 @@ class ProductDetailView(APIView):
             return True, "该商品有活跃的市场挂单，无法操作"
         if Order.objects.filter(product=product).exclude(status="cancelled").exists():
             return True, "该商品有相关的订单，无法操作"
-        if TeamProject.objects.filter(product=product).exists():
+        if TeamItem.objects.filter(product=product).exists():
             return True, "该商品有相关的拼团项目，无法操作"
         return False, ""
 

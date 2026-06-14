@@ -14,7 +14,6 @@ export interface GroupItem {
   team_id: string
   product_name: string
   product_name_display: string
-  product_price: number | null
   creator_id: string
   creator_name: string
   target_count: number

@@ -44,7 +44,6 @@ class TeamProjectListView(APIView):
         page_size = int(request.query_params.get("page_size", 10))
         keyword = request.query_params.get("keyword", "").strip()
         status_filter = request.query_params.get("status")
-        product_id = request.query_params.get("product_id")
 
         queryset = TeamProject.objects.all()
 
@@ -59,10 +58,6 @@ class TeamProjectListView(APIView):
         # 按状态筛选
         if status_filter:
             queryset = queryset.filter(status=status_filter)
-
-        # 按商品筛选
-        if product_id:
-            queryset = queryset.filter(product_id=product_id)
 
         # 排序
         queryset = queryset.order_by("-created_at")
@@ -404,7 +399,7 @@ class AdminTeamListView(APIView):
         end_date = request.query_params.get("end_date", "").strip()
 
         queryset = TeamProject.objects.select_related(
-            "product", "creator"
+            "creator"
         ).all()
 
         # 关键词搜索：编号、商品名称、发起用户昵称/手机号
@@ -451,7 +446,7 @@ class AdminTeamDetailView(APIView):
     def get(self, request, team_id):
         try:
             team = TeamProject.objects.select_related(
-                "product", "creator"
+                "creator"
             ).get(team_id=team_id)
         except TeamProject.DoesNotExist:
             return error(message="拼团不存在", code=404)
@@ -594,13 +589,14 @@ class AdminTeamSuccessView(APIView):
             participants = TeamParticipant.objects.filter(team=team, status=TeamParticipant.Status.JOINED)
             for p in participants:
                 order_id = generate_order_id()
+                item_product = p.selected_item.product
                 order = Order.objects.create(
                     order_id=order_id,
                     buyer=p.user,
                     seller=team.creator,
                     listing=None,
                     team=team,
-                    product=team.product,
+                    product=item_product,
                     quantity=1,
                     amount=team.team_price,
                     status=Order.Status.PENDING_PAYMENT,

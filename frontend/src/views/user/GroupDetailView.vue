@@ -49,6 +49,10 @@ const isParticipant = computed(() => {
   if (!detail.value?.participants) return false
   return detail.value.participants.some(p => p.user_id === currentUserId.value && p.status === 'joined')
 })
+const creatorHasJoined = computed(() => {
+  if (!detail.value?.participants) return false
+  return detail.value.participants.some(p => p.user_id === detail.value?.creator_id && p.status === 'joined')
+})
 
 const selectedAddress = computed(() => addresses.value.find(a => a.id === selectedAddressId.value) || null)
 
@@ -65,9 +69,17 @@ const participantStatusMap: Record<string, string> = {
   refunded: '已退款',
 }
 
-const availableItems = computed(() => {
-  if (!detail.value?.items) return []
-  return detail.value.items.filter(item => !item.is_selected)
+const canJoin = computed(() => {
+  if (!detail.value) return false
+  if (detail.value.status !== 'recruiting' || detail.value.is_expired) return false
+  if (detail.value.current_count >= detail.value.target_count) return false
+  // 发起人未参与时，只有发起人可以加入
+  if (!creatorHasJoined.value && !isCreator.value) return false
+  // 已参与且不是发起人的不能再次加入
+  if (isParticipant.value && !isCreator.value) return false
+  // 发起人已参与且已选小商品，不能再次加入
+  if (isCreator.value && isParticipant.value) return false
+  return true
 })
 
 // ========== 数据加载 ==========
@@ -139,7 +151,7 @@ function resetAddressForm() {
 async function handleItemClick(item: TeamItemOption) {
   if (item.is_selected) return
   if (!detail.value || detail.value.status !== 'recruiting' || detail.value.is_expired) return
-  if (isParticipant.value || isCreator.value) return
+  if (!canJoin.value) return
 
   pendingItemId.value = item.item_id
   useNewAddress.value = addresses.value.length === 0
@@ -364,7 +376,6 @@ onMounted(() => { loadDetail() })
         <div class="info-grid">
           <div><span>发起人</span><strong>{{ detail.creator_name }}</strong></div>
           <div><span>团购价</span><strong class="price">¥{{ detail.team_price }}/人</strong></div>
-          <div><span>商品原价</span><strong>{{ detail.product_price ? '¥' + detail.product_price : '未设置' }}</strong></div>
           <div><span>创建时间</span><strong>{{ formatDate(detail.created_at) }}</strong></div>
           <div><span>截止时间</span><strong>{{ formatDate(detail.deadline) }}</strong></div>
           <div><span>更新时间</span><strong>{{ formatDate(detail.updated_at) }}</strong></div>
@@ -373,18 +384,20 @@ onMounted(() => { loadDetail() })
         <!-- 小商品选项卡片 -->
         <div v-if="detail.items && detail.items.length > 0" class="items-section">
           <h3>选择你想要的小商品 ({{ detail.items.filter(i => i.is_selected).length }} / {{ detail.items.length }} 已选)</h3>
-          <p v-if="detail.status === 'recruiting' && !detail.is_expired && !isParticipant && !isCreator" class="items-hint">点击灰色可选卡片即可参与拼团</p>
+          <p v-if="detail.status === 'recruiting' && !detail.is_expired && isCreator && !isParticipant" class="items-hint">请先选择一个小商品参与拼团，之后其他用户才能加入</p>
+          <p v-else-if="detail.status === 'recruiting' && !detail.is_expired && !isParticipant && !isCreator && !creatorHasJoined" class="items-hint">等待发起人先参与拼团...</p>
+          <p v-else-if="detail.status === 'recruiting' && !detail.is_expired && !isParticipant && !isCreator" class="items-hint">点击灰色可选卡片即可参与拼团</p>
           <div class="items-grid">
             <div
               v-for="item in detail.items"
               :key="item.item_id"
-              :class="['item-card', { 'item-taken': item.is_selected, 'item-available': !item.is_selected && detail.status === 'recruiting' && !isParticipant && !isCreator && !detail.is_expired }]"
+              :class="['item-card', { 'item-taken': item.is_selected, 'item-available': !item.is_selected && canJoin }]"
               @click="handleItemClick(item)"
             >
               <div class="item-card-body">
                 <span class="item-name">{{ item.name }}</span>
                 <span v-if="item.is_selected" class="item-badge taken">已被选</span>
-                <span v-else-if="detail.status === 'recruiting' && !isParticipant && !isCreator && !detail.is_expired" class="item-badge available">可选</span>
+                <span v-else-if="canJoin" class="item-badge available">可选</span>
                 <span v-else class="item-badge unavailable">不可选</span>
               </div>
               <div v-if="item.is_selected && item.selected_user_name" class="item-card-footer">
@@ -424,8 +437,9 @@ onMounted(() => { loadDetail() })
         <section class="action-card">
           <h3>操作</h3>
           <div class="action-list">
+            <span v-if="isCreator && detail.status === 'recruiting' && !isParticipant" class="hint-text">请先选择一个小商品参与拼团</span>
+            <span v-if="isCreator && detail.status === 'recruiting' && isParticipant" class="hint-text">你已参与拼团</span>
             <span v-if="isParticipant && !isCreator && detail.status === 'recruiting'" class="hint-text">已参与</span>
-            <span v-if="isCreator && detail.status === 'recruiting'" class="hint-text">你已是拼团发起人</span>
             <button v-if="isCreator && detail.status === 'recruiting'" class="danger full" type="button" :disabled="actionLoading" @click="handleCancel">
               {{ actionLoading ? '取消中...' : '取消拼团' }}
             </button>

@@ -6,6 +6,11 @@ export const useUserStore = defineStore('user', () => {
   const access = ref<string>(localStorage.getItem('access_token') || '')
   const refresh = ref<string>(localStorage.getItem('refresh_token') || '')
   const userInfo = ref<UserInfo | null>(null)
+  const authInitialized = ref(false)
+  let resolveAuthInitialized: (() => void) | null = null
+  const authInitializedPromise = new Promise<void>((resolve) => {
+    resolveAuthInitialized = resolve
+  })
 
   const isLoggedIn = computed(() => !!access.value)
   const isAdmin = computed(() => userInfo.value?.role === 'admin')
@@ -34,5 +39,34 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('refresh_token')
   }
 
-  return { access, refresh, userInfo, isLoggedIn, isAdmin, setTokens, setAccess, setUserInfo, logout }
+  function finishAuthInitialization() {
+    if (authInitialized.value) {
+      return
+    }
+    authInitialized.value = true
+    resolveAuthInitialized?.()
+    resolveAuthInitialized = null
+  }
+
+  function waitForAuthInitialized() {
+    if (authInitialized.value) {
+      return Promise.resolve()
+    }
+    return authInitializedPromise
+  }
+
+  return {
+    access,
+    refresh,
+    userInfo,
+    authInitialized,
+    isLoggedIn,
+    isAdmin,
+    setTokens,
+    setAccess,
+    setUserInfo,
+    logout,
+    finishAuthInitialization,
+    waitForAuthInitialized,
+  }
 })

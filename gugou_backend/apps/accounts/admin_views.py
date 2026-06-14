@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.utils import timezone
@@ -8,6 +10,47 @@ from apps.common.response import error, paginated, success
 
 from .models import User
 from .serializers import AdminUserSerializer
+
+
+class AdminDashboardStatsView(APIView):
+    """管理员仪表盘统计数据"""
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        from apps.orders.models import Order
+        from apps.products.models import Product
+
+        now = timezone.now()
+        week_ago = now - timedelta(days=7)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        user_count = User.objects.exclude(status=User.Status.DELETED).count()
+        product_count = Product.objects.exclude(status="archived").count()
+        order_count = Order.objects.count()
+
+        # 待审核事项：待审核的商品 + 待处理的订单
+        pending_goods = Product.objects.filter(status="inactive").count()
+        pending_orders = Order.objects.filter(
+            status__in=["created", "pending_payment", "paid"]
+        ).count()
+        pending_count = pending_goods + pending_orders
+
+        new_users_week = User.objects.filter(
+            created_at__gte=week_ago
+        ).exclude(status=User.Status.DELETED).count()
+
+        orders_today = Order.objects.filter(
+            created_at__gte=today_start
+        ).count()
+
+        return success(data={
+            "user_count": user_count,
+            "product_count": product_count,
+            "order_count": order_count,
+            "pending_count": pending_count,
+            "new_users_week": new_users_week,
+            "orders_today": orders_today,
+        })
 
 
 class AdminUserListView(APIView):

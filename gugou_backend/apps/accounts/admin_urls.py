@@ -1,6 +1,11 @@
 from django.urls import path
 
-from .admin_views import AdminUserDisableView, AdminUserEnableView, AdminUserListView
+from .admin_views import (
+    AdminDashboardStatsView,
+    AdminUserDisableView,
+    AdminUserEnableView,
+    AdminUserListView,
+)
 
 urlpatterns = [
     path("", AdminUserListView.as_view(), name="admin-users-list"),
